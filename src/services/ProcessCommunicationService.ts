@@ -250,23 +250,23 @@ const service = (): ProcessCommunicationService => {
           );
         }
 
-        // Try enhanced natural language processing with auto-detection
-        const nlpResult = defaultProcessService.processNaturalLanguage(
+        // Try enhanced natural language service with auto-detection
+        const nlsResult = defaultProcessService.processNaturalLanguage(
           userRequest,
           processId,
         );
 
-        if (nlpResult && nlpResult.confidence > 0.6) {
+        if (nlsResult && nlsResult.confidence > 0.6) {
           // Find the handler in the template
-          const handler = nlpResult.template.handlers.find(
-            (h) => h.action === nlpResult.operation,
+          const handler = nlsResult.template.handlers.find(
+            (h) => h.action === nlsResult.operation,
           );
 
           if (handler) {
             const aoMessage = service().buildAOMessage(
               processId,
               handler,
-              nlpResult.parameters,
+              nlsResult.parameters,
             );
 
             const response = await aoMessageService.executeMessage(
@@ -277,10 +277,10 @@ const service = (): ProcessCommunicationService => {
             const result = service().interpretResponse(response, handler);
             return {
               ...result,
-              confidence: nlpResult.confidence,
-              processType: nlpResult.processType,
+              confidence: nlsResult.confidence,
+              processType: nlsResult.processType,
               suggestions: defaultProcessService.getSuggestedOperations(
-                nlpResult.processType,
+                nlsResult.processType,
               ),
               templateUsed: "default",
             };

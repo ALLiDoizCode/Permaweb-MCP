@@ -324,7 +324,7 @@ export const TOKEN_DETECTION_PATTERNS = {
 /**
  * Common token operation patterns for natural language processing
  */
-export const TOKEN_NLP_PATTERNS = {
+export const TOKEN_NLS_PATTERNS = {
   // Balance patterns
   balance: [
     /(?:check|get|show)\s+(?:my\s+)?(?:token\s+)?balance/i,
@@ -374,14 +374,14 @@ export function extractTokenOperation(request: string): {
   // const requestLower = request.toLowerCase(); // Future: use for advanced matching
   
   // Check transfer patterns
-  for (const pattern of TOKEN_NLP_PATTERNS.transfer) {
+  for (const pattern of TOKEN_NLS_PATTERNS.transfer) {
     const match = request.match(pattern);
     if (match) {
       // Handle different capture group orders for different patterns
       let recipient: string;
       let amount: number;
       
-      if (pattern === TOKEN_NLP_PATTERNS.transfer[0] || pattern === TOKEN_NLP_PATTERNS.transfer[1]) {
+      if (pattern === TOKEN_NLS_PATTERNS.transfer[0] || pattern === TOKEN_NLS_PATTERNS.transfer[1]) {
         // send/transfer patterns: (amount) (recipient)
         amount = parseFloat(match[1]);
         recipient = match[2];
@@ -400,7 +400,7 @@ export function extractTokenOperation(request: string): {
   }
   
   // Check balance patterns
-  for (const pattern of TOKEN_NLP_PATTERNS.balance) {
+  for (const pattern of TOKEN_NLS_PATTERNS.balance) {
     const match = request.match(pattern);
     if (match) {
       return {
@@ -412,7 +412,7 @@ export function extractTokenOperation(request: string): {
   }
   
   // Check mint patterns
-  for (const pattern of TOKEN_NLP_PATTERNS.mint) {
+  for (const pattern of TOKEN_NLS_PATTERNS.mint) {
     const match = request.match(pattern);
     if (match) {
       return {
@@ -427,7 +427,7 @@ export function extractTokenOperation(request: string): {
   }
   
   // Check burn patterns
-  for (const pattern of TOKEN_NLP_PATTERNS.burn) {
+  for (const pattern of TOKEN_NLS_PATTERNS.burn) {
     const match = request.match(pattern);
     if (match) {
       return {
@@ -441,7 +441,7 @@ export function extractTokenOperation(request: string): {
   }
   
   // Check info patterns
-  for (const pattern of TOKEN_NLP_PATTERNS.info) {
+  for (const pattern of TOKEN_NLS_PATTERNS.info) {
     const match = request.match(pattern);
     if (match) {
       const infoType = match[1]?.toLowerCase().replace(/\s+/g, '');

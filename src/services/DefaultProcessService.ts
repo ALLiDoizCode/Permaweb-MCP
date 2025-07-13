@@ -47,13 +47,13 @@ export interface DefaultProcessService {
   isKnownProcessType(processId: string, handlers?: string[]): null | string;
 
   /**
-   * Enhanced natural language processing with auto-detection
+   * Enhanced natural language service with auto-detection
    */
   processNaturalLanguage(
     request: string,
     processId?: string,
     knownHandlers?: string[],
-  ): EnhancedNLPResult | null;
+  ): EnhancedNLSResult | null;
 }
 
 /**
@@ -66,9 +66,9 @@ interface DefaultProcessRegistry {
 }
 
 /**
- * Enhanced Natural Language Processing Result
+ * Enhanced Natural Language Service Result
  */
-interface EnhancedNLPResult {
+interface EnhancedNLSResult {
   confidence: number;
   operation: string;
   parameters: Record<string, unknown>;
@@ -200,7 +200,7 @@ const createDefaultProcessService = (): DefaultProcessService => {
       request: string,
       processId?: string,
       knownHandlers?: string[],
-    ): EnhancedNLPResult | null {
+    ): EnhancedNLSResult | null {
       // First, try to detect process type
       let processType = "unknown";
       let template = DEFAULT_TOKEN_PROCESS; // Default fallback
@@ -341,4 +341,4 @@ export const DefaultProcessUtils = {
 /**
  * Export types for external use
  */
-export type { DefaultProcessRegistry, EnhancedNLPResult, ProcessTypeDetection };
+export type { DefaultProcessRegistry, EnhancedNLSResult, ProcessTypeDetection };

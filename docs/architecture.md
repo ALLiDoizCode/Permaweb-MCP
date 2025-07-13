@@ -146,7 +146,7 @@ interface ReasoningStep {
   - AO message construction and routing
   - Response interpretation and formatting
 
-#### Natural Language Processing Pipeline
+#### Natural Language Service Pipeline
 
 1. **Request Analysis**: Parse user intent from natural language
 2. **Handler Matching**: Find appropriate process handlers

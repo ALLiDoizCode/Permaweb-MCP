@@ -489,12 +489,12 @@ describe("Integration Tests", () => {
       expect(defaultProcessService.canHandleRequest(request)).toBe(true);
 
       // 2. Process natural language
-      const nlpResult = defaultProcessService.processNaturalLanguage(
+      const nlsResult = defaultProcessService.processNaturalLanguage(
         request,
         processId,
       );
-      expect(nlpResult).toBeDefined();
-      expect(nlpResult!.operation).toBe("transfer");
+      expect(nlsResult).toBeDefined();
+      expect(nlsResult!.operation).toBe("transfer");
 
       // 3. Get appropriate template
       const template = defaultProcessService.getDefaultProcess(
