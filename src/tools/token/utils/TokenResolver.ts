@@ -1,5 +1,5 @@
 import { fetchEvents } from "../../../relay.js";
-import { MEMORY_KINDS } from "../../../services/AIMemoryService.js";
+import { MEMORY_KINDS } from "../../../services/aiMemoryService.js";
 
 export interface ResolutionResult<T> {
   matches?: T[];

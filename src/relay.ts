@@ -36,7 +36,7 @@ interface FilterResult {
   totalCount?: number;
 }
 import { read, send } from "./process.js";
-import { processVIP01Results } from "./utils/VIP01Processing.js";
+import { processVIP01Results } from "./utils/vip01Processing.js";
 
 export const evalProcess = async (
   signer: JWKInterface,

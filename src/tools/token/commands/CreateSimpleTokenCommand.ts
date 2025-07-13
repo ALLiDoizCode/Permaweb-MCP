@@ -1,12 +1,12 @@
 import { z } from "zod";
 
 import { event } from "../../../relay.js";
-import { MEMORY_KINDS } from "../../../services/AIMemoryService.js";
+import { MEMORY_KINDS } from "../../../services/aiMemoryService.js";
 import {
   generateSimpleTokenLua,
   type SimpleTokenConfig,
 } from "../../../services/SimpleTokenService.js";
-import { tokenService } from "../../../services/TokenService.js";
+import { tokenService } from "../../../services/tokenservice.js";
 import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
 
 interface CreateSimpleTokenArgs {

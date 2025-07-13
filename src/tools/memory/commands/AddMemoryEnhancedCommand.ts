@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { MemoryType } from "../../../models/AIMemory.js";
-import { aiMemoryService } from "../../../services/AIMemoryService.js";
+import { aiMemoryService } from "../../../services/aiMemoryService.js";
 import {
   CommonSchemas,
   ToolCommand,

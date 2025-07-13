@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { event } from "../../../relay.js";
-import { MEMORY_KINDS } from "../../../services/AIMemoryService.js";
+import { MEMORY_KINDS } from "../../../services/aiMemoryService.js";
 import {
   CommonSchemas,
   ToolCommand,

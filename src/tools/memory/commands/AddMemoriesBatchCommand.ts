@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { aiMemoryService } from "../../../services/AIMemoryService.js";
+import { aiMemoryService } from "../../../services/aiMemoryService.js";
 import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
 
 interface AddMemoriesBatchArgs {
