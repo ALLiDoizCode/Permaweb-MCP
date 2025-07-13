@@ -1,4 +1,4 @@
-# Quick Start: Natural Language Process Integration
+# Quick Start: Natural Language Service Integration
 
 **Get your AO process working with Claude Desktop in 5 minutes.**
 

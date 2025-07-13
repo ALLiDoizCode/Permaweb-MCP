@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { fetchEvents } from "../../../relay.js";
-import { MEMORY_KINDS } from "../../../services/aiMemoryService.js";
+import { MEMORY_KINDS } from "../../../services/AIMemoryService.js";
 import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
 
 export class ListContactsCommand extends ToolCommand<

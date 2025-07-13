@@ -207,7 +207,7 @@ describe("ServiceName", () => {
 
 - **JSON Format**: Structured workflow definitions with handlers
 - **Markdown Format**: Natural language workflows with AI interpretation
-- **Natural Language Processing**: Intelligent parameter extraction
+- **Natural Language Service**: Intelligent parameter extraction
 - **Process Integration**: Dynamic AO process interaction
 
 ## Security Considerations

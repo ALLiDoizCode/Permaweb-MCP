@@ -1,4 +1,4 @@
-# Natural Language Process Integration
+# Natural Language Service Integration
 
 **Enable your AO process to work with Claude Desktop using only markdown documentation.**
 
@@ -481,7 +481,7 @@ This enables seamless integration where users can:
 
 The ProcessCommunicationService can be enhanced to support:
 
-- **Better parameter extraction** - More sophisticated NLP patterns
+- **Better parameter extraction** - More sophisticated NLS patterns
 - **Type validation** - Runtime parameter type checking
 - **Response formatting** - Better interpretation of process responses
 - **Error handling** - More helpful error messages and suggestions
