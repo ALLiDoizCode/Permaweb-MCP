@@ -9,3 +9,6 @@ temp.*
 mcp-*.js
 mcp-*.sh
 dist
+
+# Dashboard moved to separate repo
+dashboard/
