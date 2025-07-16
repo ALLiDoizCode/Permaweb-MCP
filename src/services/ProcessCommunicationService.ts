@@ -400,7 +400,8 @@ const service = (): ProcessCommunicationService => {
     },
 
     parseMarkdown: (markdown: string): ProcessDefinition => {
-      const lines = markdown.split("\n");
+      const lines = markdown.split("
+");
       const handlers: HandlerInfo[] = [];
       let currentHandler: null | Partial<HandlerInfo> = null;
       let processName = "Unknown Process";
