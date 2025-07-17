@@ -427,8 +427,7 @@ export class PermawebDocs {
     if (domain === "permaweb-glossary") {
       // Split by double newlines (glossary entries)
       return content
-        .split(/
-{2,}/)
+        .split(/\n\n{2,}/)
         .map((s) => s.trim())
         .filter(Boolean);
     }

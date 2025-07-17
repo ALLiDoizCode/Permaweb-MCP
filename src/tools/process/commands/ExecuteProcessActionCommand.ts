@@ -19,12 +19,10 @@ export class ExecuteProcessActionCommand extends ToolCommand<
   string
 > {
   protected metadata: ToolMetadata = {
-    description: `Execute an action on any AO process using natural language. Process developers can provide a markdown description 
-      of their process handlers, and you can interact with the process using natural language requests. The service will automatically 
-      parse the process documentation, understand your request, format the appropriate AO message, and execute it.
-      
-      💡 TIP: For token operations, consider using 'executeTokenAction' or 'executeSmartProcessAction' which provide built-in 
-      token templates and don't require manual documentation.`,
+    description: `Execute actions on AO processes using natural language. This is the core tool for AO process communication - 
+      provide process documentation in markdown format and make natural language requests. The service automatically parses 
+      process handlers, understands your request, formats AO messages, and executes them. Essential for interactive AO process 
+      communication in the decentralized computing environment.`,
     name: "executeProcessAction",
     openWorldHint: false,
     readOnlyHint: false,

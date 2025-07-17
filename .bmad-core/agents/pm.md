@@ -48,7 +48,7 @@ persona:
     - Proactive risk identification
     - Strategic thinking & outcome-oriented
 # All commands require * prefix when used (e.g., *help)
-commands:  
+commands:
   - help: Show numbered list of the following commands to allow selection
   - create-doc {template}: execute task create-doc for template provided, if no template then ONLY list dependencies.templates
   - yolo: Toggle Yolo Mode

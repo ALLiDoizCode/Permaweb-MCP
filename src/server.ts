@@ -16,7 +16,6 @@ import { DocumentationToolFactory } from "./tools/documentation/DocumentationToo
 import { ToolContext, toolRegistry } from "./tools/index.js";
 import { MemoryToolFactory } from "./tools/memory/MemoryToolFactory.js";
 import { ProcessToolFactory } from "./tools/process/ProcessToolFactory.js";
-import { SystemToolFactory } from "./tools/system/SystemToolFactory.js";
 import { TokenToolFactory } from "./tools/token/TokenToolFactory.js";
 
 let keyPair: JWKInterface;
@@ -134,15 +133,6 @@ function setupToolRegistry() {
   });
 
   documentationFactory.registerTools(toolRegistry);
-
-  // Register System tools
-  const systemFactory = new SystemToolFactory({
-    categoryDescription: "System information and utility tools",
-    categoryName: "System",
-    context,
-  });
-
-  systemFactory.registerTools(toolRegistry);
 }
 
 const server = new FastMCP({
@@ -207,14 +197,6 @@ function registerBasicTools() {
     context: basicContext,
   });
   documentationFactory.registerTools(toolRegistry);
-
-  // Register System tools
-  const systemFactory = new SystemToolFactory({
-    categoryDescription: "System information and utility tools",
-    categoryName: "System",
-    context: basicContext,
-  });
-  systemFactory.registerTools(toolRegistry);
 
   // Get tool definitions and register them
   const toolDefinitions = toolRegistry.getToolDefinitions(basicContext);

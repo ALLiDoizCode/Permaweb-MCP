@@ -22,7 +22,7 @@ export class TransferTokensCommand extends ToolCommand<
 > {
   protected metadata: ToolMetadata = {
     description:
-      "Transfer tokens from your account to another address. Supports token names/tickers and contact names from registry.",
+      "Core MVP functionality: Transfer tokens from your account to another address. Supports token names/tickers and contact names from registry.",
     name: "transferTokens",
     openWorldHint: false,
     readOnlyHint: false,
@@ -167,9 +167,10 @@ export class TransferTokensCommand extends ToolCommand<
         },
       });
     } catch (error) {
-      throw new Error(
-        `Failed to transfer tokens: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      return JSON.stringify({
+        error: `Failed to transfer tokens: ${error instanceof Error ? error.message : "Unknown error"}`,
+        success: false,
+      });
     }
   }
 }

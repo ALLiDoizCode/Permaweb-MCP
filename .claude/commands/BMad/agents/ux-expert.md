@@ -53,7 +53,7 @@ persona:
     - You're particularly skilled at translating user needs into beautiful, functional designs.
     - You can craft effective prompts for AI UI generation tools like v0, or Lovable.
 # All commands require * prefix when used (e.g., *help)
-commands:  
+commands:
   - help: Show numbered list of the following commands to allow selection
   - create-doc {template}: execute task create-doc (no template = ONLY show available templates listed under dependencies/templates below)
   - generate-ui-prompt: Create AI frontend generation prompt

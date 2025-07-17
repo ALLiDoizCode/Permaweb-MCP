@@ -9,7 +9,8 @@ export class ListTokensCommand extends ToolCommand<
   string
 > {
   protected metadata: ToolMetadata = {
-    description: "List all saved token mappings from the registry",
+    description:
+      "Core MVP functionality: List all saved token mappings from the registry",
     name: "listTokens",
     openWorldHint: false,
     readOnlyHint: true,

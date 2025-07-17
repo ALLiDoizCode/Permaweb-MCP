@@ -24,9 +24,9 @@ export class QueryAOProcessMessagesCommand extends ToolCommand<
   string
 > {
   protected metadata: ToolMetadata = {
-    description: `Query AO (Autonomous Objects) process messages and interactions. 
-    Filter by process IDs, message references, actions, and other AO-specific parameters. 
-    Useful for tracking process communications and state changes.
+    description: `Query AO process messages and communication history. Essential tool for monitoring AO process interactions, 
+    tracking message flows, and analyzing process state changes. Filter by process IDs, message references, actions, and 
+    other AO-specific parameters. Core functionality for AO process communication analysis and debugging.
     
     DISPLAY FORMAT: When presenting AO process messages, use this consistent format:
     
