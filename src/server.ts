@@ -17,10 +17,20 @@ import { ToolContext, toolRegistry } from "./tools/index.js";
 import { MemoryToolFactory } from "./tools/memory/MemoryToolFactory.js";
 import { ProcessToolFactory } from "./tools/process/ProcessToolFactory.js";
 import { TokenToolFactory } from "./tools/token/TokenToolFactory.js";
+import { UserToolFactory } from "./tools/user/UserToolFactory.js";
 
 let keyPair: JWKInterface;
 let publicKey: string;
 let hubId: string;
+let initializationComplete = false;
+
+// Export getters for current user state
+export const getCurrentUserState = () => ({
+  keyPair,
+  publicKey,
+  hubId,
+  initializationComplete,
+});
 
 // Configure environment variables silently for MCP protocol compatibility
 // Suppress all output from dotenv and any other initialization
@@ -71,6 +81,9 @@ async function init() {
 
   // Verify default process templates are loaded (silently for MCP compatibility)
   defaultProcessService.getDefaultProcesses();
+
+  // Mark initialization as complete
+  initializationComplete = true;
 
   // No automatic context loading on startup for better performance
 }
@@ -133,6 +146,16 @@ function setupToolRegistry() {
   });
 
   documentationFactory.registerTools(toolRegistry);
+
+  // Register User tools
+  const userFactory = new UserToolFactory({
+    categoryDescription:
+      "User information tools for getting public key and hub ID",
+    categoryName: "User",
+    context,
+  });
+
+  userFactory.registerTools(toolRegistry);
 }
 
 const server = new FastMCP({
@@ -197,6 +220,15 @@ function registerBasicTools() {
     context: basicContext,
   });
   documentationFactory.registerTools(toolRegistry);
+
+  // Register User tools
+  const userFactory = new UserToolFactory({
+    categoryDescription:
+      "User information tools for getting public key and hub ID",
+    categoryName: "User",
+    context: basicContext,
+  });
+  userFactory.registerTools(toolRegistry);
 
   // Get tool definitions and register them
   const toolDefinitions = toolRegistry.getToolDefinitions(basicContext);
