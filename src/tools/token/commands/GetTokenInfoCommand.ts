@@ -11,7 +11,7 @@ interface GetTokenInfoArgs {
 export class GetTokenInfoCommand extends ToolCommand<GetTokenInfoArgs, string> {
   protected metadata: ToolMetadata = {
     description:
-      "Get comprehensive token information including supply, denomination, and metadata. Supports token names/tickers from registry.",
+      "Core MVP functionality: Get comprehensive token information including supply, denomination, and metadata. Supports token names/tickers from registry.",
     name: "getTokenInfo",
     openWorldHint: false,
     readOnlyHint: true,
@@ -59,15 +59,25 @@ export class GetTokenInfoCommand extends ToolCommand<GetTokenInfoArgs, string> {
       const tags = [{ name: "Action", value: "Info" }];
       const result = await read(processId, tags);
 
+      let info = null;
+      if (result?.Data) {
+        try {
+          info = JSON.parse(result.Data);
+        } catch {
+          // If parsing fails, leave info as null
+        }
+      }
+
       return JSON.stringify({
-        info: result?.Data ? JSON.parse(result.Data) : null,
+        info,
         processId,
         success: true,
       });
     } catch (error) {
-      throw new Error(
-        `Failed to get token info: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      return JSON.stringify({
+        error: `Failed to get token info: ${error instanceof Error ? error.message : "Unknown error"}`,
+        success: false,
+      });
     }
   }
 }

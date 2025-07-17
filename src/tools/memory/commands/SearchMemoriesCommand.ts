@@ -2,38 +2,44 @@ import { z } from "zod";
 
 import { hubService } from "../../../services/HubService.js";
 import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
+import { MEMORY_KIND } from "../constants.js";
 
-interface SearchMemoriesArgs {
-  search: string;
-}
+const searchMemoriesSchema = z
+  .object({
+    search: z.string().describe("keyword or content"),
+  })
+  .strict();
+
+type SearchMemoriesArgs = z.infer<typeof searchMemoriesSchema>;
 
 export class SearchMemoriesCommand extends ToolCommand<
   SearchMemoriesArgs,
   string
 > {
   protected metadata: ToolMetadata = {
-    description:
-      "Retrieve all stored Memories for the hubId by keywords or content. Automatically searches both user memories and comprehensive Permaweb ecosystem context documentation. Call this tool when you need to search for memories based on a keyword or content.",
-    name: "searchMemories",
+    description: "Search stored memories by keywords or content",
+    name: "searchMemory",
     openWorldHint: false,
     readOnlyHint: true,
-    title: "Search Memories",
+    title: "Search Memory",
   };
 
-  protected parametersSchema = z.object({
-    search: z.string().describe("keyword or content"),
-  });
+  protected parametersSchema = searchMemoriesSchema;
 
-  constructor(private context: ToolContext) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  constructor(_context: ToolContext) {
     super();
   }
 
-  async execute(args: SearchMemoriesArgs): Promise<string> {
+  async execute(
+    args: SearchMemoriesArgs,
+    context: ToolContext,
+  ): Promise<string> {
     try {
       const memories = await hubService.search(
-        this.context.hubId,
+        context.hubId,
         args.search,
-        "10",
+        MEMORY_KIND,
       );
       return JSON.stringify(memories);
     } catch (error) {

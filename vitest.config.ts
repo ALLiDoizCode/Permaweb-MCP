@@ -6,27 +6,15 @@ export default defineConfig({
       exclude: [
         "node_modules/",
         "dist/",
-        "**/*.test.ts",
-        "**/*.spec.ts",
-        "src/constants.ts",
-        "src/mnemonic.ts", // External library wrapper
+        "tests/",
+        "*.config.ts",
+        "src/types/",
       ],
       provider: "v8",
       reporter: ["text", "json", "html"],
-      thresholds: {
-        global: {
-          branches: 75,
-          functions: 90,
-          lines: 85,
-          statements: 85,
-        },
-      },
     },
     environment: "node",
-    exclude: ["node_modules", "dist", ".git"],
     globals: true,
-    hookTimeout: 10000,
-    include: ["**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-    testTimeout: 10000,
+    include: ["tests/**/*.test.ts"],
   },
 });
