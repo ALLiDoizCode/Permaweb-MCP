@@ -5,32 +5,48 @@ import { JWKInterface } from "arweave/node/lib/wallet.js";
 import dotenv from "dotenv";
 import { FastMCP } from "fastmcp";
 
+import type { ProcessDefinition } from "./services/ProcessCommunicationService.js";
+
 import { HUB_REGISTRY_ID } from "./constants.js";
 import { getKeyFromMnemonic } from "./mnemonic.js";
 // MemoryType is now imported via the tools module
 import { ProfileCreateData } from "./models/Profile.js";
 import { defaultProcessService } from "./services/DefaultProcessService.js";
 import { hubRegistryService } from "./services/RegistryService.js";
+import { TokenProcessTemplateService } from "./services/TokenProcessTemplateService.js";
 import { ContactToolFactory } from "./tools/contact/ContactToolFactory.js";
 import { DocumentationToolFactory } from "./tools/documentation/DocumentationToolFactory.js";
 import { ToolContext, toolRegistry } from "./tools/index.js";
 import { MemoryToolFactory } from "./tools/memory/MemoryToolFactory.js";
 import { ProcessToolFactory } from "./tools/process/ProcessToolFactory.js";
-import { TokenToolFactory } from "./tools/token/TokenToolFactory.js";
 import { UserToolFactory } from "./tools/user/UserToolFactory.js";
 
 let keyPair: JWKInterface;
 let publicKey: string;
 let hubId: string;
+let embeddedTemplates: Map<string, ProcessDefinition>;
 let initializationComplete = false;
 
 // Export getters for current user state
 export const getCurrentUserState = () => ({
-  keyPair,
-  publicKey,
+  embeddedTemplates,
   hubId,
   initializationComplete,
+  keyPair,
+  publicKey,
 });
+
+// Export template availability checker
+export const isTemplateAvailable = (templateType: string): boolean => {
+  return embeddedTemplates?.has(templateType) ?? false;
+};
+
+// Export embedded templates getter
+export const getEmbeddedTemplates = ():
+  | Map<string, ProcessDefinition>
+  | undefined => {
+  return embeddedTemplates;
+};
 
 // Configure environment variables silently for MCP protocol compatibility
 // Suppress all output from dotenv and any other initialization
@@ -82,6 +98,18 @@ async function init() {
   // Verify default process templates are loaded (silently for MCP compatibility)
   defaultProcessService.getDefaultProcesses();
 
+  // Initialize embedded templates
+  embeddedTemplates = new Map<string, ProcessDefinition>();
+  embeddedTemplates.set(
+    "token",
+    TokenProcessTemplateService.getTokenTemplate(""),
+  );
+
+  // Verify template availability (silent verification for MCP compatibility)
+  if (!embeddedTemplates.has("token")) {
+    throw new Error("Failed to initialize embedded token template");
+  }
+
   // Mark initialization as complete
   initializationComplete = true;
 
@@ -95,6 +123,7 @@ function setupToolRegistry() {
 
   // Create tool context
   const context: ToolContext = {
+    embeddedTemplates,
     hubId,
     keyPair,
     publicKey,
@@ -109,16 +138,6 @@ function setupToolRegistry() {
   });
 
   memoryFactory.registerTools(toolRegistry);
-
-  // Register Token tools
-  const tokenFactory = new TokenToolFactory({
-    categoryDescription:
-      "Token management tools for creating, transferring, and querying tokens",
-    categoryName: "Token",
-    context,
-  });
-
-  tokenFactory.registerTools(toolRegistry);
 
   // Register Contact tools
   const contactFactory = new ContactToolFactory({
@@ -170,7 +189,15 @@ const server = new FastMCP({
 // while initialization happens in background
 function registerBasicTools() {
   // Create a minimal tool context with placeholders
+  // Initialize embedded templates immediately for token NLS availability
+  const basicEmbeddedTemplates = new Map<string, ProcessDefinition>();
+  basicEmbeddedTemplates.set(
+    "token",
+    TokenProcessTemplateService.getTokenTemplate(""),
+  );
+
   const basicContext: ToolContext = {
+    embeddedTemplates: basicEmbeddedTemplates,
     hubId: "initializing",
     keyPair: {} as JWKInterface, // Will be replaced after init
     publicKey: "initializing",
@@ -187,15 +214,6 @@ function registerBasicTools() {
     context: basicContext,
   });
   memoryFactory.registerTools(toolRegistry);
-
-  // Register Token tools
-  const tokenFactory = new TokenToolFactory({
-    categoryDescription:
-      "Token management tools for creating, transferring, and querying tokens",
-    categoryName: "Token",
-    context: basicContext,
-  });
-  tokenFactory.registerTools(toolRegistry);
 
   // Register Contact tools
   const contactFactory = new ContactToolFactory({

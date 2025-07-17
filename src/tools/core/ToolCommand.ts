@@ -1,7 +1,10 @@
 import { JWKInterface } from "arweave/node/lib/wallet.js";
 import { z } from "zod";
 
+import type { ProcessDefinition } from "../../services/ProcessCommunicationService.js";
+
 export interface ToolContext {
+  embeddedTemplates?: Map<string, ProcessDefinition>;
   hubId: string;
   keyPair: JWKInterface;
   publicKey: string;

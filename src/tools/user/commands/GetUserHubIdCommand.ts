@@ -24,15 +24,16 @@ export class GetUserHubIdCommand extends ToolCommand<
   async execute(): Promise<string> {
     try {
       const { hubId, initializationComplete } = getCurrentUserState();
-      
+
       // Check if initialization is still in progress
       if (!initializationComplete || !hubId || hubId === "initializing") {
         return JSON.stringify({
-          error: "Wallet is still initializing. Please wait a moment and try again.",
+          error:
+            "Wallet is still initializing. Please wait a moment and try again.",
           success: false,
         });
       }
-      
+
       return JSON.stringify({
         hubId,
         success: true,

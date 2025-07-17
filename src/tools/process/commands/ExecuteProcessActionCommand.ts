@@ -14,6 +14,11 @@ interface ExecuteProcessActionArgs {
   request: string;
 }
 
+/**
+ * @deprecated ExecuteProcessActionCommand has been consolidated into ExecuteActionCommand.
+ * Use ExecuteActionCommand with the processMarkdown parameter instead.
+ * This provides unified functionality for both embedded templates and custom process documentation.
+ */
 export class ExecuteProcessActionCommand extends ToolCommand<
   ExecuteProcessActionArgs,
   string
