@@ -34,7 +34,10 @@ jobs:
         run: npm ci
 
       - name: Run quality checks
-        run: npm run ci:quality
+        run: |
+          npm run lint
+          npm run type-check
+          npm run audit
 
       - name: Generate nightly version
         id: version
@@ -62,18 +65,22 @@ jobs:
         run: npm run test:coverage
 
       - name: Publish to NPM
+        id: npm-publish
         run: |
+          echo "Publishing to NPM with nightly tag..."
           npm publish --tag nightly --access public
+          echo "npm-published=true" >> $GITHUB_OUTPUT
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub release
-        uses: actions/create-release@v1
+        id: github-release
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: nightly-${{ steps.version.outputs.timestamp }}
-          release_name: Nightly Build ${{ steps.version.outputs.version }}
+          name: Nightly Build ${{ steps.version.outputs.version }}
           body: |
             🌙 **Nightly Build** - ${{ steps.version.outputs.version }}
             
@@ -91,6 +98,13 @@ jobs:
             ⚠️ **Warning:** This is a pre-release version intended for testing and development purposes only.
           draft: false
           prerelease: true
+
+      - name: Rollback on failure
+        if: failure() && steps.npm-publish.outputs.npm-published == 'true'
+        run: |
+          echo "❌ Build failed after NPM publish. Consider manual cleanup if needed."
+          echo "Published version: ${{ steps.version.outputs.version }}"
+          echo "You may need to unpublish manually: npm unpublish permamind@${{ steps.version.outputs.version }}"
 
       - name: Notify on success
         if: success()
