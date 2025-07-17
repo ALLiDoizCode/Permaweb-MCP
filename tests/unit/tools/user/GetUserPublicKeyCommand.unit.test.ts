@@ -20,14 +20,14 @@ describe("GetUserPublicKeyCommand", () => {
       publicKey: "test-public-key-address",
     };
     command = new GetUserPublicKeyCommand(mockContext);
-    
+
     // Mock getCurrentUserState
     const { getCurrentUserState } = await import("../../../../src/server.js");
     vi.mocked(getCurrentUserState).mockReturnValue({
       hubId: "test-hub-id",
+      initializationComplete: true,
       keyPair: {} as JWKInterface,
       publicKey: "test-public-key-address",
-      initializationComplete: true,
     });
   });
 
@@ -63,16 +63,18 @@ describe("GetUserPublicKeyCommand", () => {
       const { getCurrentUserState } = await import("../../../../src/server.js");
       vi.mocked(getCurrentUserState).mockReturnValue({
         hubId: "test-hub-id",
+        initializationComplete: false,
         keyPair: {} as JWKInterface,
         publicKey: "initializing",
-        initializationComplete: false,
       });
 
       const result = await command.execute({});
       const parsed = JSON.parse(result);
 
       expect(parsed.success).toBe(false);
-      expect(parsed.error).toBe("Wallet is still initializing. Please wait a moment and try again.");
+      expect(parsed.error).toBe(
+        "Wallet is still initializing. Please wait a moment and try again.",
+      );
     });
   });
 });

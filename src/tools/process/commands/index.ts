@@ -1,2 +1,2 @@
-export * from "./ExecuteProcessActionCommand.js";
+export * from "./ExecuteActionCommand.js";
 export * from "./QueryAOProcessMessagesCommand.js";

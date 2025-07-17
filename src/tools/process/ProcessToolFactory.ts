@@ -1,9 +1,12 @@
 import { BaseToolFactory, ToolCommand, ToolContext } from "../core/index.js";
-import { ExecuteProcessActionCommand } from "./commands/ExecuteProcessActionCommand.js";
+import { ExecuteActionCommand } from "./commands/ExecuteActionCommand.js";
 import { QueryAOProcessMessagesCommand } from "./commands/QueryAOProcessMessagesCommand.js";
 
 export class ProcessToolFactory extends BaseToolFactory {
   protected getToolClasses(): Array<new (context: ToolContext) => ToolCommand> {
-    return [ExecuteProcessActionCommand, QueryAOProcessMessagesCommand];
+    return [
+      ExecuteActionCommand,
+      QueryAOProcessMessagesCommand,
+    ];
   }
 }

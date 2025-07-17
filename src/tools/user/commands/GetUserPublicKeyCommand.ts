@@ -23,16 +23,21 @@ export class GetUserPublicKeyCommand extends ToolCommand<
 
   async execute(): Promise<string> {
     try {
-      const { publicKey, initializationComplete } = getCurrentUserState();
-      
+      const { initializationComplete, publicKey } = getCurrentUserState();
+
       // Check if initialization is still in progress
-      if (!initializationComplete || !publicKey || publicKey === "initializing") {
+      if (
+        !initializationComplete ||
+        !publicKey ||
+        publicKey === "initializing"
+      ) {
         return JSON.stringify({
-          error: "Wallet is still initializing. Please wait a moment and try again.",
+          error:
+            "Wallet is still initializing. Please wait a moment and try again.",
           success: false,
         });
       }
-      
+
       return JSON.stringify({
         publicKey,
         success: true,
