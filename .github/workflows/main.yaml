@@ -90,9 +90,6 @@ jobs:
         node:
           - 20
           - 22
-        test-type:
-          - unit
-          - integration
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -107,8 +104,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run ${{ matrix.test-type }} tests
-        run: npm run test:${{ matrix.test-type }}
+      - name: Run tests
+        run: npm test
 
   build-and-release:
     name: Build & Release
