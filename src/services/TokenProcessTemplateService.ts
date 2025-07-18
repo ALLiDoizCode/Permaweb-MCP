@@ -153,26 +153,37 @@ export class TokenProcessTemplateService {
    */
   static getTokenTemplateAsMarkdown(processId: string): string {
     const template = TokenProcessTemplateService.getTokenTemplate(processId);
-    let markdown = `# ${template.name}\n\n`;
+    let markdown = `# ${template.name}
+
+`;
 
     for (const handler of template.handlers) {
-      markdown += `## ${handler.action}\n\n`;
-      markdown += `${handler.description}\n\n`;
+      markdown += `## ${handler.action}
+
+`;
+      markdown += `${handler.description}
+
+`;
 
       if (handler.parameters && handler.parameters.length > 0) {
         for (const param of handler.parameters) {
           const required = param.required ? "required" : "optional";
-          markdown += `- ${param.name}: ${param.description} (${required})\n`;
+          markdown += `- ${param.name}: ${param.description} (${required})
+`;
         }
-        markdown += "\n";
+        markdown += "
+";
       }
 
       if (handler.examples && handler.examples.length > 0) {
-        markdown += "Examples:\n";
+        markdown += "Examples:
+";
         for (const example of handler.examples) {
-          markdown += `- ${example}\n`;
+          markdown += `- ${example}
+`;
         }
-        markdown += "\n";
+        markdown += "
+";
       }
     }
 
