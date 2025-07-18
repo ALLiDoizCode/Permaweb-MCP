@@ -15,8 +15,8 @@ import {
 
 interface ExecuteActionArgs {
   processId: string;
-  processType?: string;
   processMarkdown?: string;
+  processType?: string;
   request: string;
 }
 
@@ -39,17 +39,17 @@ export class ExecuteActionCommand extends ToolCommand<
     processId: CommonSchemas.processId.describe(
       "The AO process ID to communicate with",
     ),
-    processType: z
-      .string()
-      .optional()
-      .describe(
-        "Optional process type hint (e.g., 'token') to use embedded templates",
-      ),
     processMarkdown: z
       .string()
       .optional()
       .describe(
         "Markdown documentation describing the process handlers and parameters",
+      ),
+    processType: z
+      .string()
+      .optional()
+      .describe(
+        "Optional process type hint (e.g., 'token') to use embedded templates",
       ),
     request: z
       .string()
@@ -124,19 +124,15 @@ export class ExecuteActionCommand extends ToolCommand<
           markdown += `- ${param.name}: ${param.description} (${required})
 `;
         }
-        markdown += "
-";
+        markdown += "\n";
       }
 
       if (handler.examples && handler.examples.length > 0) {
-        markdown += "Examples:
-";
+        markdown += "Examples:\n";
         for (const example of handler.examples) {
-          markdown += `- ${example}
-`;
+          markdown += `- ${example}\n`;
         }
-        markdown += "
-";
+        markdown += "\n";
       }
     }
 

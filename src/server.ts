@@ -14,6 +14,7 @@ import { ProfileCreateData } from "./models/Profile.js";
 import { defaultProcessService } from "./services/DefaultProcessService.js";
 import { hubRegistryService } from "./services/RegistryService.js";
 import { TokenProcessTemplateService } from "./services/TokenProcessTemplateService.js";
+import { BMADToolFactory } from "./tools/bmad/BMADToolFactory.js";
 import { ContactToolFactory } from "./tools/contact/ContactToolFactory.js";
 import { DocumentationToolFactory } from "./tools/documentation/DocumentationToolFactory.js";
 import { ToolContext, toolRegistry } from "./tools/index.js";
@@ -129,6 +130,16 @@ function setupToolRegistry() {
     publicKey,
   };
 
+  // Register BMAD tools
+  const bmadFactory = new BMADToolFactory({
+    categoryDescription:
+      "BMAD methodology tools for structured development workflows",
+    categoryName: "BMAD",
+    context,
+  });
+
+  bmadFactory.registerTools(toolRegistry);
+
   // Register Memory tools
   const memoryFactory = new MemoryToolFactory({
     categoryDescription:
@@ -205,6 +216,15 @@ function registerBasicTools() {
 
   // Setup tool registry with basic context
   toolRegistry.clear();
+
+  // Register BMAD tools
+  const bmadFactory = new BMADToolFactory({
+    categoryDescription:
+      "BMAD methodology tools for structured development workflows",
+    categoryName: "BMAD",
+    context: basicContext,
+  });
+  bmadFactory.registerTools(toolRegistry);
 
   // Register Memory tools
   const memoryFactory = new MemoryToolFactory({

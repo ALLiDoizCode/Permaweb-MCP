@@ -25,7 +25,9 @@ Add BMAD (Build, Manage, and Deploy) methodology integration to Permamind, provi
 ## Stories
 
 ### Story 1: BMAD Core Integration
+
 **Acceptance Criteria:**
+
 - Create BMADToolFactory following existing tool factory patterns
 - Add BMAD commands: help, kb, task, create-doc, execute-checklist, yolo, doc-out, exit
 - Implement .bmad-core resource file system structure
@@ -34,7 +36,9 @@ Add BMAD (Build, Manage, and Deploy) methodology integration to Permamind, provi
 - Preserve existing tool functionality and patterns
 
 ### Story 2: Complete AO Development Tools Integration
+
 **Acceptance Criteria:**
+
 - Integrate Teal typed AO process development framework with existing AO services
 - Add AOLite local testing environment for AO process validation
 - Leverage existing PermawebDocs service for real-time development guidance
@@ -43,7 +47,9 @@ Add BMAD (Build, Manage, and Deploy) methodology integration to Permamind, provi
 - Support fullstack AO development workflow with type safety and comprehensive testing
 
 ### Story 3: Fullstack Team Agent System
+
 **Acceptance Criteria:**
+
 - Implement BMAD agent personas (bmad-master, architects, developers, etc.)
 - Create workflow automation leveraging Permamind's memory and AO integration
 - Add task/template/checklist execution system
@@ -62,7 +68,7 @@ Add BMAD (Build, Manage, and Deploy) methodology integration to Permamind, provi
 ## Risk Mitigation
 
 - **Primary Risk:** BMAD resource files and workflows could conflict with existing Permamind tool structure
-- **Mitigation:** Implement BMAD components as separate tool factory following existing patterns, use namespaced commands (*bmad prefix), lazy load resources only when requested
+- **Mitigation:** Implement BMAD components as separate tool factory following existing patterns, use namespaced commands (\*bmad prefix), lazy load resources only when requested
 - **Rollback Plan:** BMAD integration can be disabled via configuration flag, all existing functionality remains intact
 
 ## Definition of Done
@@ -132,6 +138,7 @@ The epic implementation is successful when:
 **Acceptance Criteria:**
 
 #### AC 1.1: Create BMAD Tool Factory
+
 - **Given** the existing MCP tool system architecture
 - **When** I implement BMADToolFactory
 - **Then** it should follow the same patterns as existing tool factories
@@ -139,6 +146,7 @@ The epic implementation is successful when:
 - **And** integrate with the existing tool registry system
 
 #### AC 1.2: Implement Core BMAD Commands
+
 - **Given** the BMAD methodology requirements
 - **When** I implement the core commands (*help, *kb, *task, *create-doc, *execute-checklist, *yolo, *doc-out, *exit)
 - **Then** each command should use existing MCP command patterns
@@ -146,6 +154,7 @@ The epic implementation is successful when:
 - **And** maintain compatibility with existing tool behaviors
 
 #### AC 1.3: Create Resource File System Structure
+
 - **Given** the need for BMAD resources
 - **When** I implement the .bmad-core directory structure
 - **Then** it should support tasks, templates, data, workflows, and checklists
@@ -153,6 +162,7 @@ The epic implementation is successful when:
 - **And** never pre-load resources during server startup
 
 #### AC 1.4: Preserve Existing Functionality
+
 - **Given** the current MCP tool system
 - **When** BMAD tools are added
 - **Then** all existing tools should continue to work unchanged
@@ -166,6 +176,7 @@ The epic implementation is successful when:
 **Acceptance Criteria:**
 
 #### AC 2.1: Integrate Teal Typed Process Development
+
 - **Given** the existing AO services in Permamind
 - **When** I implement Teal integration
 - **Then** it should support typed AO process development (.tl files)
@@ -174,6 +185,7 @@ The epic implementation is successful when:
 - **And** maintain compatibility with current ProcessCommunicationService patterns
 
 #### AC 2.2: Add AOLite Local Testing Environment
+
 - **Given** the need for local AO process testing
 - **When** I implement AOLite integration
 - **Then** it should provide local AO process simulation and testing
@@ -182,6 +194,7 @@ The epic implementation is successful when:
 - **And** integrate with existing test patterns and workflows
 
 #### AC 2.3: Leverage Existing PermawebDocs for Development Guidance
+
 - **Given** Permamind's existing PermawebDocsService capabilities
 - **When** I integrate with BMAD workflows
 - **Then** it should provide real-time AO development guidance (89 AO documents, 36,761 words)
@@ -190,6 +203,7 @@ The epic implementation is successful when:
 - **And** query live documentation for patterns and best practices
 
 #### AC 2.4: Create Complete Development Pipeline
+
 - **Given** all three tools (PermawebDocs, Teal, AOLite)
 - **When** I implement the complete workflow
 - **Then** it should support: Query Docs → Develop with Teal → Test with AOLite → Deploy via Permamind
@@ -204,6 +218,7 @@ The epic implementation is successful when:
 **Acceptance Criteria:**
 
 #### AC 3.1: Implement BMAD Agent Personas
+
 - **Given** the BMAD methodology agent definitions
 - **When** I implement agent personas (bmad-master, architects, developers, etc.)
 - **Then** they should integrate with existing memory services
@@ -211,6 +226,7 @@ The epic implementation is successful when:
 - **And** maintain session state through Permamind's memory system
 
 #### AC 3.2: Create Workflow Automation
+
 - **Given** the existing AI memory and AO integration
 - **When** I implement BMAD workflow automation
 - **Then** it should leverage existing memory services for project context
@@ -218,6 +234,7 @@ The epic implementation is successful when:
 - **And** support natural language workflow interaction
 
 #### AC 3.3: Add Task/Template/Checklist Execution
+
 - **Given** the BMAD resource system
 - **When** I implement execution capabilities
 - **Then** tasks should be executable through natural language commands
@@ -225,6 +242,7 @@ The epic implementation is successful when:
 - **And** checklists should provide structured validation workflows
 
 #### AC 3.4: Enable Natural Language Interaction
+
 - **Given** the existing MCP natural language capabilities
 - **When** I implement BMAD natural language interface
 - **Then** users should interact with BMAD methodology through conversation
@@ -232,6 +250,7 @@ The epic implementation is successful when:
 - **And** maintain compatibility with existing natural language tools
 
 #### AC 3.5: Integrate with Memory Services
+
 - **Given** the existing AI memory services
 - **When** BMAD workflows are executed
 - **Then** project context should be stored in memory
