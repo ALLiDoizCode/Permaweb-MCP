@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-import { 
-  bmadResourceService, 
-  type BMADResourceType 
+import {
+  bmadResourceService,
+  type BMADResourceType,
 } from "../../../services/BMADResourceService.js";
 import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
 

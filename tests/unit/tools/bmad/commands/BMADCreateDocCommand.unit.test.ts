@@ -31,7 +31,7 @@ describe("BMADCreateDocCommand", () => {
     expect(metadata.name).toBe("*create-doc");
     expect(metadata.title).toBe("BMAD Document Creation");
     expect(metadata.description).toBe(
-      "Create documents from BMAD templates with variable substitution"
+      "Create documents from BMAD templates with variable substitution",
     );
     expect(metadata.readOnlyHint).toBe(false);
     expect(metadata.openWorldHint).toBe(false);
@@ -48,7 +48,7 @@ describe("BMADCreateDocCommand", () => {
 
     const result = await createDocCommand.execute(
       { templateId: "nonexistent" },
-      mockContext
+      mockContext,
     );
 
     expect(result).toContain("Template not found: nonexistent");
@@ -63,39 +63,41 @@ describe("BMADCreateDocCommand", () => {
     });
 
     const mockTemplate = {
-      id: "test-template",
-      name: "Test Template",
       content: {
         template: "Hello {{name}}, welcome to {{project}}!",
         variables: [
           {
-            name: "name",
-            type: "string",
-            required: true,
             description: "User name",
+            name: "name",
+            required: true,
+            type: "string",
           },
           {
-            name: "project",
-            type: "string",
-            required: true,
             description: "Project name",
+            name: "project",
+            required: true,
+            type: "string",
           },
         ],
       },
+      id: "test-template",
+      name: "Test Template",
     };
 
     (bmadResourceService.loadResource as any).mockResolvedValue(mockTemplate);
 
     const result = await createDocCommand.execute(
       {
+        outputName: "Welcome Document",
         templateId: "test-template",
         variables: { name: "John", project: "BMAD" },
-        outputName: "Welcome Document",
       },
-      mockContext
+      mockContext,
     );
 
-    expect(result).toContain("# Document Generated from Template: test-template");
+    expect(result).toContain(
+      "# Document Generated from Template: test-template",
+    );
     expect(result).toContain("**Output Name:** Welcome Document");
     expect(result).toContain("Hello John, welcome to BMAD!");
   });
@@ -109,26 +111,26 @@ describe("BMADCreateDocCommand", () => {
     });
 
     const mockTemplate = {
-      id: "test-template",
-      name: "Test Template",
       content: {
         template: "Hello {{name}}, version {{version}}",
         variables: [
           {
-            name: "name",
-            type: "string",
-            required: true,
             description: "User name",
+            name: "name",
+            required: true,
+            type: "string",
           },
           {
-            name: "version",
-            type: "string",
-            required: false,
-            description: "Version number",
             defaultValue: "1.0.0",
+            description: "Version number",
+            name: "version",
+            required: false,
+            type: "string",
           },
         ],
       },
+      id: "test-template",
+      name: "Test Template",
     };
 
     (bmadResourceService.loadResource as any).mockResolvedValue(mockTemplate);
@@ -138,7 +140,7 @@ describe("BMADCreateDocCommand", () => {
         templateId: "test-template",
         variables: { name: "John" },
       },
-      mockContext
+      mockContext,
     );
 
     expect(result).toContain("Hello John, version 1.0.0");
@@ -150,12 +152,12 @@ describe("BMADCreateDocCommand", () => {
     );
     (bmadResourceService.getConfig as any).mockReturnValue(null);
     (bmadResourceService.initialize as any).mockRejectedValue(
-      new Error("Service error")
+      new Error("Service error"),
     );
 
     const result = await createDocCommand.execute(
       { templateId: "test-template" },
-      mockContext
+      mockContext,
     );
 
     expect(result).toContain("Error creating document: Service error");

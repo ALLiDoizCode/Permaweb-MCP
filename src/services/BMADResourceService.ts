@@ -358,7 +358,7 @@ export class BMADResourceService {
         return {
           ...baseMetadata,
           difficulty: "medium" as const,
-          estimatedTime: "30 minutes"
+          estimatedTime: "30 minutes",
         } as BMADTaskMetadata;
     }
   }
