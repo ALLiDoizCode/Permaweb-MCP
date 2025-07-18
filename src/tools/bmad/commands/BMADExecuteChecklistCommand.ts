@@ -77,9 +77,12 @@ export class BMADExecuteChecklistCommand extends ToolCommand<
         const itemNumber = index + 1;
         const required = item.required ? "(Required)" : "(Optional)";
         const type = item.type || "check";
-        return `${itemNumber}. **${item.title || "Untitled Item"}** ${required} [${type}]\n   ${item.description || "No description available"}`;
+        return `${itemNumber}. **${item.title || "Untitled Item"}** ${required} [${type}]
+   ${item.description || "No description available"}`;
       })
-      .join("\n\n");
+      .join("
+
+");
   }
 
   private async listChecklists(): Promise<string> {
@@ -92,7 +95,8 @@ export class BMADExecuteChecklistCommand extends ToolCommand<
     return `
 # Available BMAD Checklists
 
-${checklists.map((checklist) => `- **${checklist}** - Use \`*execute-checklist run ${checklist}\` to run this checklist`).join("\n")}
+${checklists.map((checklist) => `- **${checklist}** - Use \`*execute-checklist run ${checklist}\` to run this checklist`).join("
+")}
 
 Use \`*execute-checklist run <checklistId>\` to execute a specific checklist.
     `.trim();
@@ -133,7 +137,8 @@ ${
   responses
     ? Object.entries(responses)
         .map(([key, value]) => `- **${key}:** ${value}`)
-        .join("\n")
+        .join("
+")
     : "No responses provided"
 }
 
@@ -182,7 +187,8 @@ ${validation.results
     const status = result.passed ? "✅" : "❌";
     return `${status} **${result.itemId}** - ${result.message}`;
   })
-  .join("\n")}
+  .join("
+")}
 
 ## Summary
 

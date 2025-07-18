@@ -95,7 +95,8 @@ ${
   parameters
     ? Object.entries(parameters)
         .map(([key, value]) => `- **${key}:** ${value}`)
-        .join("\n")
+        .join("
+")
     : "No parameters provided"
 }
 
@@ -116,9 +117,12 @@ Use \`*task status ${taskId}\` to check execution status.
       .map((step, index) => {
         const stepNumber = index + 1;
         const required = step.required ? "(Required)" : "(Optional)";
-        return `${stepNumber}. **${step.title || "Untitled Step"}** ${required}\n   ${step.description || "No description available"}`;
+        return `${stepNumber}. **${step.title || "Untitled Step"}** ${required}
+   ${step.description || "No description available"}`;
       })
-      .join("\n\n");
+      .join("
+
+");
   }
 
   private async getTaskStatus(taskId?: string): Promise<string> {
@@ -149,7 +153,8 @@ This is a placeholder implementation. Task status tracking will be implemented i
     return `
 # Available BMAD Tasks
 
-${tasks.map((task) => `- **${task}** - Use \`*task execute ${task}\` to run this task`).join("\n")}
+${tasks.map((task) => `- **${task}** - Use \`*task execute ${task}\` to run this task`).join("
+")}
 
 Use \`*task execute <taskId>\` to execute a specific task.
     `.trim();

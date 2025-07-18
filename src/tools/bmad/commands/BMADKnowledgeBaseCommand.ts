@@ -131,7 +131,8 @@ Use \`*kb list <resourceType>\` to see available resources of a specific type.
     return `
 # ${resourceType.toUpperCase()} Resources
 
-${resources.map((resource) => `- ${resource}`).join("\n")}
+${resources.map((resource) => `- ${resource}`).join("
+")}
 
 Use \`*kb get ${resourceType} <resourceId>\` to retrieve a specific resource.
     `.trim();
@@ -173,7 +174,8 @@ Use \`*kb get ${resourceType} <resourceId>\` to retrieve a specific resource.
     return `
 # Search Results for "${query}"
 
-${results.join("\n")}
+${results.join("
+")}
     `.trim();
   }
 }

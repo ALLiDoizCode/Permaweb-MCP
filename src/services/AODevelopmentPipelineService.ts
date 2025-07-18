@@ -398,7 +398,8 @@ ${stage.error ? `- **Error**: ${stage.error}` : ""}
 ${stage.output ? `- **Output**: ${JSON.stringify(stage.output, null, 2)}` : ""}
 `,
   )
-  .join("\n")}
+  .join("
+")}
 
 ## Artifacts Generated
 
@@ -411,7 +412,8 @@ ${results.artifacts
 - **Checksum**: ${artifact.checksum || "N/A"}
 `,
   )
-  .join("\n")}
+  .join("
+")}
 
 ## Configuration
 - **Auto Advance**: ${pipeline.configuration.autoAdvance || false}

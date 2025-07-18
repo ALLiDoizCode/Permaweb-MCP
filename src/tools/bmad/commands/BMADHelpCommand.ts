@@ -85,7 +85,9 @@ Use \`*help <command>\` to get specific help for any command.
 
     const help = helpTopics[topic.toLowerCase()];
     if (help) {
-      return `# ${topic.toUpperCase()} Help\n\n${help}`;
+      return `# ${topic.toUpperCase()} Help
+
+${help}`;
     }
 
     return `Unknown help topic: ${topic}. Use \`*help\` to see available topics.`;
