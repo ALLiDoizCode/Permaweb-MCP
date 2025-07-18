@@ -80,9 +80,7 @@ export class BMADExecuteChecklistCommand extends ToolCommand<
         return `${itemNumber}. **${item.title || "Untitled Item"}** ${required} [${type}]
    ${item.description || "No description available"}`;
       })
-      .join("
-
-");
+      .join("\n\n");
   }
 
   private async listChecklists(): Promise<string> {
@@ -95,8 +93,7 @@ export class BMADExecuteChecklistCommand extends ToolCommand<
     return `
 # Available BMAD Checklists
 
-${checklists.map((checklist) => `- **${checklist}** - Use \`*execute-checklist run ${checklist}\` to run this checklist`).join("
-")}
+${checklists.map((checklist) => `- **${checklist}** - Use \`*execute-checklist run ${checklist}\` to run this checklist`).join("\n")}
 
 Use \`*execute-checklist run <checklistId>\` to execute a specific checklist.
     `.trim();
@@ -137,8 +134,7 @@ ${
   responses
     ? Object.entries(responses)
         .map(([key, value]) => `- **${key}:** ${value}`)
-        .join("
-")
+        .join("\n")
     : "No responses provided"
 }
 
@@ -187,8 +183,7 @@ ${validation.results
     const status = result.passed ? "✅" : "❌";
     return `${status} **${result.itemId}** - ${result.message}`;
   })
-  .join("
-")}
+  .join("\n")}
 
 ## Summary
 
