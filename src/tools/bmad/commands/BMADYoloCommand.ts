@@ -65,8 +65,7 @@ export class BMADYoloCommand extends ToolCommand<BMADYoloArgs, string> {
 
 ${Object.keys(quickOperations)
   .map((op) => `- **${op}** - Use \`bmad_yolo ${op}\` to execute`)
-  .join("
-")}
+  .join("\n")}
 
 Use \`bmad_yolo <operation>\` to execute a quick operation.
       `.trim();

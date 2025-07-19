@@ -131,8 +131,7 @@ Use \`bmad_kb list <resourceType>\` to see available resources of a specific typ
     return `
 # ${resourceType.toUpperCase()} Resources
 
-${resources.map((resource) => `- ${resource}`).join("
-")}
+${resources.map((resource) => `- ${resource}`).join("\n")}
 
 Use \`bmad_kb get ${resourceType} <resourceId>\` to retrieve a specific resource.
     `.trim();
@@ -174,8 +173,7 @@ Use \`bmad_kb get ${resourceType} <resourceId>\` to retrieve a specific resource
     return `
 # Search Results for "${query}"
 
-${results.join("
-")}
+${results.join("\n")}
     `.trim();
   }
 }

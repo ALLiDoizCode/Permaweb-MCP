@@ -95,8 +95,7 @@ ${
   parameters
     ? Object.entries(parameters)
         .map(([key, value]) => `- **${key}:** ${value}`)
-        .join("
-")
+        .join("\n")
     : "No parameters provided"
 }
 
@@ -120,9 +119,7 @@ Use \`bmad_task status ${taskId}\` to check execution status.
         return `${stepNumber}. **${step.title || "Untitled Step"}** ${required}
    ${step.description || "No description available"}`;
       })
-      .join("
-
-");
+      .join("\n\n");
   }
 
   private async getTaskStatus(taskId?: string): Promise<string> {
@@ -153,8 +150,7 @@ This is a placeholder implementation. Task status tracking will be implemented i
     return `
 # Available BMAD Tasks
 
-${tasks.map((task) => `- **${task}** - Use \`bmad_task execute ${task}\` to run this task`).join("
-")}
+${tasks.map((task) => `- **${task}** - Use \`bmad_task execute ${task}\` to run this task`).join("\n")}
 
 Use \`bmad_task execute <taskId>\` to execute a specific task.
     `.trim();

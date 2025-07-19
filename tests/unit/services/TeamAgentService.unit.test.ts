@@ -454,7 +454,7 @@ describe("TeamAgentService", () => {
         role: "developer",
         description: "Mock agent for testing",
         capabilities: ["testing"],
-        state: { 
+        state: {
           conversationHistory: [],
           lastActivity: new Date().toISOString(),
           projectContext: {
@@ -492,12 +492,16 @@ describe("TeamAgentService", () => {
               preferredTools: [],
             },
             communicationStyle: "formal" as const,
-            notifications: { enabled: true, frequency: "immediate" as const, types: [] },
+            notifications: {
+              enabled: true,
+              frequency: "immediate" as const,
+              types: [],
+            },
             workingHours: { end: "17:00", start: "09:00", timezone: "UTC" },
           },
         },
       };
-      
+
       mockMemoryService.searchAdvanced.mockResolvedValue([
         { content: JSON.stringify(mockAgent) },
       ]);
