@@ -21,7 +21,7 @@ type BMADDocOutArgs = z.infer<typeof bmadDocOutSchema>;
 export class BMADDocOutCommand extends ToolCommand<BMADDocOutArgs, string> {
   protected metadata: ToolMetadata = {
     description: "Document output and export in various formats",
-    name: "*doc-out",
+    name: "bmad_doc-out",
     openWorldHint: false,
     readOnlyHint: false,
     title: "BMAD Document Output",

@@ -27,7 +27,7 @@ export class BMADExecuteChecklistCommand extends ToolCommand<
 > {
   protected metadata: ToolMetadata = {
     description: "Execute BMAD checklists for quality assurance and validation",
-    name: "*execute-checklist",
+    name: "bmad_execute-checklist",
     openWorldHint: false,
     readOnlyHint: false,
     title: "BMAD Checklist Execution",
@@ -93,9 +93,9 @@ export class BMADExecuteChecklistCommand extends ToolCommand<
     return `
 # Available BMAD Checklists
 
-${checklists.map((checklist) => `- **${checklist}** - Use \`*execute-checklist run ${checklist}\` to run this checklist`).join("\n")}
+${checklists.map((checklist) => `- **${checklist}** - Use \`bmad_execute-checklist run ${checklist}\` to run this checklist`).join("\n")}
 
-Use \`*execute-checklist run <checklistId>\` to execute a specific checklist.
+Use \`bmad_execute-checklist run <checklistId>\` to execute a specific checklist.
     `.trim();
   }
 
@@ -141,10 +141,10 @@ ${
 ## Next Steps
 
 1. Complete all checklist items
-2. Use \`*execute-checklist validate ${checklistId}\` with your responses to validate completion
+2. Use \`bmad_execute-checklist validate ${checklistId}\` with your responses to validate completion
 3. Review any failed items and address them
 
-Use \`*execute-checklist validate ${checklistId}\` to validate your responses.
+Use \`bmad_execute-checklist validate ${checklistId}\` to validate your responses.
     `.trim();
   }
 

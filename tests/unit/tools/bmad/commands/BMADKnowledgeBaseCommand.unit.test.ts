@@ -29,7 +29,7 @@ describe("BMADKnowledgeBaseCommand", () => {
 
   it("should have correct metadata", () => {
     const metadata = kbCommand.getMetadata();
-    expect(metadata.name).toBe("*kb");
+    expect(metadata.name).toBe("bmad_kb");
     expect(metadata.title).toBe("BMAD Knowledge Base");
     expect(metadata.description).toBe(
       "Access BMAD knowledge base for tasks, templates, checklists, and workflows",

@@ -1,14 +1,21 @@
-version: 1.0.0
-bmad:
-  description: "BMAD methodology integration for structured development workflows"
-  version: "1.0.0"
-  resourceTypes:
-    - tasks
-    - templates
-    - checklists
-    - workflows
-    - data
-  commandPrefix: "*"
-  loadOnDemand: true
-  cacheEnabled: true
-  cacheTimeoutMinutes: 60
+version: 4.29.0
+markdownExploder: true
+prd:
+  prdFile: docs/prd.md
+  prdVersion: v4
+  prdSharded: true
+  prdShardedLocation: docs/prd
+  epicFilePattern: epic-{n}*.md
+architecture:
+  architectureFile: docs/architecture.md
+  architectureVersion: v4
+  architectureSharded: true
+  architectureShardedLocation: docs/architecture
+customTechnicalDocuments: null
+devLoadAlwaysFiles:
+  - docs/architecture/coding-standards.md
+  - docs/architecture/tech-stack.md
+  - docs/architecture/source-tree.md
+devDebugLog: .ai/debug-log.md
+devStoryLocation: docs/stories
+slashPrefix: BMad

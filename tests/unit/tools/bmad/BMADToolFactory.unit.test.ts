@@ -31,14 +31,14 @@ describe("BMADToolFactory", () => {
     expect(tools).toHaveLength(8);
 
     const toolNames = tools.map((tool) => tool.getMetadata().name);
-    expect(toolNames).toContain("*help");
-    expect(toolNames).toContain("*kb");
-    expect(toolNames).toContain("*task");
-    expect(toolNames).toContain("*create-doc");
-    expect(toolNames).toContain("*execute-checklist");
-    expect(toolNames).toContain("*yolo");
-    expect(toolNames).toContain("*doc-out");
-    expect(toolNames).toContain("*exit");
+    expect(toolNames).toContain("bmad_help");
+    expect(toolNames).toContain("bmad_kb");
+    expect(toolNames).toContain("bmad_task");
+    expect(toolNames).toContain("bmad_create-doc");
+    expect(toolNames).toContain("bmad_execute-checklist");
+    expect(toolNames).toContain("bmad_yolo");
+    expect(toolNames).toContain("bmad_doc-out");
+    expect(toolNames).toContain("bmad_exit");
   });
 
   it("should create tools with correct metadata", () => {
@@ -47,7 +47,7 @@ describe("BMADToolFactory", () => {
     // Check that all tools have the BMAD prefix
     const toolNames = tools.map((tool) => tool.getMetadata().name);
     toolNames.forEach((name) => {
-      expect(name).toMatch(/^\*/);
+      expect(name).toMatch(/^bmad_/);
     });
   });
 
@@ -66,15 +66,15 @@ describe("BMADToolFactory", () => {
   });
 
   it("should find tools by name", () => {
-    const helpTool = factory.getToolByName("*help");
+    const helpTool = factory.getToolByName("bmad_help");
     expect(helpTool).toBeDefined();
-    expect(helpTool?.getMetadata().name).toBe("*help");
+    expect(helpTool?.getMetadata().name).toBe("bmad_help");
 
-    const kbTool = factory.getToolByName("*kb");
+    const kbTool = factory.getToolByName("bmad_kb");
     expect(kbTool).toBeDefined();
-    expect(kbTool?.getMetadata().name).toBe("*kb");
+    expect(kbTool?.getMetadata().name).toBe("bmad_kb");
 
-    const nonexistentTool = factory.getToolByName("*nonexistent");
+    const nonexistentTool = factory.getToolByName("bmad_nonexistent");
     expect(nonexistentTool).toBeUndefined();
   });
 
@@ -96,7 +96,9 @@ describe("BMADToolFactory", () => {
     const tools = factory.getTools();
 
     // Test that help command can be executed
-    const helpTool = tools.find((tool) => tool.getMetadata().name === "*help");
+    const helpTool = tools.find(
+      (tool) => tool.getMetadata().name === "bmad_help",
+    );
     expect(helpTool).toBeDefined();
 
     if (helpTool) {

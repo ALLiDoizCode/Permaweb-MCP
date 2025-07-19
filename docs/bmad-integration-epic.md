@@ -68,7 +68,7 @@ Add BMAD (Build, Manage, and Deploy) methodology integration to Permamind, provi
 ## Risk Mitigation
 
 - **Primary Risk:** BMAD resource files and workflows could conflict with existing Permamind tool structure
-- **Mitigation:** Implement BMAD components as separate tool factory following existing patterns, use namespaced commands (\*bmad prefix), lazy load resources only when requested
+- **Mitigation:** Implement BMAD components as separate tool factory following existing patterns, use namespaced commands (bmad\_ prefix), lazy load resources only when requested
 - **Rollback Plan:** BMAD integration can be disabled via configuration flag, all existing functionality remains intact
 
 ## Definition of Done
@@ -148,7 +148,7 @@ The epic implementation is successful when:
 #### AC 1.2: Implement Core BMAD Commands
 
 - **Given** the BMAD methodology requirements
-- **When** I implement the core commands (*help, *kb, *task, *create-doc, *execute-checklist, *yolo, *doc-out, *exit)
+- **When** I implement the core commands (bmad_help, bmad_kb, bmad_task, bmad_create-doc, bmad_execute-checklist, bmad_yolo, bmad_doc-out, bmad_exit)
 - **Then** each command should use existing MCP command patterns
 - **And** provide appropriate error handling and validation
 - **And** maintain compatibility with existing tool behaviors

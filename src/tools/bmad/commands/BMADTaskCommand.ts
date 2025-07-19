@@ -24,7 +24,7 @@ type BMADTaskArgs = z.infer<typeof bmadTaskSchema>;
 export class BMADTaskCommand extends ToolCommand<BMADTaskArgs, string> {
   protected metadata: ToolMetadata = {
     description: "Execute BMAD tasks with step-by-step guidance",
-    name: "*task",
+    name: "bmad_task",
     openWorldHint: false,
     readOnlyHint: false,
     title: "BMAD Task Execution",
@@ -103,7 +103,7 @@ ${
 
 Task execution initiated. Follow the steps above to complete the task.
 
-Use \`*task status ${taskId}\` to check execution status.
+Use \`bmad_task status ${taskId}\` to check execution status.
     `.trim();
   }
 
@@ -150,9 +150,9 @@ This is a placeholder implementation. Task status tracking will be implemented i
     return `
 # Available BMAD Tasks
 
-${tasks.map((task) => `- **${task}** - Use \`*task execute ${task}\` to run this task`).join("\n")}
+${tasks.map((task) => `- **${task}** - Use \`bmad_task execute ${task}\` to run this task`).join("\n")}
 
-Use \`*task execute <taskId>\` to execute a specific task.
+Use \`bmad_task execute <taskId>\` to execute a specific task.
     `.trim();
   }
 }

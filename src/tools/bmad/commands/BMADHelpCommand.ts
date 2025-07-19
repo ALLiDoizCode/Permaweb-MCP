@@ -16,7 +16,7 @@ type BMADHelpArgs = z.infer<typeof bmadHelpSchema>;
 export class BMADHelpCommand extends ToolCommand<BMADHelpArgs, string> {
   protected metadata: ToolMetadata = {
     description: "Display BMAD methodology help and available commands",
-    name: "*help",
+    name: "bmad_help",
     openWorldHint: false,
     readOnlyHint: true,
     title: "BMAD Help",
@@ -47,25 +47,25 @@ BMAD (Build, Manage, and Deploy) is a comprehensive methodology for structured d
 
 ## Available Commands
 
-- **\`*help\`** - Display this help information
-- **\`*kb\`** - Access BMAD knowledge base
-- **\`*task\`** - Execute BMAD tasks
-- **\`*create-doc\`** - Create documents from templates
-- **\`*execute-checklist\`** - Run checklists
-- **\`*yolo\`** - Quick execution mode
-- **\`*doc-out\`** - Document output/export
-- **\`*exit\`** - Exit BMAD mode
+- **\`bmad_help\`** - Display this help information
+- **\`bmad_kb\`** - Access BMAD knowledge base
+- **\`bmad_task\`** - Execute BMAD tasks
+- **\`bmad_create-doc\`** - Create documents from templates
+- **\`bmad_execute-checklist\`** - Run checklists
+- **\`bmad_yolo\`** - Quick execution mode
+- **\`bmad_doc-out\`** - Document output/export
+- **\`bmad_exit\`** - Exit BMAD mode
 
 ## Getting Started
 
-1. Use \`*kb\` to explore available knowledge base resources
-2. Use \`*task\` to list and execute development tasks
-3. Use \`*create-doc\` to generate documents from templates
-4. Use \`*execute-checklist\` to run quality assurance checklists
+1. Use \`bmad_kb\` to explore available knowledge base resources
+2. Use \`bmad_task\` to list and execute development tasks
+3. Use \`bmad_create-doc\` to generate documents from templates
+4. Use \`bmad_execute-checklist\` to run quality assurance checklists
 
 ## Need More Help?
 
-Use \`*help <command>\` to get specific help for any command.
+Use \`bmad_help <command>\` to get specific help for any command.
     `.trim();
   }
 
@@ -90,6 +90,6 @@ Use \`*help <command>\` to get specific help for any command.
 ${help}`;
     }
 
-    return `Unknown help topic: ${topic}. Use \`*help\` to see available topics.`;
+    return `Unknown help topic: ${topic}. Use \`bmad_help\` to see available topics.`;
   }
 }

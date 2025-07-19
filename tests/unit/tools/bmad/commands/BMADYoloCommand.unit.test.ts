@@ -15,7 +15,7 @@ describe("BMADYoloCommand", () => {
 
   it("should have correct metadata", () => {
     const metadata = yoloCommand.getMetadata();
-    expect(metadata.name).toBe("*yolo");
+    expect(metadata.name).toBe("bmad_yolo");
     expect(metadata.title).toBe("BMAD Quick Execution");
     expect(metadata.description).toBe(
       "Quick execution mode for common BMAD operations",

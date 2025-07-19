@@ -32,7 +32,7 @@ export class BMADKnowledgeBaseCommand extends ToolCommand<
   protected metadata: ToolMetadata = {
     description:
       "Access BMAD knowledge base for tasks, templates, checklists, and workflows",
-    name: "*kb",
+    name: "bmad_kb",
     openWorldHint: false,
     readOnlyHint: true,
     title: "BMAD Knowledge Base",
@@ -116,7 +116,7 @@ ${JSON.stringify(resource.content, null, 2)}
 - **workflows** - Process workflows and automation
 - **data** - Reference data and configurations
 
-Use \`*kb list <resourceType>\` to see available resources of a specific type.
+Use \`bmad_kb list <resourceType>\` to see available resources of a specific type.
       `.trim();
     }
 
@@ -133,7 +133,7 @@ Use \`*kb list <resourceType>\` to see available resources of a specific type.
 
 ${resources.map((resource) => `- ${resource}`).join("\n")}
 
-Use \`*kb get ${resourceType} <resourceId>\` to retrieve a specific resource.
+Use \`bmad_kb get ${resourceType} <resourceId>\` to retrieve a specific resource.
     `.trim();
   }
 

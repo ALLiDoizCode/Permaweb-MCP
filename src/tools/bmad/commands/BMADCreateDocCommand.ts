@@ -25,7 +25,7 @@ export class BMADCreateDocCommand extends ToolCommand<
   protected metadata: ToolMetadata = {
     description:
       "Create documents from BMAD templates with variable substitution",
-    name: "*create-doc",
+    name: "bmad_create-doc",
     openWorldHint: false,
     readOnlyHint: false,
     title: "BMAD Document Creation",

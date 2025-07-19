@@ -28,7 +28,7 @@ describe("BMADCreateDocCommand", () => {
 
   it("should have correct metadata", () => {
     const metadata = createDocCommand.getMetadata();
-    expect(metadata.name).toBe("*create-doc");
+    expect(metadata.name).toBe("bmad_create-doc");
     expect(metadata.title).toBe("BMAD Document Creation");
     expect(metadata.description).toBe(
       "Create documents from BMAD templates with variable substitution",

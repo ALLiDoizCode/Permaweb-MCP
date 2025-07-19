@@ -1,5 +1,5 @@
 version: 4.29.0
-installed_at: "2025-07-16T13:15:43.729Z"
+installed_at: "2025-07-18T19:14:06.228Z"
 install_type: full
 agent: null
 ides_setup:
@@ -130,7 +130,7 @@ files:
     hash: 2dae43f4464f1ad2
     modified: false
   - path: .bmad-core/data/bmad-kb.md
-    hash: 210a0c2a5d26a18b
+    hash: fd0d443bd30753c5
     modified: false
   - path: .bmad-core/checklists/story-draft-checklist.md
     hash: d3a5783fcd5bf5e9

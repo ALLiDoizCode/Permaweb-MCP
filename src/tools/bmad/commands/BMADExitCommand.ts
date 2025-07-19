@@ -17,7 +17,7 @@ type BMADExitArgs = z.infer<typeof bmadExitSchema>;
 export class BMADExitCommand extends ToolCommand<BMADExitArgs, string> {
   protected metadata: ToolMetadata = {
     description: "Exit BMAD methodology mode and return to normal operation",
-    name: "*exit",
+    name: "bmad_exit",
     openWorldHint: false,
     readOnlyHint: false,
     title: "BMAD Exit",
@@ -83,14 +83,14 @@ ${sessionInfo}
 
 BMAD methodology mode has been deactivated. You can return to normal Permamind operations.
 
-To re-enter BMAD mode, use any BMAD command (commands starting with \`*\`).
+To re-enter BMAD mode, use any BMAD command (commands starting with \`bmad_\`).
 
 ## Available Next Steps
 
 1. Continue with regular Permamind memory operations
 2. Use process communication tools
 3. Access documentation and deployment tools
-4. Re-enter BMAD mode when needed with \`*help\`
+4. Re-enter BMAD mode when needed with \`bmad_help\`
 
 Thank you for using BMAD methodology tools!
     `.trim();

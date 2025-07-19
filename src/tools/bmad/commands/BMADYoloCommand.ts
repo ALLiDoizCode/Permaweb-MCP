@@ -17,7 +17,7 @@ type BMADYoloArgs = z.infer<typeof bmadYoloSchema>;
 export class BMADYoloCommand extends ToolCommand<BMADYoloArgs, string> {
   protected metadata: ToolMetadata = {
     description: "Quick execution mode for common BMAD operations",
-    name: "*yolo",
+    name: "bmad_yolo",
     openWorldHint: false,
     readOnlyHint: false,
     title: "BMAD Quick Execution",
@@ -64,10 +64,10 @@ export class BMADYoloCommand extends ToolCommand<BMADYoloArgs, string> {
 ## Available Quick Operations
 
 ${Object.keys(quickOperations)
-  .map((op) => `- **${op}** - Use \`*yolo ${op}\` to execute`)
-  .join("\\n")}
+  .map((op) => `- **${op}** - Use \`bmad_yolo ${op}\` to execute`)
+  .join("\n")}
 
-Use \`*yolo <operation>\` to execute a quick operation.
+Use \`bmad_yolo <operation>\` to execute a quick operation.
       `.trim();
     }
 
@@ -85,10 +85,10 @@ Use \`*yolo <operation>\` to execute a quick operation.
 
 ## Quick Actions Available
 
-- \`*yolo setup\` - Initialize BMAD environment
-- \`*yolo validate\` - Run quick validation
-- \`*yolo test\` - Execute quick tests
-- \`*yolo build\` - Quick build operation
+- \`bmad_yolo setup\` - Initialize BMAD environment
+- \`bmad_yolo validate\` - Run quick validation
+- \`bmad_yolo test\` - Execute quick tests
+- \`bmad_yolo build\` - Quick build operation
     `.trim();
   }
 
@@ -168,9 +168,9 @@ This operation will be implemented in a future version to provide:
 
 ## Next Steps
 
-1. Use \`*kb list\` to explore available resources
-2. Use \`*task list\` to see available tasks
-3. Use \`*yolo status\` to check system status
+1. Use \`bmad_kb list\` to explore available resources
+2. Use \`bmad_task list\` to see available tasks
+3. Use \`bmad_yolo status\` to check system status
     `.trim();
   }
 

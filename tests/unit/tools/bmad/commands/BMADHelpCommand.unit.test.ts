@@ -15,7 +15,7 @@ describe("BMADHelpCommand", () => {
 
   it("should have correct metadata", () => {
     const metadata = helpCommand.getMetadata();
-    expect(metadata.name).toBe("*help");
+    expect(metadata.name).toBe("bmad_help");
     expect(metadata.title).toBe("BMAD Help");
     expect(metadata.description).toBe(
       "Display BMAD methodology help and available commands",
@@ -29,14 +29,14 @@ describe("BMADHelpCommand", () => {
 
     expect(result).toContain("# BMAD Methodology Help");
     expect(result).toContain("Available Commands");
-    expect(result).toContain("*help");
-    expect(result).toContain("*kb");
-    expect(result).toContain("*task");
-    expect(result).toContain("*create-doc");
-    expect(result).toContain("*execute-checklist");
-    expect(result).toContain("*yolo");
-    expect(result).toContain("*doc-out");
-    expect(result).toContain("*exit");
+    expect(result).toContain("bmad_help");
+    expect(result).toContain("bmad_kb");
+    expect(result).toContain("bmad_task");
+    expect(result).toContain("bmad_create-doc");
+    expect(result).toContain("bmad_execute-checklist");
+    expect(result).toContain("bmad_yolo");
+    expect(result).toContain("bmad_doc-out");
+    expect(result).toContain("bmad_exit");
   });
 
   it("should return specific help for known topics", async () => {
@@ -101,6 +101,6 @@ describe("BMADHelpCommand", () => {
     );
 
     expect(result).toContain("Unknown help topic: invalid-topic");
-    expect(result).toContain("Use `*help` to see available topics");
+    expect(result).toContain("Use `bmad_help` to see available topics");
   });
 });
