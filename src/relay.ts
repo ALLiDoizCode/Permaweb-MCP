@@ -45,9 +45,10 @@ export const evalProcess = async (
 ) => {
   try {
     const tags = Eval();
-    await send(signer, processId, tags, data);
+    return await send(signer, processId, tags, data);
   } catch {
     // Silent error handling for evaluation process
+    return null;
   }
 };
 
