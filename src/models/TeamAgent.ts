@@ -169,3 +169,103 @@ export interface WorkflowState {
   progress: number; // 0-100
   workflowId?: string;
 }
+
+// Claude Code specific interfaces
+export interface ClaudeCodeHookContext {
+  sessionId: string;
+  transcriptPath: string;
+  workingDirectory: string;
+  toolName?: string;
+  eventType: "PreToolUse" | "PostToolUse" | "UserPromptSubmit" | "Stop";
+  timestamp: string;
+}
+
+export interface AgentDetectionPattern {
+  hookType: string;
+  pattern: RegExp;
+  agentRole: AgentRole;
+  confidence: number;
+  contextRequirements: string[];
+}
+
+export interface ClaudeCodeAgentState extends AgentState {
+  mcpConfiguration: MCPServerConfig;
+  hookSubscriptions: string[];
+  fileSystemState: FileSystemState;
+}
+
+export interface BMadProjectConfig {
+  projectPath: string;
+  agentPreferences: AgentPreferences;
+  defaultAgent: AgentRole;
+  gitIntegration: GitIntegrationConfig;
+  memoryHubId: string;
+}
+
+export interface GitIntegrationConfig {
+  enabled: boolean;
+  watchPaths: string[];
+  triggerPatterns: string[];
+  excludePaths: string[];
+}
+
+export interface FileSystemState {
+  configPath: string;
+  statePath: string;
+  lastModified: Date;
+  permissions: FilePermissions;
+}
+
+export interface FilePermissions {
+  read: boolean;
+  write: boolean;
+  execute: boolean;
+}
+
+export interface MCPServerConfig {
+  scope: "Local" | "Project" | "User";
+  transport: "stdio" | "sse" | "http";
+  serverName: string;
+  capabilities: string[];
+  authentication?: MCPAuthConfig;
+}
+
+export interface MCPAuthConfig {
+  type: "oauth2";
+  provider: string;
+  scopes: string[];
+}
+
+export interface AgentDetectionResult {
+  success: boolean;
+  detectedAgent?: AgentRole;
+  confidence: number;
+  context: Record<string, unknown>;
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+}
+
+export interface GitContext {
+  isRepository: boolean;
+  currentBranch: string;
+  recentCommits: GitCommit[];
+  modifiedFiles: string[];
+  projectStage: "development" | "testing" | "deployment" | "unknown";
+}
+
+export interface GitCommit {
+  hash: string;
+  message: string;
+  author: string;
+  timestamp: string;
+}
+
+export interface FileChanges {
+  added: string[];
+  modified: string[];
+  deleted: string[];
+  renamed: Array<{ from: string; to: string }>;
+}
