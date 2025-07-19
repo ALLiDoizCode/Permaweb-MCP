@@ -2,63 +2,63 @@ import {
   type AgentDetectionPattern,
   type AgentDetectionResult,
   type AgentRole,
-  type ClaudeCodeHookContext,
   type BMadProjectConfig,
+  type ClaudeCodeHookContext,
 } from "../models/TeamAgent.js";
 import { getCurrentUserState } from "../server.js";
 import { AIMemoryService } from "./aiMemoryService.js";
-import { TeamAgentService } from "./TeamAgentService.js";
 import { FileSystemAgentService } from "./FileSystemAgentService.js";
+import { TeamAgentService } from "./TeamAgentService.js";
 
 export class ClaudeCodeAgentService {
   private detectionPatterns: AgentDetectionPattern[] = [
     // Development patterns
     {
-      hookType: "UserPromptSubmit",
-      pattern: /\b(implement|fix|debug|refactor|code|build|test)\b/i,
       agentRole: "developer",
       confidence: 0.8,
       contextRequirements: ["projectPath"],
+      hookType: "UserPromptSubmit",
+      pattern: /\b(implement|fix|debug|refactor|code|build|test)\b/i,
     },
     // PM patterns
     {
-      hookType: "UserPromptSubmit",
-      pattern: /\b(plan|roadmap|requirements|milestone|timeline|epic|story)\b/i,
       agentRole: "pm",
       confidence: 0.7,
       contextRequirements: ["projectPath"],
+      hookType: "UserPromptSubmit",
+      pattern: /\b(plan|roadmap|requirements|milestone|timeline|epic|story)\b/i,
     },
     // UX patterns
     {
-      hookType: "UserPromptSubmit",
-      pattern: /\b(design|ui|ux|interface|user|wireframe|mockup)\b/i,
       agentRole: "ux-expert",
       confidence: 0.7,
       contextRequirements: ["projectPath"],
+      hookType: "UserPromptSubmit",
+      pattern: /\b(design|ui|ux|interface|user|wireframe|mockup)\b/i,
     },
     // QA patterns
     {
-      hookType: "UserPromptSubmit",
-      pattern: /\b(test|quality|bug|validate|verify|check)\b/i,
       agentRole: "qa",
       confidence: 0.6,
       contextRequirements: ["projectPath"],
+      hookType: "UserPromptSubmit",
+      pattern: /\b(test|quality|bug|validate|verify|check)\b/i,
     },
     // Architecture patterns
     {
-      hookType: "UserPromptSubmit",
-      pattern: /\b(architect|design|system|structure|pattern|framework)\b/i,
       agentRole: "architect",
       confidence: 0.7,
       contextRequirements: ["projectPath"],
+      hookType: "UserPromptSubmit",
+      pattern: /\b(architect|design|system|structure|pattern|framework)\b/i,
     },
     // BMAD patterns
     {
-      hookType: "UserPromptSubmit",
-      pattern: /\b(bmad|methodology|workflow|checklist|template)\b/i,
       agentRole: "bmad-master",
       confidence: 0.9,
       contextRequirements: ["projectPath"],
+      hookType: "UserPromptSubmit",
+      pattern: /\b(bmad|methodology|workflow|checklist|template)\b/i,
     },
   ];
 
@@ -67,42 +67,6 @@ export class ClaudeCodeAgentService {
     private teamAgentService: TeamAgentService,
     private fileSystemService: FileSystemAgentService,
   ) {}
-
-  async handleHookEvent(
-    hookContext: ClaudeCodeHookContext,
-  ): Promise<AgentDetectionResult> {
-    try {
-      // Load project configuration if available
-      const projectConfig = await this.loadProjectConfig(
-        hookContext.workingDirectory,
-      );
-
-      // Analyze user input for agent patterns
-      const detectionResult = await this.detectAgentFromContext(
-        hookContext,
-        projectConfig,
-      );
-
-      // Store context for future use
-      if (detectionResult.success && detectionResult.detectedAgent) {
-        await this.storeAgentContext(hookContext, detectionResult);
-      }
-
-      return detectionResult;
-    } catch (error) {
-      return {
-        success: false,
-        confidence: 0,
-        context: {},
-        error: {
-          code: "AGENT_DETECTION_FAILED",
-          message:
-            error instanceof Error ? error.message : "Unknown error occurred",
-          details: error,
-        },
-      };
-    }
-  }
 
   async configureProjectAgent(
     projectPath: string,
@@ -115,33 +79,33 @@ export class ClaudeCodeAgentService {
 
       // Create or update project configuration
       const config: BMadProjectConfig = {
-        projectPath,
         agentPreferences: agentPreferences?.agentPreferences || {
-          communicationStyle: "technical",
           collaboration: {
             feedbackStyle: "constructive",
             meetingPreference: "async",
             preferredTools: [],
           },
+          communicationStyle: "technical",
           notifications: {
             enabled: true,
             frequency: "immediate",
             types: ["agent_activation", "handoff", "error"],
           },
           workingHours: {
-            start: "09:00",
             end: "17:00",
+            start: "09:00",
             timezone: "UTC",
           },
         },
         defaultAgent: agentRole,
         gitIntegration: agentPreferences?.gitIntegration || {
           enabled: true,
-          watchPaths: ["src/", "docs/", "tests/"],
-          triggerPatterns: ["feat:", "fix:", "test:", "docs:"],
           excludePaths: ["node_modules/", ".git/", "dist/"],
+          triggerPatterns: ["feat:", "fix:", "test:", "docs:"],
+          watchPaths: ["src/", "docs/", "tests/"],
         },
         memoryHubId: agentPreferences?.memoryHubId || "default",
+        projectPath,
       };
 
       await this.fileSystemService.persistAgentConfig(projectPath, config);
@@ -170,33 +134,69 @@ export class ClaudeCodeAgentService {
       if (recentMemories.length > 0) {
         const memory = recentMemories[0];
         return {
-          success: true,
-          detectedAgent: (memory.context as any)?.agentRole as AgentRole,
           confidence: memory.importance || 0.5,
           context: (memory.context as Record<string, unknown>) || {},
+          detectedAgent: (memory.context as any)?.agentRole as AgentRole,
+          success: true,
         };
       }
 
       return {
-        success: false,
         confidence: 0,
         context: {},
         error: {
           code: "NO_AGENT_STATE",
           message: "No active agent state found for session",
         },
+        success: false,
       };
     } catch (error) {
       return {
-        success: false,
         confidence: 0,
         context: {},
         error: {
           code: "STATE_RETRIEVAL_FAILED",
+          details: error,
           message:
             error instanceof Error ? error.message : "Unknown error occurred",
-          details: error,
         },
+        success: false,
+      };
+    }
+  }
+
+  async handleHookEvent(
+    hookContext: ClaudeCodeHookContext,
+  ): Promise<AgentDetectionResult> {
+    try {
+      // Load project configuration if available
+      const projectConfig = await this.loadProjectConfig(
+        hookContext.workingDirectory,
+      );
+
+      // Analyze user input for agent patterns
+      const detectionResult = await this.detectAgentFromContext(
+        hookContext,
+        projectConfig,
+      );
+
+      // Store context for future use
+      if (detectionResult.success && detectionResult.detectedAgent) {
+        await this.storeAgentContext(hookContext, detectionResult);
+      }
+
+      return detectionResult;
+    } catch (error) {
+      return {
+        confidence: 0,
+        context: {},
+        error: {
+          code: "AGENT_DETECTION_FAILED",
+          details: error,
+          message:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        },
+        success: false,
       };
     }
   }
@@ -208,7 +208,7 @@ export class ClaudeCodeAgentService {
   ): Promise<AgentDetectionResult> {
     try {
       // Retrieve context from source agent and setup for transfer
-      const { keyPair, hubId } = getCurrentUserState();
+      const { hubId, keyPair } = getCurrentUserState();
       const sourceMemories = await this.memoryService.searchAdvanced(
         hubId,
         `agent:${fromAgent} session:${sessionId}`,
@@ -222,39 +222,39 @@ export class ClaudeCodeAgentService {
 
       // Transfer context to target agent
       const transferContext = {
-        fromAgent,
-        toAgent,
-        sessionId,
-        transferredAt: new Date().toISOString(),
         contextCount: limitedMemories.length,
+        fromAgent,
+        sessionId,
+        toAgent,
+        transferredAt: new Date().toISOString(),
       };
       await this.memoryService.addEnhanced(keyPair, hubId, {
         content: `Agent handoff: ${fromAgent} → ${toAgent}`,
-        memoryType: "context",
-        importance: 0.9,
         context: {
           ...transferContext,
           transferredMemories: limitedMemories.map((m) => m.id),
         } as any,
+        importance: 0.9,
+        memoryType: "context",
       });
 
       return {
-        success: true,
-        detectedAgent: toAgent as AgentRole,
         confidence: 1.0,
         context: transferContext,
+        detectedAgent: toAgent as AgentRole,
+        success: true,
       };
     } catch (error) {
       return {
-        success: false,
         confidence: 0,
         context: {},
         error: {
           code: "CONTEXT_TRANSFER_FAILED",
+          details: error,
           message:
             error instanceof Error ? error.message : "Unknown error occurred",
-          details: error,
         },
+        success: false,
       };
     }
   }
@@ -281,40 +281,40 @@ export class ClaudeCodeAgentService {
 
     if (bestMatch) {
       return {
-        success: true,
-        detectedAgent: bestMatch.agentRole,
         confidence: bestConfidence,
         context: {
-          pattern: bestMatch.pattern.source,
-          hookType: hookContext.eventType,
-          userInput: userInput.substring(0, 200), // First 200 chars for context
-          projectPath: hookContext.workingDirectory,
           defaultAgent: projectConfig?.defaultAgent,
+          hookType: hookContext.eventType,
+          pattern: bestMatch.pattern.source,
+          projectPath: hookContext.workingDirectory,
+          userInput: userInput.substring(0, 200), // First 200 chars for context
         },
+        detectedAgent: bestMatch.agentRole,
+        success: true,
       };
     }
 
     // Fallback to default agent if configured
     if (projectConfig?.defaultAgent) {
       return {
-        success: true,
-        detectedAgent: projectConfig.defaultAgent,
         confidence: 0.3,
         context: {
           fallback: true,
           projectPath: hookContext.workingDirectory,
         },
+        detectedAgent: projectConfig.defaultAgent,
+        success: true,
       };
     }
 
     return {
-      success: false,
       confidence: 0,
       context: {},
       error: {
         code: "NO_AGENT_DETECTED",
         message: "No suitable agent pattern matched the user input",
       },
+      success: false,
     };
   }
 
@@ -346,19 +346,19 @@ export class ClaudeCodeAgentService {
     hookContext: ClaudeCodeHookContext,
     detectionResult: AgentDetectionResult,
   ): Promise<void> {
-    const { keyPair, hubId } = getCurrentUserState();
+    const { hubId, keyPair } = getCurrentUserState();
     await this.memoryService.addEnhanced(keyPair, hubId, {
       content: `Agent activated: ${detectionResult.detectedAgent}`,
-      memoryType: "context",
-      importance: detectionResult.confidence,
       context: {
-        sessionId: hookContext.sessionId,
         agentRole: detectionResult.detectedAgent,
         hookType: hookContext.eventType,
+        sessionId: hookContext.sessionId,
         timestamp: hookContext.timestamp,
         workingDirectory: hookContext.workingDirectory,
         ...detectionResult.context,
       } as any,
+      importance: detectionResult.confidence,
+      memoryType: "context",
     });
   }
 }

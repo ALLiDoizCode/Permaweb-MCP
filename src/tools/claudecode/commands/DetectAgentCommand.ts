@@ -1,24 +1,28 @@
 import { z } from "zod";
-import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
+
 import type { ClaudeCodeHookContext } from "../../../models/TeamAgent.js";
-import { ClaudeCodeAgentService } from "../../../services/ClaudeCodeAgentService.js";
+
 import { aiMemoryService } from "../../../services/aiMemoryService.js";
-import { createTeamAgentService } from "../../../services/TeamAgentService.js";
+import { bmadResourceService } from "../../../services/BMADResourceService.js";
+import { ClaudeCodeAgentService } from "../../../services/ClaudeCodeAgentService.js";
 import { FileSystemAgentService } from "../../../services/FileSystemAgentService.js";
+import { processCommunicationService } from "../../../services/ProcessCommunicationService.js";
+import { createTeamAgentService } from "../../../services/TeamAgentService.js";
+import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
 
 const detectAgentSchema = z
   .object({
     hookContext: z.object({
+      eventType: z
+        .enum(["PreToolUse", "PostToolUse", "UserPromptSubmit", "Stop"])
+        .describe("Type of hook event that triggered agent detection"),
       sessionId: z.string().describe("Current Claude Code session ID"),
+      timestamp: z.string().describe("ISO timestamp of the event"),
+      toolName: z.string().optional().describe("Name of the tool being used"),
       transcriptPath: z
         .string()
         .describe("Path to the conversation transcript"),
       workingDirectory: z.string().describe("Current working directory"),
-      toolName: z.string().optional().describe("Name of the tool being used"),
-      eventType: z
-        .enum(["PreToolUse", "PostToolUse", "UserPromptSubmit", "Stop"])
-        .describe("Type of hook event that triggered agent detection"),
-      timestamp: z.string().describe("ISO timestamp of the event"),
     }),
     userInput: z
       .string()
@@ -51,8 +55,8 @@ export class DetectAgentCommand extends ToolCommand<DetectAgentArgs, object> {
       const memoryService = aiMemoryService;
       const teamAgentService = createTeamAgentService(
         memoryService,
-        {} as any,
-        {} as any,
+        processCommunicationService,
+        bmadResourceService,
       );
       const fileSystemService = new FileSystemAgentService();
       const agentService = new ClaudeCodeAgentService(
@@ -73,33 +77,33 @@ export class DetectAgentCommand extends ToolCommand<DetectAgentArgs, object> {
 
       if (detectionResult.success) {
         return {
-          success: true,
-          detectedAgent: detectionResult.detectedAgent,
           confidence: detectionResult.confidence,
           context: detectionResult.context,
+          detectedAgent: detectionResult.detectedAgent,
           message: `Agent detected: ${detectionResult.detectedAgent} (confidence: ${Math.round(detectionResult.confidence * 100)}%)`,
+          success: true,
         };
       } else {
         return {
-          success: false,
           error: {
             code: detectionResult.error?.code || "DETECTION_FAILED",
+            details: detectionResult.error?.details,
             message:
               detectionResult.error?.message ||
               "Failed to detect suitable agent",
-            details: detectionResult.error?.details,
           },
+          success: false,
         };
       }
     } catch (error) {
       return {
-        success: false,
         error: {
           code: "DETECT_AGENT_ERROR",
+          details: error,
           message:
             error instanceof Error ? error.message : "Unknown error occurred",
-          details: error,
         },
+        success: false,
       };
     }
   }

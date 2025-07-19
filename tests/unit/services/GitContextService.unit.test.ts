@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
 import { exec } from "child_process";
 import { promises as fs } from "fs";
-import { GitContextService } from "../../../src/services/GitContextService.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { ClaudeCodeAgentService } from "../../../src/services/ClaudeCodeAgentService.js";
+import { GitContextService } from "../../../src/services/GitContextService.js";
 
 // Mock child_process
 vi.mock("child_process", () => ({
@@ -32,7 +33,11 @@ describe("GitContextService", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockAgentService = new ClaudeCodeAgentService({} as any, {} as any, {} as any);
+    mockAgentService = new ClaudeCodeAgentService(
+      {} as any,
+      {} as any,
+      {} as any,
+    );
     service = new GitContextService(mockAgentService);
   });
 
@@ -48,16 +53,19 @@ describe("GitContextService", () => {
         }
 
         if (command === "git rev-parse --git-dir") {
-          callback?.(null, { stdout: ".git", stderr: "" } as any);
+          callback?.(null, { stderr: "", stdout: ".git" } as any);
         } else if (command === "git branch --show-current") {
-          callback?.(null, { stdout: "main\n", stderr: "" } as any);
+          callback?.(null, { stderr: "", stdout: "main\n" } as any);
         } else if (command.includes("git log")) {
           callback?.(null, {
-            stdout: "abc123|feat: add feature|John Doe|2024-01-01 12:00:00\n",
             stderr: "",
+            stdout: "abc123|feat: add feature|John Doe|2024-01-01 12:00:00\n",
           } as any);
         } else if (command === "git status --porcelain") {
-          callback?.(null, { stdout: "M src/file.ts\nA docs/readme.md\n", stderr: "" } as any);
+          callback?.(null, {
+            stderr: "",
+            stdout: "M src/file.ts\nA docs/readme.md\n",
+          } as any);
         }
 
         return {} as any;
@@ -69,9 +77,9 @@ describe("GitContextService", () => {
       expect(result.currentBranch).toBe("main");
       expect(result.recentCommits).toHaveLength(1);
       expect(result.recentCommits[0]).toEqual({
+        author: "John Doe",
         hash: "abc123",
         message: "feat: add feature",
-        author: "John Doe",
         timestamp: "2024-01-01 12:00:00",
       });
       expect(result.modifiedFiles).toEqual(["src/file.ts", "docs/readme.md"]);
@@ -85,7 +93,10 @@ describe("GitContextService", () => {
         if (typeof options === "function") {
           callback = options;
         }
-        callback?.(new Error("Not a git repository"), { stdout: "", stderr: "" } as any);
+        callback?.(new Error("Not a git repository"), {
+          stderr: "",
+          stdout: "",
+        } as any);
         return {} as any;
       });
 
@@ -107,9 +118,12 @@ describe("GitContextService", () => {
         }
 
         if (command === "git rev-parse --git-dir") {
-          callback?.(null, { stdout: ".git", stderr: "" } as any);
+          callback?.(null, { stderr: "", stdout: ".git" } as any);
         } else {
-          callback?.(new Error("Git command failed"), { stdout: "", stderr: "" } as any);
+          callback?.(new Error("Git command failed"), {
+            stderr: "",
+            stdout: "",
+          } as any);
         }
 
         return {} as any;
@@ -138,7 +152,7 @@ describe("GitContextService", () => {
         if (typeof options === "function") {
           callback = options;
         }
-        callback?.(null, { stdout: "M src/file.ts\n", stderr: "" } as any);
+        callback?.(null, { stderr: "", stdout: "M src/file.ts\n" } as any);
         return {} as any;
       });
 
@@ -155,84 +169,96 @@ describe("GitContextService", () => {
   describe("detectAgentFromGitContext", () => {
     it("should detect developer agent from development patterns", async () => {
       const gitContext = {
-        isRepository: true,
         currentBranch: "feature/new-feature",
+        isRepository: true,
+        modifiedFiles: ["src/component.ts", "src/utils.js"],
+        projectStage: "development" as const,
         recentCommits: [
           {
+            author: "John Doe",
             hash: "abc123",
             message: "feat: implement new feature",
-            author: "John Doe",
             timestamp: "2024-01-01",
           },
         ],
-        modifiedFiles: ["src/component.ts", "src/utils.js"],
-        projectStage: "development" as const,
       };
 
-      const result = await service.detectAgentFromGitContext("/test/repo", gitContext);
+      const result = await service.detectAgentFromGitContext(
+        "/test/repo",
+        gitContext,
+      );
 
       expect(result).toBe("developer");
     });
 
     it("should detect PM agent from documentation patterns", async () => {
       const gitContext = {
-        isRepository: true,
         currentBranch: "docs/update-readme",
+        isRepository: true,
+        modifiedFiles: ["README.md", "docs/guide.md"],
+        projectStage: "development" as const,
         recentCommits: [
           {
+            author: "Jane Doe",
             hash: "def456",
             message: "docs: update project documentation",
-            author: "Jane Doe",
             timestamp: "2024-01-01",
           },
         ],
-        modifiedFiles: ["README.md", "docs/guide.md"],
-        projectStage: "development" as const,
       };
 
-      const result = await service.detectAgentFromGitContext("/test/repo", gitContext);
+      const result = await service.detectAgentFromGitContext(
+        "/test/repo",
+        gitContext,
+      );
 
       expect(result).toBe("pm");
     });
 
     it("should detect QA agent from test patterns", async () => {
       const gitContext = {
-        isRepository: true,
         currentBranch: "test/unit-tests",
+        isRepository: true,
+        modifiedFiles: ["tests/component.test.ts", "tests/utils.spec.js"],
+        projectStage: "testing" as const,
         recentCommits: [
           {
+            author: "Test Engineer",
             hash: "ghi789",
             message: "test: add unit tests for components",
-            author: "Test Engineer",
             timestamp: "2024-01-01",
           },
         ],
-        modifiedFiles: ["tests/component.test.ts", "tests/utils.spec.js"],
-        projectStage: "testing" as const,
       };
 
-      const result = await service.detectAgentFromGitContext("/test/repo", gitContext);
+      const result = await service.detectAgentFromGitContext(
+        "/test/repo",
+        gitContext,
+      );
 
       expect(result).toBe("qa");
     });
 
     it("should return null when no clear pattern matches", async () => {
       const gitContext = {
-        isRepository: true,
         currentBranch: "main",
+        isRepository: true,
+        modifiedFiles: ["random.txt"],
+        projectStage: "unknown" as const,
         recentCommits: [
           {
+            author: "Unknown",
             hash: "xyz999",
             message: "misc changes",
-            author: "Unknown",
             timestamp: "2024-01-01",
           },
         ],
-        modifiedFiles: ["random.txt"],
-        projectStage: "unknown" as const,
       };
 
-      const result = await service.detectAgentFromGitContext("/test/repo", gitContext);
+      const result = await service.detectAgentFromGitContext(
+        "/test/repo",
+        gitContext,
+      );
 
       expect(result).toBeNull();
     });
@@ -245,8 +271,9 @@ describe("GitContextService", () => {
           callback = options;
         }
         callback?.(null, {
-          stdout: "feat: add feature\nfix: fix bug\nfeat: another feature\ntest: add tests\n",
           stderr: "",
+          stdout:
+            "feat: add feature\nfix: fix bug\nfeat: another feature\ntest: add tests\n",
         } as any);
         return {} as any;
       });
@@ -265,7 +292,7 @@ describe("GitContextService", () => {
         if (typeof options === "function") {
           callback = options;
         }
-        callback?.(new Error("Git error"), { stdout: "", stderr: "" } as any);
+        callback?.(new Error("Git error"), { stderr: "", stdout: "" } as any);
         return {} as any;
       });
 
@@ -283,11 +310,20 @@ describe("GitContextService", () => {
         }
 
         if (command === "git branch --show-current") {
-          callback?.(null, { stdout: "feature/new-feature\n", stderr: "" } as any);
+          callback?.(null, {
+            stderr: "",
+            stdout: "feature/new-feature\n",
+          } as any);
         } else if (command.includes("git branch --format")) {
-          callback?.(null, { stdout: "main\nfeature/new-feature\ndev\n", stderr: "" } as any);
+          callback?.(null, {
+            stderr: "",
+            stdout: "main\nfeature/new-feature\ndev\n",
+          } as any);
         } else if (command.includes("git branch -r")) {
-          callback?.(null, { stdout: "origin/main\norigin/dev\n", stderr: "" } as any);
+          callback?.(null, {
+            stderr: "",
+            stdout: "origin/main\norigin/dev\n",
+          } as any);
         }
 
         return {} as any;
@@ -296,12 +332,12 @@ describe("GitContextService", () => {
       const result = await service.getBranchContext("/test/repo");
 
       expect(result).toEqual({
-        currentBranch: "feature/new-feature",
         allBranches: ["main", "feature/new-feature", "dev"],
-        remoteBranches: ["origin/main", "origin/dev"],
-        isMainBranch: false,
+        currentBranch: "feature/new-feature",
         isFeatureBranch: true,
         isHotfixBranch: false,
+        isMainBranch: false,
+        remoteBranches: ["origin/main", "origin/dev"],
       });
     });
   });

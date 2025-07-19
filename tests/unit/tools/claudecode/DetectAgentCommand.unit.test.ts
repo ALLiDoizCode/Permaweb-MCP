@@ -1,6 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { DetectAgentCommand } from "../../../../src/tools/claudecode/commands/DetectAgentCommand.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { ClaudeCodeHookContext } from "../../../../src/models/TeamAgent.js";
+
+import { DetectAgentCommand } from "../../../../src/tools/claudecode/commands/DetectAgentCommand.js";
 
 // Mock the services
 vi.mock("../../../../src/services/ClaudeCodeAgentService.js", () => ({
@@ -32,12 +34,12 @@ describe("DetectAgentCommand", () => {
   describe("execute", () => {
     it("should detect agent successfully", async () => {
       const hookContext: ClaudeCodeHookContext = {
+        eventType: "UserPromptSubmit",
         sessionId: "test-session",
+        timestamp: "2024-01-01T00:00:00Z",
+        toolName: "implement feature",
         transcriptPath: "/path/to/transcript",
         workingDirectory: "/path/to/project",
-        toolName: "implement feature",
-        eventType: "UserPromptSubmit",
-        timestamp: "2024-01-01T00:00:00Z",
       };
 
       const input = {
@@ -47,18 +49,24 @@ describe("DetectAgentCommand", () => {
 
       // Mock successful detection
       const mockDetectionResult = {
-        success: true,
-        detectedAgent: "developer",
         confidence: 0.8,
-        context: { pattern: "implement", hookType: "UserPromptSubmit" },
+        context: { hookType: "UserPromptSubmit", pattern: "implement" },
+        detectedAgent: "developer",
+        success: true,
       };
 
       // We need to get the mocked service instance
       const { ClaudeCodeAgentService } = await import(
         "../../../../src/services/ClaudeCodeAgentService.js"
       );
-      const mockService = new ClaudeCodeAgentService({} as any, {} as any, {} as any);
-      vi.mocked(mockService.handleHookEvent).mockResolvedValue(mockDetectionResult);
+      const mockService = new ClaudeCodeAgentService(
+        {} as any,
+        {} as any,
+        {} as any,
+      );
+      vi.mocked(mockService.handleHookEvent).mockResolvedValue(
+        mockDetectionResult,
+      );
 
       const result = await command.execute(input);
 
@@ -70,31 +78,37 @@ describe("DetectAgentCommand", () => {
 
     it("should handle detection failure", async () => {
       const hookContext: ClaudeCodeHookContext = {
+        eventType: "UserPromptSubmit",
         sessionId: "test-session",
+        timestamp: "2024-01-01T00:00:00Z",
         transcriptPath: "/path/to/transcript",
         workingDirectory: "/path/to/project",
-        eventType: "UserPromptSubmit",
-        timestamp: "2024-01-01T00:00:00Z",
       };
 
       const input = { hookContext };
 
       // Mock failed detection
       const mockDetectionResult = {
-        success: false,
         confidence: 0,
         context: {},
         error: {
           code: "NO_AGENT_DETECTED",
           message: "No suitable agent pattern matched",
         },
+        success: false,
       };
 
       const { ClaudeCodeAgentService } = await import(
         "../../../../src/services/ClaudeCodeAgentService.js"
       );
-      const mockService = new ClaudeCodeAgentService({} as any, {} as any, {} as any);
-      vi.mocked(mockService.handleHookEvent).mockResolvedValue(mockDetectionResult);
+      const mockService = new ClaudeCodeAgentService(
+        {} as any,
+        {} as any,
+        {} as any,
+      );
+      vi.mocked(mockService.handleHookEvent).mockResolvedValue(
+        mockDetectionResult,
+      );
 
       const result = await command.execute(input);
 
@@ -105,11 +119,11 @@ describe("DetectAgentCommand", () => {
 
     it("should handle service errors", async () => {
       const hookContext: ClaudeCodeHookContext = {
+        eventType: "UserPromptSubmit",
         sessionId: "test-session",
+        timestamp: "2024-01-01T00:00:00Z",
         transcriptPath: "/path/to/transcript",
         workingDirectory: "/path/to/project",
-        eventType: "UserPromptSubmit",
-        timestamp: "2024-01-01T00:00:00Z",
       };
 
       const input = { hookContext };
@@ -117,8 +131,14 @@ describe("DetectAgentCommand", () => {
       const { ClaudeCodeAgentService } = await import(
         "../../../../src/services/ClaudeCodeAgentService.js"
       );
-      const mockService = new ClaudeCodeAgentService({} as any, {} as any, {} as any);
-      vi.mocked(mockService.handleHookEvent).mockRejectedValue(new Error("Service error"));
+      const mockService = new ClaudeCodeAgentService(
+        {} as any,
+        {} as any,
+        {} as any,
+      );
+      vi.mocked(mockService.handleHookEvent).mockRejectedValue(
+        new Error("Service error"),
+      );
 
       const result = await command.execute(input);
 

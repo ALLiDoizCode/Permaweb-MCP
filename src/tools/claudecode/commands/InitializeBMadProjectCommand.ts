@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
+
 import { FileSystemAgentService } from "../../../services/FileSystemAgentService.js";
+import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
 
 const initializeBMadProjectSchema = z
   .object({
@@ -42,7 +43,7 @@ export class InitializeBMadProjectCommand extends ToolCommand<
       await fileSystemService.initializeBMadStructure(args.projectPath);
 
       return {
-        success: true,
+        message: `Successfully initialized BMAD structure at ${args.projectPath}/.bmad/`,
         projectPath: args.projectPath,
         structureCreated: [
           ".bmad/",
@@ -53,17 +54,17 @@ export class InitializeBMadProjectCommand extends ToolCommand<
           ".bmad/config.json",
           ".bmad/.gitignore",
         ],
-        message: `Successfully initialized BMAD structure at ${args.projectPath}/.bmad/`,
+        success: true,
       };
     } catch (error) {
       return {
-        success: false,
         error: {
           code: "INITIALIZE_BMAD_ERROR",
+          details: error,
           message:
             error instanceof Error ? error.message : "Unknown error occurred",
-          details: error,
         },
+        success: false,
       };
     }
   }

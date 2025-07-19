@@ -54,6 +54,26 @@ export interface AgentContext {
   workflowState: WorkflowState;
 }
 
+export interface AgentDetectionPattern {
+  agentRole: AgentRole;
+  confidence: number;
+  contextRequirements: string[];
+  hookType: string;
+  pattern: RegExp;
+}
+
+export interface AgentDetectionResult {
+  confidence: number;
+  context: Record<string, unknown>;
+  detectedAgent?: AgentRole;
+  error?: {
+    code: string;
+    details?: unknown;
+    message: string;
+  };
+  success: boolean;
+}
+
 export interface AgentMemory {
   longTerm: MemoryEntry[];
   preferences: AgentPreferences;
@@ -89,7 +109,6 @@ export type AgentRole =
   | "qa"
   | "sm"
   | "ux-expert";
-
 export interface AgentState {
   activeWorkflow?: string;
   conversationHistory: ConversationEntry[];
@@ -100,6 +119,31 @@ export interface AgentState {
 }
 
 export type AgentStatus = "active" | "busy" | "idle" | "offline";
+
+export interface BMadProjectConfig {
+  agentPreferences: AgentPreferences;
+  defaultAgent: AgentRole;
+  gitIntegration: GitIntegrationConfig;
+  memoryHubId: string;
+  projectPath: string;
+}
+
+export interface ClaudeCodeAgentState extends AgentState {
+  fileSystemState: FileSystemState;
+  hookSubscriptions: string[];
+  mcpConfiguration: MCPServerConfig;
+}
+
+// Claude Code specific interfaces
+export interface ClaudeCodeHookContext {
+  eventType: "PostToolUse" | "PreToolUse" | "Stop" | "UserPromptSubmit";
+  sessionId: string;
+  timestamp: string;
+  toolName?: string;
+  transcriptPath: string;
+  workingDirectory: string;
+}
+
 export interface ConversationEntry {
   context?: Record<string, unknown>;
   id: string;
@@ -107,6 +151,62 @@ export interface ConversationEntry {
   messageType: "command" | "notification" | "question" | "response";
   speaker: string;
   timestamp: string;
+}
+
+export interface FileChanges {
+  added: string[];
+  deleted: string[];
+  modified: string[];
+  renamed: Array<{ from: string; to: string }>;
+}
+
+export interface FilePermissions {
+  execute: boolean;
+  read: boolean;
+  write: boolean;
+}
+
+export interface FileSystemState {
+  configPath: string;
+  lastModified: Date;
+  permissions: FilePermissions;
+  statePath: string;
+}
+
+export interface GitCommit {
+  author: string;
+  hash: string;
+  message: string;
+  timestamp: string;
+}
+
+export interface GitContext {
+  currentBranch: string;
+  isRepository: boolean;
+  modifiedFiles: string[];
+  projectStage: "deployment" | "development" | "testing" | "unknown";
+  recentCommits: GitCommit[];
+}
+
+export interface GitIntegrationConfig {
+  enabled: boolean;
+  excludePaths: string[];
+  triggerPatterns: string[];
+  watchPaths: string[];
+}
+
+export interface MCPAuthConfig {
+  provider: string;
+  scopes: string[];
+  type: "oauth2";
+}
+
+export interface MCPServerConfig {
+  authentication?: MCPAuthConfig;
+  capabilities: string[];
+  scope: "Local" | "Project" | "User";
+  serverName: string;
+  transport: "http" | "sse" | "stdio";
 }
 
 export interface MemoryEntry {
@@ -168,104 +268,4 @@ export interface WorkflowState {
   nextActions: string[];
   progress: number; // 0-100
   workflowId?: string;
-}
-
-// Claude Code specific interfaces
-export interface ClaudeCodeHookContext {
-  sessionId: string;
-  transcriptPath: string;
-  workingDirectory: string;
-  toolName?: string;
-  eventType: "PreToolUse" | "PostToolUse" | "UserPromptSubmit" | "Stop";
-  timestamp: string;
-}
-
-export interface AgentDetectionPattern {
-  hookType: string;
-  pattern: RegExp;
-  agentRole: AgentRole;
-  confidence: number;
-  contextRequirements: string[];
-}
-
-export interface ClaudeCodeAgentState extends AgentState {
-  mcpConfiguration: MCPServerConfig;
-  hookSubscriptions: string[];
-  fileSystemState: FileSystemState;
-}
-
-export interface BMadProjectConfig {
-  projectPath: string;
-  agentPreferences: AgentPreferences;
-  defaultAgent: AgentRole;
-  gitIntegration: GitIntegrationConfig;
-  memoryHubId: string;
-}
-
-export interface GitIntegrationConfig {
-  enabled: boolean;
-  watchPaths: string[];
-  triggerPatterns: string[];
-  excludePaths: string[];
-}
-
-export interface FileSystemState {
-  configPath: string;
-  statePath: string;
-  lastModified: Date;
-  permissions: FilePermissions;
-}
-
-export interface FilePermissions {
-  read: boolean;
-  write: boolean;
-  execute: boolean;
-}
-
-export interface MCPServerConfig {
-  scope: "Local" | "Project" | "User";
-  transport: "stdio" | "sse" | "http";
-  serverName: string;
-  capabilities: string[];
-  authentication?: MCPAuthConfig;
-}
-
-export interface MCPAuthConfig {
-  type: "oauth2";
-  provider: string;
-  scopes: string[];
-}
-
-export interface AgentDetectionResult {
-  success: boolean;
-  detectedAgent?: AgentRole;
-  confidence: number;
-  context: Record<string, unknown>;
-  error?: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
-}
-
-export interface GitContext {
-  isRepository: boolean;
-  currentBranch: string;
-  recentCommits: GitCommit[];
-  modifiedFiles: string[];
-  projectStage: "development" | "testing" | "deployment" | "unknown";
-}
-
-export interface GitCommit {
-  hash: string;
-  message: string;
-  author: string;
-  timestamp: string;
-}
-
-export interface FileChanges {
-  added: string[];
-  modified: string[];
-  deleted: string[];
-  renamed: Array<{ from: string; to: string }>;
 }

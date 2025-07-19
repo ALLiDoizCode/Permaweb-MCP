@@ -1,22 +1,24 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { promises as fs } from "fs";
 import * as path from "path";
-import { FileSystemAgentService } from "../../../src/services/FileSystemAgentService.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { BMadProjectConfig } from "../../../src/models/TeamAgent.js";
+
+import { FileSystemAgentService } from "../../../src/services/FileSystemAgentService.js";
 
 // Mock fs module
 vi.mock("fs", () => ({
   promises: {
-    mkdir: vi.fn(),
-    writeFile: vi.fn(),
-    readFile: vi.fn(),
     access: vi.fn(),
+    appendFile: vi.fn(),
+    copyFile: vi.fn(),
+    mkdir: vi.fn(),
     readdir: vi.fn(),
+    readFile: vi.fn(),
+    rename: vi.fn(),
     stat: vi.fn(),
     unlink: vi.fn(),
-    copyFile: vi.fn(),
-    rename: vi.fn(),
-    appendFile: vi.fn(),
+    writeFile: vi.fn(),
   },
 }));
 
@@ -94,33 +96,33 @@ describe("FileSystemAgentService", () => {
   describe("persistAgentConfig", () => {
     it("should persist agent configuration successfully", async () => {
       const config: BMadProjectConfig = {
-        projectPath: mockProjectPath,
         agentPreferences: {
-          communicationStyle: "technical",
           collaboration: {
             feedbackStyle: "constructive",
             meetingPreference: "async",
             preferredTools: [],
           },
+          communicationStyle: "technical",
           notifications: {
             enabled: true,
             frequency: "immediate",
             types: [],
           },
           workingHours: {
-            start: "09:00",
             end: "17:00",
+            start: "09:00",
             timezone: "UTC",
           },
         },
         defaultAgent: "developer",
         gitIntegration: {
           enabled: true,
-          watchPaths: [],
-          triggerPatterns: [],
           excludePaths: [],
+          triggerPatterns: [],
+          watchPaths: [],
         },
         memoryHubId: "default",
+        projectPath: mockProjectPath,
       };
 
       vi.mocked(fs.access).mockRejectedValue(new Error("ENOENT"));
@@ -145,11 +147,11 @@ describe("FileSystemAgentService", () => {
 
     it("should validate path security", async () => {
       const config: BMadProjectConfig = {
-        projectPath: "../malicious/path",
         agentPreferences: {} as any,
         defaultAgent: "developer",
         gitIntegration: {} as any,
         memoryHubId: "default",
+        projectPath: "../malicious/path",
       };
 
       await expect(
@@ -161,11 +163,11 @@ describe("FileSystemAgentService", () => {
   describe("loadAgentConfig", () => {
     it("should load agent configuration successfully", async () => {
       const mockConfig: BMadProjectConfig = {
-        projectPath: mockProjectPath,
         agentPreferences: {} as any,
         defaultAgent: "developer",
         gitIntegration: {} as any,
         memoryHubId: "default",
+        projectPath: mockProjectPath,
       };
 
       vi.mocked(fs.access).mockResolvedValue(undefined);
@@ -181,7 +183,7 @@ describe("FileSystemAgentService", () => {
     });
 
     it("should throw error for missing configuration", async () => {
-      const error = new Error("ENOENT") as Error & { code: string };
+      const error = new Error("ENOENT") as { code: string } & Error;
       error.code = "ENOENT";
       vi.mocked(fs.access).mockRejectedValue(error);
 
@@ -246,7 +248,7 @@ describe("FileSystemAgentService", () => {
     });
 
     it("should return empty state for missing session", async () => {
-      const error = new Error("ENOENT") as Error & { code: string };
+      const error = new Error("ENOENT") as { code: string } & Error;
       error.code = "ENOENT";
       vi.mocked(fs.readFile).mockRejectedValue(error);
 
@@ -293,9 +295,9 @@ describe("FileSystemAgentService", () => {
       const permissions = await service.checkFilePermissions("/test/file");
 
       expect(permissions).toEqual({
+        execute: false,
         read: true,
         write: true,
-        execute: false,
       });
     });
 

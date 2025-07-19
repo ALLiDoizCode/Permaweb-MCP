@@ -1,23 +1,25 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { promises as fs } from "fs";
 import * as path from "path";
-import { ClaudeCodeToolFactory } from "../../../src/tools/claudecode/ClaudeCodeToolFactory.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { ClaudeCodeHookContext } from "../../../src/models/TeamAgent.js";
+
+import { ClaudeCodeToolFactory } from "../../../src/tools/claudecode/ClaudeCodeToolFactory.js";
 
 // Mock fs module for file system operations
 vi.mock("fs", () => ({
   promises: {
-    mkdir: vi.fn(),
-    writeFile: vi.fn(),
-    readFile: vi.fn(),
     access: vi.fn(),
+    appendFile: vi.fn(),
+    copyFile: vi.fn(),
+    mkdir: vi.fn(),
     readdir: vi.fn(),
+    readFile: vi.fn(),
+    rename: vi.fn(),
     stat: vi.fn(),
     unlink: vi.fn(),
-    copyFile: vi.fn(),
-    rename: vi.fn(),
-    appendFile: vi.fn(),
     watch: vi.fn(),
+    writeFile: vi.fn(),
   },
 }));
 
@@ -70,7 +72,9 @@ describe("Claude Code Agent Workflow Integration", () => {
   describe("Complete Agent Detection and Configuration Workflow", () => {
     it("should initialize project, detect agent, and configure successfully", async () => {
       // Step 1: Initialize BMAD project structure
-      const initializeCommand = toolFactory.getToolByName("initializeBMadProject");
+      const initializeCommand = toolFactory.getToolByName(
+        "initializeBMadProject",
+      );
       expect(initializeCommand).toBeDefined();
 
       // Mock directory doesn't exist initially
@@ -81,7 +85,7 @@ describe("Claude Code Agent Workflow Integration", () => {
       });
 
       expect(initResult.success).toBe(true);
-      expect(initResult.data?.structureCreated).toContain(".bmad/");
+      expect(initResult.structureCreated).toContain(".bmad/");
 
       // Verify directory structure creation
       expect(fs.mkdir).toHaveBeenCalledWith(
@@ -94,30 +98,30 @@ describe("Claude Code Agent Workflow Integration", () => {
       expect(configureCommand).toBeDefined();
 
       const configResult = await configureCommand!.execute({
-        projectPath: mockProjectPath,
-        agentRole: "developer",
         agentPreferences: {
           gitIntegration: {
             enabled: true,
             watchPaths: ["src/", "tests/"],
           },
         },
+        agentRole: "developer",
+        projectPath: mockProjectPath,
       });
 
       expect(configResult.success).toBe(true);
-      expect(configResult.data?.defaultAgent).toBe("developer");
+      expect(configResult.defaultAgent).toBe("developer");
 
       // Step 3: Detect agent based on hook context
       const detectCommand = toolFactory.getToolByName("detectAgent");
       expect(detectCommand).toBeDefined();
 
       const hookContext: ClaudeCodeHookContext = {
+        eventType: "UserPromptSubmit",
         sessionId: "integration-test-session",
+        timestamp: new Date().toISOString(),
+        toolName: "implement new feature",
         transcriptPath: "/path/to/transcript",
         workingDirectory: mockProjectPath,
-        toolName: "implement new feature",
-        eventType: "UserPromptSubmit",
-        timestamp: new Date().toISOString(),
       };
 
       const detectResult = await detectCommand!.execute({
@@ -126,8 +130,8 @@ describe("Claude Code Agent Workflow Integration", () => {
       });
 
       expect(detectResult.success).toBe(true);
-      expect(detectResult.data?.detectedAgent).toBe("developer");
-      expect(detectResult.data?.confidence).toBeGreaterThan(0);
+      expect(detectResult.detectedAgent).toBe("developer");
+      expect(detectResult.confidence).toBeGreaterThan(0);
 
       // Step 4: Get agent state
       const getStateCommand = toolFactory.getToolByName("getAgentState");
@@ -148,20 +152,22 @@ describe("Claude Code Agent Workflow Integration", () => {
 
       const transferResult = await transferCommand!.execute({
         fromAgent: "developer",
-        toAgent: "pm",
         sessionId: "handoff-test-session",
+        toAgent: "pm",
       });
 
       expect(transferResult.success).toBe(true);
-      expect(transferResult.data?.fromAgent).toBe("developer");
-      expect(transferResult.data?.toAgent).toBe("pm");
+      expect(transferResult.fromAgent).toBe("developer");
+      expect(transferResult.toAgent).toBe("pm");
     });
 
     it("should handle file system errors gracefully", async () => {
       // Mock file system error
       vi.mocked(fs.mkdir).mockRejectedValue(new Error("Permission denied"));
 
-      const initializeCommand = toolFactory.getToolByName("initializeBMadProject");
+      const initializeCommand = toolFactory.getToolByName(
+        "initializeBMadProject",
+      );
       const result = await initializeCommand!.execute({
         projectPath: "/restricted/path",
       });
@@ -175,12 +181,14 @@ describe("Claude Code Agent Workflow Integration", () => {
 
       // Test path traversal protection
       const result = await configureCommand!.execute({
-        projectPath: "../malicious/path",
         agentRole: "developer",
+        projectPath: "../malicious/path",
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain("Failed to configure project agent");
+      expect(result.error?.message).toContain(
+        "Failed to configure project agent",
+      );
     });
   });
 
@@ -190,45 +198,45 @@ describe("Claude Code Agent Workflow Integration", () => {
 
       const testCases = [
         {
-          toolName: "implement authentication system",
-          expectedAgent: "developer",
           description: "development task",
+          expectedAgent: "developer",
+          toolName: "implement authentication system",
         },
         {
-          toolName: "create project roadmap",
-          expectedAgent: "pm",
           description: "project management task",
+          expectedAgent: "pm",
+          toolName: "create project roadmap",
         },
         {
-          toolName: "design user interface",
-          expectedAgent: "ux-expert",
           description: "UX design task",
+          expectedAgent: "ux-expert",
+          toolName: "design user interface",
         },
         {
-          toolName: "test component functionality",
-          expectedAgent: "qa",
           description: "quality assurance task",
+          expectedAgent: "qa",
+          toolName: "test component functionality",
         },
         {
-          toolName: "bmad methodology checklist",
-          expectedAgent: "bmad-master",
           description: "BMAD methodology task",
+          expectedAgent: "bmad-master",
+          toolName: "bmad methodology checklist",
         },
         {
-          toolName: "system architecture design",
-          expectedAgent: "architect",
           description: "architecture task",
+          expectedAgent: "architect",
+          toolName: "system architecture design",
         },
       ];
 
       for (const testCase of testCases) {
         const hookContext: ClaudeCodeHookContext = {
+          eventType: "UserPromptSubmit",
           sessionId: `test-${testCase.expectedAgent}`,
+          timestamp: new Date().toISOString(),
+          toolName: testCase.toolName,
           transcriptPath: "/path/to/transcript",
           workingDirectory: mockProjectPath,
-          toolName: testCase.toolName,
-          eventType: "UserPromptSubmit",
-          timestamp: new Date().toISOString(),
         };
 
         const result = await detectCommand!.execute({
@@ -237,8 +245,8 @@ describe("Claude Code Agent Workflow Integration", () => {
         });
 
         expect(result.success).toBe(true);
-        expect(result.data?.detectedAgent).toBe(testCase.expectedAgent);
-        expect(result.data?.confidence).toBeGreaterThan(0);
+        expect(result.detectedAgent).toBe(testCase.expectedAgent);
+        expect(result.confidence).toBeGreaterThan(0);
       }
     });
   });
@@ -248,12 +256,12 @@ describe("Claude Code Agent Workflow Integration", () => {
       const detectCommand = toolFactory.getToolByName("detectAgent");
 
       const hookContext: ClaudeCodeHookContext = {
+        eventType: "UserPromptSubmit",
         sessionId: "unknown-test-session",
+        timestamp: new Date().toISOString(),
+        toolName: "some random task that doesn't match any pattern",
         transcriptPath: "/path/to/transcript",
         workingDirectory: mockProjectPath,
-        toolName: "some random task that doesn't match any pattern",
-        eventType: "UserPromptSubmit",
-        timestamp: new Date().toISOString(),
       };
 
       const result = await detectCommand!.execute({
@@ -263,7 +271,7 @@ describe("Claude Code Agent Workflow Integration", () => {
 
       // Should either detect a default agent or fail gracefully
       if (result.success) {
-        expect(result.data?.confidence).toBeLessThan(0.5);
+        expect(result.confidence).toBeLessThan(0.5);
       } else {
         expect(result.error?.code).toBeTruthy();
       }

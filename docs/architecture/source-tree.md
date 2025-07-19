@@ -24,13 +24,15 @@ src/
 ## Tool Organization
 
 Each tool category follows the factory pattern:
+
 - `ToolFactory.ts` - Factory class for tool registration
-- `commands/` - Individual command implementations  
+- `commands/` - Individual command implementations
 - `index.ts` - Exports for the tool category
 
 ## Service Layer
 
 Services provide business logic abstraction:
+
 - AI Memory operations
 - Process communication
 - Documentation management

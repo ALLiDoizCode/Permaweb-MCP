@@ -1,10 +1,10 @@
 import { BaseToolFactory, ToolCommand, ToolContext } from "../core/index.js";
 import {
-  DetectAgentCommand,
   ConfigureAgentCommand,
+  DetectAgentCommand,
   GetAgentStateCommand,
-  TransferAgentContextCommand,
   InitializeBMadProjectCommand,
+  TransferAgentContextCommand,
 } from "./commands/index.js";
 
 export class ClaudeCodeToolFactory extends BaseToolFactory {

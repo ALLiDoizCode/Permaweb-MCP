@@ -1,12 +1,14 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { ClaudeCodeAgentService } from "../../../src/services/ClaudeCodeAgentService.js";
-import { AIMemoryService } from "../../../src/services/aiMemoryService.js";
-import { TeamAgentService } from "../../../src/services/TeamAgentService.js";
-import { FileSystemAgentService } from "../../../src/services/FileSystemAgentService.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import type {
-  ClaudeCodeHookContext,
   BMadProjectConfig,
+  ClaudeCodeHookContext,
 } from "../../../src/models/TeamAgent.js";
+
+import { AIMemoryService } from "../../../src/services/aiMemoryService.js";
+import { ClaudeCodeAgentService } from "../../../src/services/ClaudeCodeAgentService.js";
+import { FileSystemAgentService } from "../../../src/services/FileSystemAgentService.js";
+import { TeamAgentService } from "../../../src/services/TeamAgentService.js";
 
 // Mock the services
 vi.mock("../../../src/services/aiMemoryService.js", () => ({
@@ -23,15 +25,15 @@ vi.mock("../../../src/services/TeamAgentService.js", () => ({
 vi.mock("../../../src/services/FileSystemAgentService.js", () => ({
   FileSystemAgentService: vi.fn().mockImplementation(() => ({
     initializeBMadStructure: vi.fn().mockResolvedValue(undefined),
-    persistAgentConfig: vi.fn().mockResolvedValue(undefined),
     loadAgentConfig: vi.fn().mockResolvedValue(undefined),
+    persistAgentConfig: vi.fn().mockResolvedValue(undefined),
   })),
 }));
 
 vi.mock("../../../src/server.js", () => ({
   getCurrentUserState: vi.fn().mockReturnValue({
-    keyPair: {},
     hubId: "default",
+    keyPair: {},
   }),
 }));
 
@@ -56,12 +58,12 @@ describe("ClaudeCodeAgentService", () => {
   describe("handleHookEvent", () => {
     it("should detect developer agent from development keywords", async () => {
       const hookContext: ClaudeCodeHookContext = {
+        eventType: "UserPromptSubmit",
         sessionId: "test-session",
+        timestamp: "2024-01-01T00:00:00Z",
+        toolName: "implement new feature",
         transcriptPath: "/path/to/transcript",
         workingDirectory: "/path/to/project",
-        toolName: "implement new feature",
-        eventType: "UserPromptSubmit",
-        timestamp: "2024-01-01T00:00:00Z",
       };
 
       const result = await service.handleHookEvent(hookContext);
@@ -73,12 +75,12 @@ describe("ClaudeCodeAgentService", () => {
 
     it("should detect PM agent from planning keywords", async () => {
       const hookContext: ClaudeCodeHookContext = {
+        eventType: "UserPromptSubmit",
         sessionId: "test-session",
+        timestamp: "2024-01-01T00:00:00Z",
+        toolName: "create project roadmap",
         transcriptPath: "/path/to/transcript",
         workingDirectory: "/path/to/project",
-        toolName: "create project roadmap",
-        eventType: "UserPromptSubmit",
-        timestamp: "2024-01-01T00:00:00Z",
       };
 
       const result = await service.handleHookEvent(hookContext);
@@ -90,12 +92,12 @@ describe("ClaudeCodeAgentService", () => {
 
     it("should detect BMAD agent from methodology keywords", async () => {
       const hookContext: ClaudeCodeHookContext = {
+        eventType: "UserPromptSubmit",
         sessionId: "test-session",
+        timestamp: "2024-01-01T00:00:00Z",
+        toolName: "bmad workflow checklist",
         transcriptPath: "/path/to/transcript",
         workingDirectory: "/path/to/project",
-        toolName: "bmad workflow checklist",
-        eventType: "UserPromptSubmit",
-        timestamp: "2024-01-01T00:00:00Z",
       };
 
       const result = await service.handleHookEvent(hookContext);
@@ -107,12 +109,12 @@ describe("ClaudeCodeAgentService", () => {
 
     it("should handle hook event errors gracefully", async () => {
       const hookContext: ClaudeCodeHookContext = {
+        eventType: "UserPromptSubmit",
         sessionId: "test-session",
+        timestamp: "2024-01-01T00:00:00Z",
+        toolName: "implement feature", // This will trigger agent detection
         transcriptPath: "/path/to/transcript",
         workingDirectory: "/path/to/project",
-        toolName: "implement feature", // This will trigger agent detection
-        eventType: "UserPromptSubmit",
-        timestamp: "2024-01-01T00:00:00Z",
       };
 
       // Mock an error in the memory service addEnhanced (called when storing context)
@@ -142,8 +144,8 @@ describe("ClaudeCodeAgentService", () => {
       expect(mockFileSystemService.persistAgentConfig).toHaveBeenCalledWith(
         projectPath,
         expect.objectContaining({
-          projectPath,
           defaultAgent: agentRole,
+          projectPath,
         }),
       );
     });
@@ -162,9 +164,9 @@ describe("ClaudeCodeAgentService", () => {
   describe("getAgentState", () => {
     it("should retrieve agent state from memory", async () => {
       const mockMemory = {
-        id: "mem-1",
         content: "Agent activated",
         context: { agentRole: "developer" },
+        id: "mem-1",
         importance: 0.8,
       };
 
@@ -192,8 +194,8 @@ describe("ClaudeCodeAgentService", () => {
   describe("transferAgentContext", () => {
     it("should transfer context between agents", async () => {
       const mockMemories = [
-        { id: "mem-1", content: "Context 1" },
-        { id: "mem-2", content: "Context 2" },
+        { content: "Context 1", id: "mem-1" },
+        { content: "Context 2", id: "mem-2" },
       ];
 
       vi.mocked(mockMemoryService.searchAdvanced).mockResolvedValue(

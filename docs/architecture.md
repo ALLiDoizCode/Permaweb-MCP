@@ -489,6 +489,7 @@ The future Agent UX system will transform Permamind into a collaborative AI team
 #### Dual-Platform Integration
 
 **Claude Desktop Architecture:**
+
 ```mermaid
 graph TB
     subgraph "Project Workspace"
@@ -516,17 +517,18 @@ graph TB
     DEV --> CD
     UX --> CD
     QA --> CD
-    
+
     CD --> AL
     AL --> PS
     PS --> CM
-    
+
     CM --> HUB
     HUB --> MT
     MT --> CS
 ```
 
 **Claude Code Architecture:**
+
 ```mermaid
 graph TB
     subgraph "File System"
@@ -551,11 +553,11 @@ graph TB
     CLI --> CMD
     FILES --> FD
     GIT --> GD
-    
+
     CMD --> AC
     FD --> AC
     GD --> AC
-    
+
     AC --> WS
     WS --> HS
     HS --> HUB
@@ -564,6 +566,7 @@ graph TB
 #### Memory-Driven Collaboration
 
 **Context Sharing Architecture:**
+
 - **Single Hub Design**: All agents share one Permamind hub
 - **Smart Tagging**: Memory tagged with agent roles and sharing permissions
 - **Workflow Awareness**: Context filtered by project stage and agent specialization
@@ -572,6 +575,7 @@ graph TB
 #### Persona Management System
 
 **Dynamic Persona Loading:**
+
 - **Workflow Integration**: Personas adapt to BMad workflow stages
 - **Team Coordination**: Complementary personalities for optimal collaboration
 - **Evolution Engine**: Personas improve based on user feedback and performance

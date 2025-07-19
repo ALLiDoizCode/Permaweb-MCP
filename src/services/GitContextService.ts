@@ -1,13 +1,15 @@
 import { exec } from "child_process";
-import { promisify } from "util";
 import { promises as fs } from "fs";
 import * as path from "path";
+import { promisify } from "util";
+
 import type {
-  GitContext,
-  GitCommit,
-  FileChanges,
   AgentRole,
+  FileChanges,
+  GitCommit,
+  GitContext,
 } from "../models/TeamAgent.js";
+
 import { ClaudeCodeAgentService } from "./ClaudeCodeAgentService.js";
 
 const execAsync = promisify(exec);
@@ -21,11 +23,11 @@ export class GitContextService {
 
       if (!isRepository) {
         return {
-          isRepository: false,
           currentBranch: "",
-          recentCommits: [],
+          isRepository: false,
           modifiedFiles: [],
           projectStage: "unknown",
+          recentCommits: [],
         };
       }
 
@@ -41,44 +43,15 @@ export class GitContextService {
       );
 
       return {
-        isRepository: true,
         currentBranch,
-        recentCommits,
+        isRepository: true,
         modifiedFiles,
         projectStage,
+        recentCommits,
       };
     } catch (error) {
       throw new Error(
         `Failed to analyze repository: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
-  }
-
-  async monitorFileChanges(
-    repoPath: string,
-    callback: (changes: FileChanges) => void,
-  ): Promise<void> {
-    try {
-      // Simple file monitoring implementation
-      // Note: In a real implementation, this would use fs.watch properly
-      // For now, we'll implement a polling-based approach
-      const pollInterval = setInterval(async () => {
-        try {
-          const changes = await this.getFileChanges(repoPath);
-          if (changes.added.length > 0 || changes.modified.length > 0 || 
-              changes.deleted.length > 0 || changes.renamed.length > 0) {
-            callback(changes);
-          }
-        } catch (error) {
-          console.warn(`Error monitoring file changes: ${error}`);
-        }
-      }, 2000); // Poll every 2 seconds
-
-      // Store interval for potential cleanup (not implemented here)
-      // In a real implementation, you'd want to return a cleanup function
-    } catch (error) {
-      throw new Error(
-        `Failed to monitor file changes: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -102,7 +75,7 @@ export class GitContextService {
       if (
         commitMessages.match(/\b(feat|fix|refactor|perf)\b/i) ||
         fileExtensions.some((ext) =>
-          [".ts", ".js", ".py", ".java", ".go"].includes(ext),
+          [".go", ".java", ".js", ".py", ".ts"].includes(ext),
         )
       ) {
         return "developer";
@@ -111,7 +84,7 @@ export class GitContextService {
       // Documentation context indicators
       if (
         commitMessages.match(/\b(docs|readme|documentation)\b/i) ||
-        fileExtensions.some((ext) => [".md", ".txt", ".rst"].includes(ext))
+        fileExtensions.some((ext) => [".md", ".rst", ".txt"].includes(ext))
       ) {
         return "pm"; // PM often handles documentation
       }
@@ -136,6 +109,31 @@ export class GitContextService {
     } catch (error) {
       console.warn(`Error detecting agent from git context: ${error}`);
       return null;
+    }
+  }
+
+  async getBranchContext(repoPath: string): Promise<Record<string, unknown>> {
+    try {
+      const [currentBranch, allBranches, remoteBranches] = await Promise.all([
+        this.getCurrentBranch(repoPath),
+        this.getAllBranches(repoPath),
+        this.getRemoteBranches(repoPath),
+      ]);
+
+      return {
+        allBranches,
+        currentBranch,
+        isFeatureBranch:
+          currentBranch.startsWith("feature/") ||
+          currentBranch.startsWith("feat/"),
+        isHotfixBranch:
+          currentBranch.startsWith("hotfix/") ||
+          currentBranch.startsWith("fix/"),
+        isMainBranch: ["develop", "main", "master"].includes(currentBranch),
+        remoteBranches,
+      };
+    } catch (error) {
+      return {};
     }
   }
 
@@ -167,175 +165,43 @@ export class GitContextService {
     }
   }
 
-  async getBranchContext(repoPath: string): Promise<Record<string, unknown>> {
-    try {
-      const [currentBranch, allBranches, remoteBranches] = await Promise.all([
-        this.getCurrentBranch(repoPath),
-        this.getAllBranches(repoPath),
-        this.getRemoteBranches(repoPath),
-      ]);
-
-      return {
-        currentBranch,
-        allBranches,
-        remoteBranches,
-        isMainBranch: ["main", "master", "develop"].includes(currentBranch),
-        isFeatureBranch:
-          currentBranch.startsWith("feature/") ||
-          currentBranch.startsWith("feat/"),
-        isHotfixBranch:
-          currentBranch.startsWith("hotfix/") ||
-          currentBranch.startsWith("fix/"),
-      };
-    } catch (error) {
-      return {};
-    }
-  }
-
-  private async isGitRepository(repoPath: string): Promise<boolean> {
-    try {
-      await execAsync("git rev-parse --git-dir", { cwd: repoPath });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  private async getCurrentBranch(repoPath: string): Promise<string> {
-    try {
-      const { stdout } = await execAsync("git branch --show-current", {
-        cwd: repoPath,
-      });
-      return stdout.trim();
-    } catch {
-      return "unknown";
-    }
-  }
-
-  private async getRecentCommits(
+  async monitorFileChanges(
     repoPath: string,
-    count: number = 10,
-  ): Promise<GitCommit[]> {
+    callback: (changes: FileChanges) => void,
+  ): Promise<void> {
     try {
-      const { stdout } = await execAsync(
-        `git log --oneline -n ${count} --pretty=format:"%H|%s|%an|%ai"`,
-        { cwd: repoPath },
-      );
-
-      return stdout
-        .split("\n")
-        .filter((line) => line.trim())
-        .map((line) => {
-          const [hash, message, author, timestamp] = line.split("|");
-          return {
-            hash: hash.substring(0, 8), // Short hash
-            message,
-            author,
-            timestamp,
-          };
-        });
-    } catch {
-      return [];
-    }
-  }
-
-  private async getModifiedFiles(repoPath: string): Promise<string[]> {
-    try {
-      const { stdout } = await execAsync("git status --porcelain", {
-        cwd: repoPath,
-      });
-
-      return stdout
-        .split("\n")
-        .filter((line) => line.trim())
-        .map((line) => line.substring(3)); // Remove status prefix
-    } catch {
-      return [];
-    }
-  }
-
-  private async getFileChanges(repoPath: string): Promise<FileChanges> {
-    try {
-      const { stdout } = await execAsync("git status --porcelain", {
-        cwd: repoPath,
-      });
-
-      const changes: FileChanges = {
-        added: [],
-        modified: [],
-        deleted: [],
-        renamed: [],
-      };
-
-      for (const line of stdout.split("\n")) {
-        if (!line.trim()) continue;
-
-        const status = line.substring(0, 2);
-        const filename = line.substring(3);
-
-        switch (status.trim()) {
-          case "A":
-            changes.added.push(filename);
-            break;
-          case "M":
-            changes.modified.push(filename);
-            break;
-          case "D":
-            changes.deleted.push(filename);
-            break;
-          case "R":
-            // Renamed files have format "R  old -> new"
-            const [oldName, newName] = filename.split(" -> ");
-            if (oldName && newName) {
-              changes.renamed.push({ from: oldName, to: newName });
-            }
-            break;
+      // Simple file monitoring implementation
+      // Note: In a real implementation, this would use fs.watch properly
+      // For now, we'll implement a polling-based approach
+      const pollInterval = setInterval(async () => {
+        try {
+          const changes = await this.getFileChanges(repoPath);
+          if (
+            changes.added.length > 0 ||
+            changes.modified.length > 0 ||
+            changes.deleted.length > 0 ||
+            changes.renamed.length > 0
+          ) {
+            callback(changes);
+          }
+        } catch (error) {
+          console.warn(`Error monitoring file changes: ${error}`);
         }
-      }
+      }, 2000); // Poll every 2 seconds
 
-      return changes;
-    } catch {
-      return {
-        added: [],
-        modified: [],
-        deleted: [],
-        renamed: [],
-      };
-    }
-  }
-
-  private async getAllBranches(repoPath: string): Promise<string[]> {
-    try {
-      const { stdout } = await execAsync(
-        "git branch --format='%(refname:short)'",
-        {
-          cwd: repoPath,
-        },
+      // Store interval for potential cleanup (not implemented here)
+      // In a real implementation, you'd want to return a cleanup function
+    } catch (error) {
+      throw new Error(
+        `Failed to monitor file changes: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
-      return stdout.split("\n").filter((branch) => branch.trim());
-    } catch {
-      return [];
-    }
-  }
-
-  private async getRemoteBranches(repoPath: string): Promise<string[]> {
-    try {
-      const { stdout } = await execAsync(
-        "git branch -r --format='%(refname:short)'",
-        {
-          cwd: repoPath,
-        },
-      );
-      return stdout.split("\n").filter((branch) => branch.trim());
-    } catch {
-      return [];
     }
   }
 
   private determineProjectStage(
     commits: GitCommit[],
     modifiedFiles: string[],
-  ): "development" | "testing" | "deployment" | "unknown" {
+  ): "deployment" | "development" | "testing" | "unknown" {
     const recentMessages = commits
       .map((c) => c.message.toLowerCase())
       .join(" ");
@@ -368,6 +234,146 @@ export class GitContextService {
     }
 
     return "unknown";
+  }
+
+  private async getAllBranches(repoPath: string): Promise<string[]> {
+    try {
+      const { stdout } = await execAsync(
+        "git branch --format='%(refname:short)'",
+        {
+          cwd: repoPath,
+        },
+      );
+      return stdout.split("\n").filter((branch) => branch.trim());
+    } catch {
+      return [];
+    }
+  }
+
+  private async getCurrentBranch(repoPath: string): Promise<string> {
+    try {
+      const { stdout } = await execAsync("git branch --show-current", {
+        cwd: repoPath,
+      });
+      return stdout.trim();
+    } catch {
+      return "unknown";
+    }
+  }
+
+  private async getFileChanges(repoPath: string): Promise<FileChanges> {
+    try {
+      const { stdout } = await execAsync("git status --porcelain", {
+        cwd: repoPath,
+      });
+
+      const changes: FileChanges = {
+        added: [],
+        deleted: [],
+        modified: [],
+        renamed: [],
+      };
+
+      for (const line of stdout.split("\n")) {
+        if (!line.trim()) continue;
+
+        const status = line.substring(0, 2);
+        const filename = line.substring(3);
+
+        switch (status.trim()) {
+          case "A":
+            changes.added.push(filename);
+            break;
+          case "D":
+            changes.deleted.push(filename);
+            break;
+          case "M":
+            changes.modified.push(filename);
+            break;
+          case "R":
+            // Renamed files have format "R  old -> new"
+            const [oldName, newName] = filename.split(" -> ");
+            if (oldName && newName) {
+              changes.renamed.push({ from: oldName, to: newName });
+            }
+            break;
+        }
+      }
+
+      return changes;
+    } catch {
+      return {
+        added: [],
+        deleted: [],
+        modified: [],
+        renamed: [],
+      };
+    }
+  }
+
+  private async getModifiedFiles(repoPath: string): Promise<string[]> {
+    try {
+      const { stdout } = await execAsync("git status --porcelain", {
+        cwd: repoPath,
+      });
+
+      return stdout
+        .split("\n")
+        .filter((line) => line.trim())
+        .map((line) => line.substring(3)); // Remove status prefix
+    } catch {
+      return [];
+    }
+  }
+
+  private async getRecentCommits(
+    repoPath: string,
+    count: number = 10,
+  ): Promise<GitCommit[]> {
+    try {
+      const { stdout } = await execAsync(
+        `git log --oneline -n ${count} --pretty=format:"%H|%s|%an|%ai"`,
+        { cwd: repoPath },
+      );
+
+      return stdout
+        .split("\n")
+        .filter((line) => line.trim())
+        .map((line) => {
+          const [hash, message, author, timestamp] = line.split("|");
+          return {
+            author,
+            hash: hash.substring(0, 8), // Short hash
+            message,
+            timestamp,
+          };
+        });
+    } catch {
+      return [];
+    }
+  }
+
+  private async getRemoteBranches(repoPath: string): Promise<string[]> {
+    try {
+      const { stdout } = await execAsync(
+        "git branch -r --format='%(refname:short)'",
+        {
+          cwd: repoPath,
+        },
+      );
+      return stdout.split("\n").filter((branch) => branch.trim());
+    } catch {
+      return [];
+    }
+  }
+
+  private async isGitRepository(repoPath: string): Promise<boolean> {
+    try {
+      await execAsync("git rev-parse --git-dir", { cwd: repoPath });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private shouldIgnoreFile(filename: string): boolean {

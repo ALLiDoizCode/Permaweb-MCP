@@ -1,9 +1,12 @@
 import { z } from "zod";
-import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
-import { ClaudeCodeAgentService } from "../../../services/ClaudeCodeAgentService.js";
+
 import { aiMemoryService } from "../../../services/aiMemoryService.js";
-import { createTeamAgentService } from "../../../services/TeamAgentService.js";
+import { bmadResourceService } from "../../../services/BMADResourceService.js";
+import { ClaudeCodeAgentService } from "../../../services/ClaudeCodeAgentService.js";
 import { FileSystemAgentService } from "../../../services/FileSystemAgentService.js";
+import { processCommunicationService } from "../../../services/ProcessCommunicationService.js";
+import { createTeamAgentService } from "../../../services/TeamAgentService.js";
+import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
 
 const getAgentStateSchema = z
   .object({
@@ -41,8 +44,8 @@ export class GetAgentStateCommand extends ToolCommand<
       const memoryService = aiMemoryService;
       const teamAgentService = createTeamAgentService(
         memoryService,
-        {} as any,
-        {} as any,
+        processCommunicationService,
+        bmadResourceService,
       );
       const fileSystemService = new FileSystemAgentService();
       const agentService = new ClaudeCodeAgentService(
@@ -56,35 +59,35 @@ export class GetAgentStateCommand extends ToolCommand<
 
       if (stateResult.success) {
         return {
-          success: true,
-          sessionId: args.sessionId,
           activeAgent: stateResult.detectedAgent,
           confidence: stateResult.confidence,
           context: stateResult.context,
           message: stateResult.detectedAgent
             ? `Active agent: ${stateResult.detectedAgent}`
             : "No active agent found for session",
+          sessionId: args.sessionId,
+          success: true,
         };
       } else {
         return {
-          success: false,
           error: {
             code: stateResult.error?.code || "STATE_RETRIEVAL_FAILED",
+            details: stateResult.error?.details,
             message:
               stateResult.error?.message || "Failed to retrieve agent state",
-            details: stateResult.error?.details,
           },
+          success: false,
         };
       }
     } catch (error) {
       return {
-        success: false,
         error: {
           code: "GET_AGENT_STATE_ERROR",
+          details: error,
           message:
             error instanceof Error ? error.message : "Unknown error occurred",
-          details: error,
         },
+        success: false,
       };
     }
   }

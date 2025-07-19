@@ -1,15 +1,18 @@
 import { z } from "zod";
-import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
-import { ClaudeCodeAgentService } from "../../../services/ClaudeCodeAgentService.js";
+
 import { aiMemoryService } from "../../../services/aiMemoryService.js";
-import { createTeamAgentService } from "../../../services/TeamAgentService.js";
+import { bmadResourceService } from "../../../services/BMADResourceService.js";
+import { ClaudeCodeAgentService } from "../../../services/ClaudeCodeAgentService.js";
 import { FileSystemAgentService } from "../../../services/FileSystemAgentService.js";
+import { processCommunicationService } from "../../../services/ProcessCommunicationService.js";
+import { createTeamAgentService } from "../../../services/TeamAgentService.js";
+import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
 
 const transferAgentContextSchema = z
   .object({
     fromAgent: z.string().describe("Source agent identifier"),
-    toAgent: z.string().describe("Target agent identifier"),
     sessionId: z.string().describe("Session ID for the context transfer"),
+    toAgent: z.string().describe("Target agent identifier"),
   })
   .strict();
 
@@ -43,8 +46,8 @@ export class TransferAgentContextCommand extends ToolCommand<
       const memoryService = aiMemoryService;
       const teamAgentService = createTeamAgentService(
         memoryService,
-        {} as any,
-        {} as any,
+        processCommunicationService,
+        bmadResourceService,
       );
       const fileSystemService = new FileSystemAgentService();
       const agentService = new ClaudeCodeAgentService(
@@ -62,35 +65,35 @@ export class TransferAgentContextCommand extends ToolCommand<
 
       if (transferResult.success) {
         return {
-          success: true,
-          fromAgent: args.fromAgent,
-          toAgent: args.toAgent,
-          sessionId: args.sessionId,
-          transferredAt: transferResult.context?.transferredAt,
           contextCount: transferResult.context?.contextCount || 0,
+          fromAgent: args.fromAgent,
           message: `Successfully transferred context from ${args.fromAgent} to ${args.toAgent}`,
+          sessionId: args.sessionId,
+          success: true,
+          toAgent: args.toAgent,
+          transferredAt: transferResult.context?.transferredAt,
         };
       } else {
         return {
-          success: false,
           error: {
             code: transferResult.error?.code || "CONTEXT_TRANSFER_FAILED",
+            details: transferResult.error?.details,
             message:
               transferResult.error?.message ||
               "Failed to transfer agent context",
-            details: transferResult.error?.details,
           },
+          success: false,
         };
       }
     } catch (error) {
       return {
-        success: false,
         error: {
           code: "TRANSFER_CONTEXT_ERROR",
+          details: error,
           message:
             error instanceof Error ? error.message : "Unknown error occurred",
-          details: error,
         },
+        success: false,
       };
     }
   }

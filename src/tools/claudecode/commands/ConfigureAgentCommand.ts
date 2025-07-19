@@ -1,17 +1,36 @@
 import { z } from "zod";
-import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
+
 import type {
   AgentRole,
   BMadProjectConfig,
 } from "../../../models/TeamAgent.js";
-import { ClaudeCodeAgentService } from "../../../services/ClaudeCodeAgentService.js";
+
 import { aiMemoryService } from "../../../services/aiMemoryService.js";
-import { createTeamAgentService } from "../../../services/TeamAgentService.js";
+import { bmadResourceService } from "../../../services/BMADResourceService.js";
+import { ClaudeCodeAgentService } from "../../../services/ClaudeCodeAgentService.js";
 import { FileSystemAgentService } from "../../../services/FileSystemAgentService.js";
+import { processCommunicationService } from "../../../services/ProcessCommunicationService.js";
+import { createTeamAgentService } from "../../../services/TeamAgentService.js";
+import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
 
 const configureAgentSchema = z
   .object({
-    projectPath: z.string().describe("Path to the project directory"),
+    agentPreferences: z
+      .object({
+        communicationStyle: z
+          .enum(["casual", "collaborative", "formal", "technical"])
+          .optional(),
+        gitIntegration: z
+          .object({
+            enabled: z.boolean(),
+            excludePaths: z.array(z.string()),
+            triggerPatterns: z.array(z.string()),
+            watchPaths: z.array(z.string()),
+          })
+          .optional(),
+        memoryHubId: z.string().optional(),
+      })
+      .optional(),
     agentRole: z
       .enum([
         "analyst",
@@ -24,22 +43,7 @@ const configureAgentSchema = z
         "ux-expert",
       ])
       .describe("Default agent role for the project"),
-    agentPreferences: z
-      .object({
-        communicationStyle: z
-          .enum(["casual", "collaborative", "formal", "technical"])
-          .optional(),
-        gitIntegration: z
-          .object({
-            enabled: z.boolean(),
-            watchPaths: z.array(z.string()),
-            triggerPatterns: z.array(z.string()),
-            excludePaths: z.array(z.string()),
-          })
-          .optional(),
-        memoryHubId: z.string().optional(),
-      })
-      .optional(),
+    projectPath: z.string().describe("Path to the project directory"),
   })
   .strict();
 
@@ -73,8 +77,8 @@ export class ConfigureAgentCommand extends ToolCommand<
       const memoryService = aiMemoryService;
       const teamAgentService = createTeamAgentService(
         memoryService,
-        {} as any,
-        {} as any,
+        processCommunicationService,
+        bmadResourceService,
       );
       const fileSystemService = new FileSystemAgentService();
       const agentService = new ClaudeCodeAgentService(
@@ -84,16 +88,23 @@ export class ConfigureAgentCommand extends ToolCommand<
       );
 
       // Configure the project agent with defaults
-      const agentPreferences = args.agentPreferences ? {
-        ...args.agentPreferences,
-        memoryHubId: args.agentPreferences.memoryHubId || "default",
-        gitIntegration: args.agentPreferences.gitIntegration ? {
-          enabled: args.agentPreferences.gitIntegration.enabled ?? true,
-          watchPaths: args.agentPreferences.gitIntegration.watchPaths ?? ["src/", "docs/", "tests/"],
-          triggerPatterns: args.agentPreferences.gitIntegration.triggerPatterns ?? ["feat:", "fix:", "test:", "docs:"],
-          excludePaths: args.agentPreferences.gitIntegration.excludePaths ?? ["node_modules/", ".git/", "dist/"],
-        } : undefined,
-      } : undefined;
+      const agentPreferences = args.agentPreferences
+        ? {
+            ...args.agentPreferences,
+            gitIntegration: args.agentPreferences.gitIntegration
+              ? {
+                  enabled: args.agentPreferences.gitIntegration.enabled ?? true,
+                  excludePaths: args.agentPreferences.gitIntegration
+                    .excludePaths ?? ["node_modules/", ".git/", "dist/"],
+                  triggerPatterns: args.agentPreferences.gitIntegration
+                    .triggerPatterns ?? ["feat:", "fix:", "test:", "docs:"],
+                  watchPaths: args.agentPreferences.gitIntegration
+                    .watchPaths ?? ["src/", "docs/", "tests/"],
+                }
+              : undefined,
+            memoryHubId: args.agentPreferences.memoryHubId || "default",
+          }
+        : undefined;
 
       await agentService.configureProjectAgent(
         args.projectPath,
@@ -102,10 +113,6 @@ export class ConfigureAgentCommand extends ToolCommand<
       );
 
       return {
-        success: true,
-        projectPath: args.projectPath,
-        defaultAgent: args.agentRole,
-        message: `Successfully configured ${args.agentRole} as default agent for project`,
         configurationApplied: {
           communicationStyle:
             args.agentPreferences?.communicationStyle || "technical",
@@ -113,16 +120,20 @@ export class ConfigureAgentCommand extends ToolCommand<
             args.agentPreferences?.gitIntegration?.enabled !== false,
           memoryHubId: args.agentPreferences?.memoryHubId || "default",
         },
+        defaultAgent: args.agentRole,
+        message: `Successfully configured ${args.agentRole} as default agent for project`,
+        projectPath: args.projectPath,
+        success: true,
       };
     } catch (error) {
       return {
-        success: false,
         error: {
           code: "CONFIGURE_AGENT_ERROR",
+          details: error,
           message:
             error instanceof Error ? error.message : "Unknown error occurred",
-          details: error,
         },
+        success: false,
       };
     }
   }
