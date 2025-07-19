@@ -78,7 +78,8 @@ ${generatedDoc}
 ${
   Object.entries(variables || {})
     .map(([key, value]) => `- **${key}:** ${value}`)
-    .join("\n") || "No variables provided"
+    .join("
+") || "No variables provided"
 }
 
 ## Available Template Variables
@@ -103,7 +104,8 @@ ${this.formatTemplateVariables(template.variables || [])}
           : "";
         return `- **${variable.name}** (${variable.type}) ${required} - ${variable.description}${defaultValue}`;
       })
-      .join("\n");
+      .join("
+");
   }
 
   private generateDocument(

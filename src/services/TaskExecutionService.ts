@@ -2400,7 +2400,7 @@ export class TaskExecutionServiceImpl implements TaskExecutionService {
 
     // Replace variables
     for (const [key, value] of Object.entries(variables)) {
-      const regex = new RegExp(`{{\\s*${key}\\s*}}`, "g");
+      const regex = new RegExp(`{{\s*${key}\s*}}`, "g");
       content = content.replace(regex, String(value));
     }
 

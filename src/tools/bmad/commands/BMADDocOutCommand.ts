@@ -109,7 +109,8 @@ export class BMADDocOutCommand extends ToolCommand<BMADDocOutArgs, string> {
 <ul>
 ${Object.entries(metadata)
   .map(([key, value]) => `<li><strong>${key}:</strong> ${value}</li>`)
-  .join("\n")}
+  .join("
+")}
 </ul>
 </div>
 `
@@ -171,7 +172,8 @@ ${Object.entries(metadata)
 
 ${Object.entries(metadata)
   .map(([key, value]) => `- **${key}:** ${value}`)
-  .join("\n")}
+  .join("
+")}
 `
         : "";
 
@@ -208,7 +210,8 @@ ${content}
 ## Metadata
 ${Object.entries(metadata)
   .map(([key, value]) => `${key}: ${value}`)
-  .join("\n")}
+  .join("
+")}
 
 ## Content
 ${content}
@@ -230,7 +233,8 @@ ${content}
 METADATA:
 ${Object.entries(metadata)
   .map(([key, value]) => `${key}: ${value}`)
-  .join("\n")}
+  .join("
+")}
 
 `
         : "";
