@@ -26,7 +26,7 @@ describe("CreateProcessCommand", () => {
     const { createProcess } = await import("../../../../src/process.js");
     mockCreateProcess = createProcess;
 
-    command = new CreateProcessCommand();
+    command = new CreateProcessCommand(mockContext);
   });
 
   describe("metadata", () => {
@@ -62,7 +62,7 @@ describe("CreateProcessCommand", () => {
       mockCreateProcess.mockResolvedValue(mockProcessId);
 
       const args = {};
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       expect(mockCreateProcess).toHaveBeenCalledWith(mockContext.keyPair);
 
@@ -79,7 +79,7 @@ describe("CreateProcessCommand", () => {
       mockCreateProcess.mockRejectedValue(mockError);
 
       const args = {};
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       expect(mockCreateProcess).toHaveBeenCalledWith(mockContext.keyPair);
 
@@ -94,7 +94,7 @@ describe("CreateProcessCommand", () => {
       mockCreateProcess.mockRejectedValue(mockError);
 
       const args = {};
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       expect(mockCreateProcess).toHaveBeenCalledWith(mockContext.keyPair);
 
@@ -109,7 +109,7 @@ describe("CreateProcessCommand", () => {
       mockCreateProcess.mockRejectedValue(mockError);
 
       const args = {};
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       expect(mockCreateProcess).toHaveBeenCalledWith(mockContext.keyPair);
 
@@ -127,7 +127,8 @@ describe("CreateProcessCommand", () => {
       mockCreateProcess.mockResolvedValue(mockProcessId);
 
       const args = {};
-      await command.execute(args, customContext);
+      const customCommand = new CreateProcessCommand(customContext);
+      await customCommand.execute(args);
 
       expect(mockCreateProcess).toHaveBeenCalledWith(customKeyPair);
     });
@@ -137,7 +138,7 @@ describe("CreateProcessCommand", () => {
       mockCreateProcess.mockResolvedValue(mockProcessId);
 
       const args = {};
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       // Should be valid JSON
       expect(() => JSON.parse(result)).not.toThrow();
@@ -157,7 +158,7 @@ describe("CreateProcessCommand", () => {
       mockCreateProcess.mockResolvedValue(mockProcessId);
 
       const args = {};
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       const parsedResult = JSON.parse(result);
       expect(parsedResult.processId).toMatch(/^[a-zA-Z0-9_-]{43}$/);

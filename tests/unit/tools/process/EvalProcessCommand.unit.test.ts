@@ -26,7 +26,7 @@ describe("EvalProcessCommand", () => {
     const { evalProcess } = await import("../../../../src/relay.js");
     mockEvalProcess = evalProcess;
 
-    command = new EvalProcessCommand();
+    command = new EvalProcessCommand(mockContext);
   });
 
   describe("metadata", () => {
@@ -105,7 +105,7 @@ describe("EvalProcessCommand", () => {
         code: "return 2 + 2",
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       expect(mockEvalProcess).toHaveBeenCalledWith(
         mockContext.keyPair,
@@ -126,7 +126,7 @@ describe("EvalProcessCommand", () => {
         code: "return 2 + 2",
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       const parsedResult = JSON.parse(result);
       expect(parsedResult.success).toBe(false);
@@ -141,7 +141,7 @@ describe("EvalProcessCommand", () => {
         code: "return 2 + 2",
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       const parsedResult = JSON.parse(result);
       expect(parsedResult.success).toBe(false);
@@ -157,7 +157,7 @@ describe("EvalProcessCommand", () => {
         code: "invalid lua code",
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       const parsedResult = JSON.parse(result);
       expect(parsedResult.success).toBe(false);
@@ -175,7 +175,7 @@ describe("EvalProcessCommand", () => {
         code: "return 2 + 2",
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       const parsedResult = JSON.parse(result);
       expect(parsedResult.success).toBe(false);
@@ -193,7 +193,7 @@ describe("EvalProcessCommand", () => {
         code: "return 2 + 2",
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       const parsedResult = JSON.parse(result);
       expect(parsedResult.success).toBe(false);
@@ -214,7 +214,8 @@ describe("EvalProcessCommand", () => {
         code: 'return "Hello, World!"',
         processId: "custom-process-id-1234567890123456789012345",
       };
-      await command.execute(args, customContext);
+      const customCommand = new EvalProcessCommand(customContext);
+      await customCommand.execute(args);
 
       expect(mockEvalProcess).toHaveBeenCalledWith(
         customKeyPair,
@@ -231,7 +232,7 @@ describe("EvalProcessCommand", () => {
         code: "return true",
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       // Should be valid JSON
       expect(() => JSON.parse(result)).not.toThrow();
@@ -263,7 +264,7 @@ describe("EvalProcessCommand", () => {
         code: complexCode,
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       expect(mockEvalProcess).toHaveBeenCalledWith(
         mockContext.keyPair,
@@ -334,7 +335,7 @@ describe("EvalProcessCommand", () => {
         code: aoCode,
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       const parsedResult = JSON.parse(result);
       expect(parsedResult.success).toBe(true);
@@ -359,7 +360,7 @@ describe("EvalProcessCommand", () => {
         code: stateCode,
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       const parsedResult = JSON.parse(result);
       expect(parsedResult.success).toBe(true);
@@ -375,7 +376,7 @@ describe("EvalProcessCommand", () => {
         code: simpleExpression,
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
-      const result = await command.execute(args, mockContext);
+      const result = await command.execute(args);
 
       const parsedResult = JSON.parse(result);
       expect(parsedResult.success).toBe(true);

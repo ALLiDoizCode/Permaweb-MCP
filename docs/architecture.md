@@ -212,9 +212,15 @@ Centralized tool management with category organization:
 
 **Process Tools** (`src/tools/process/`)
 
+- `CreateProcessCommand` - Spawn new AO processes with template support
+- `EvalProcessCommand` - Execute Lua code within processes for testing/setup
 - `ExecuteActionCommand` - Smart process communication
 - `ExecuteProcessActionCommand` - Markdown-driven execution
 - `QueryAOProcessMessagesCommand` - Message history analysis
+
+The Process Tools provide complete AO process lifecycle management:
+**Create → Evaluate → Communicate → Query** workflows enable comprehensive
+process development, testing, and monitoring capabilities.
 
 **Documentation Tools** (`src/tools/documentation/`)
 

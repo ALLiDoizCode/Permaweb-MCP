@@ -24,12 +24,16 @@ export class CreateProcessCommand extends ToolCommand<
     // No parameters required for basic process creation
   });
 
-  async execute(
-    args: CreateProcessArgs,
-    context: ToolContext,
-  ): Promise<string> {
+  constructor(private context: ToolContext) {
+    super();
+  }
+
+  async execute(args: CreateProcessArgs): Promise<string> {
     try {
-      const processId = await createProcess(context.keyPair);
+      const processId = await createProcess(this.context.keyPair);
+
+      // Include 3-second initialization delay as specified in requirements
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
       return JSON.stringify({
         message: `AO process created successfully: ${processId}`,

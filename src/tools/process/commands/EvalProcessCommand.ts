@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 import { evalProcess } from "../../../relay.js";
-import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
+import {
+  CommonSchemas,
+  ToolCommand,
+  ToolContext,
+  ToolMetadata,
+} from "../../core/index.js";
 
 interface EvalProcessArgs {
   code: string;
@@ -24,19 +29,19 @@ export class EvalProcessCommand extends ToolCommand<EvalProcessArgs, string> {
       .min(1, "Lua code cannot be empty")
       .max(10000, "Lua code too long (max 10000 characters)")
       .describe("Lua code to evaluate in the AO process"),
-    processId: z
-      .string()
-      .regex(
-        /^[a-zA-Z0-9_-]{43}$/,
-        "Process ID must be a 43-character base64-like string"
-      )
-      .describe("The AO process ID to evaluate code within"),
+    processId: CommonSchemas.processId.describe(
+      "The AO process ID to evaluate code within",
+    ),
   });
 
-  async execute(args: EvalProcessArgs, context: ToolContext): Promise<string> {
+  constructor(private context: ToolContext) {
+    super();
+  }
+
+  async execute(args: EvalProcessArgs): Promise<string> {
     try {
       const result = await evalProcess(
-        context.keyPair,
+        this.context.keyPair,
         args.code,
         args.processId,
       );
