@@ -4,9 +4,6 @@ import { QueryAOProcessMessagesCommand } from "./commands/QueryAOProcessMessages
 
 export class ProcessToolFactory extends BaseToolFactory {
   protected getToolClasses(): Array<new (context: ToolContext) => ToolCommand> {
-    return [
-      ExecuteActionCommand,
-      QueryAOProcessMessagesCommand,
-    ];
+    return [ExecuteActionCommand, QueryAOProcessMessagesCommand];
   }
 }
