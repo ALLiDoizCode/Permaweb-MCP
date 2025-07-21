@@ -1,0 +1,462 @@
+template:
+  id: ao-process-requirements-v1
+  name: AO Process Requirements Document
+  version: 1.0
+  output:
+    format: markdown
+    filename: docs/ao-process-requirements.md
+    title: "{{project_name}} AO Process Requirements"
+
+workflow:
+  mode: interactive
+  elicitation: advanced-elicitation
+
+sections:
+  - id: introduction
+    title: Introduction
+    instruction: |
+      Create comprehensive business requirements documentation for an AO process based on user needs and Permaweb ecosystem analysis.
+    sections:
+      - id: intro-content
+        content: |
+          This document defines the business requirements for {{project_name}}, an AO (Autonomous Objects) process to be deployed on the Permaweb. This analysis focuses on user needs, market positioning, and business value creation within the AO ecosystem.
+          
+          **Document Purpose:**
+          - Define business requirements and user value proposition
+          - Analyze market fit within AO/Permaweb ecosystem
+          - Specify tokenomics and incentive structures
+          - Establish success criteria and metrics
+          - Provide clear handoff to technical architecture team
+      - id: changelog
+        title: Change Log
+        type: table
+        columns: [Date, Version, Description, Author]
+        instruction: Track document versions and changes
+
+  - id: business-overview
+    title: Business Overview
+    instruction: |
+      Define the business context and value proposition for this AO process.
+    elicit: true
+    sections:
+      - id: problem-statement
+        title: Problem Statement
+        instruction: |
+          Clearly articulate the problem this AO process will solve:
+          
+          1. What specific user problem or market gap does this address?
+          2. Why is the current solution landscape inadequate?
+          3. How does this problem manifest in the AO/Permaweb ecosystem?
+          4. What is the cost/impact of not solving this problem?
+          
+          Focus on business value, not technical features.
+        template: |
+          **Problem:** {{problem_description}}
+          
+          **Current State:** {{current_solution_gaps}}
+          
+          **Impact:** {{problem_impact_metrics}}
+          
+          **AO Ecosystem Context:** {{ao_ecosystem_gaps}}
+
+      - id: solution-overview
+        title: Solution Overview
+        instruction: |
+          Describe the high-level solution approach:
+          
+          1. How will this AO process solve the identified problem?
+          2. What unique advantages does AO/Permaweb provide for this solution?
+          3. What is the core value proposition for users?
+          4. How does this fit into the broader Permaweb ecosystem?
+        template: |
+          **Solution Approach:** {{solution_description}}
+          
+          **Permaweb Advantages:** {{permaweb_benefits}}
+          
+          **Core Value Proposition:** {{user_value_prop}}
+          
+          **Ecosystem Integration:** {{ecosystem_fit}}
+
+      - id: success-metrics
+        title: Success Metrics
+        type: table
+        columns: [Metric, Target, Timeline, Measurement Method]
+        instruction: |
+          Define quantifiable success criteria:
+          - User adoption metrics
+          - Business/token value metrics  
+          - Technical performance metrics
+          - Ecosystem impact metrics
+        examples:
+          - "| **Active Users** | 1,000 monthly | 6 months | Process message analytics |"
+          - "| **Token Velocity** | $10K monthly | 3 months | On-chain transaction analysis |"
+          - "| **Process Uptime** | 99.9% | Ongoing | AO network monitoring |"
+
+  - id: user-analysis
+    title: User Analysis
+    instruction: |
+      Define target users and their specific needs within the AO ecosystem.
+    elicit: true
+    sections:
+      - id: user-personas
+        title: User Personas
+        repeatable: true
+        instruction: |
+          For each key user type, define:
+          1. Who they are in the AO/Permaweb ecosystem
+          2. Their specific needs and pain points
+          3. How they would interact with this process
+          4. What value they expect to receive
+        sections:
+          - id: persona
+            title: "{{persona_name}}"
+            template: |
+              **Background:** {{persona_background}}
+              
+              **Role in AO Ecosystem:** {{ao_ecosystem_role}}
+              
+              **Pain Points:**
+              - {{pain_point_1}}
+              - {{pain_point_2}}
+              - {{pain_point_3}}
+              
+              **Needs from This Process:**
+              - {{need_1}}
+              - {{need_2}}
+              - {{need_3}}
+              
+              **Expected Value:** {{expected_value}}
+              
+              **Interaction Patterns:** {{how_they_use_process}}
+
+      - id: user-stories
+        title: User Stories
+        instruction: |
+          Create detailed user stories with clear acceptance criteria. Focus on business value, not technical implementation.
+        repeatable: true
+        sections:
+          - id: user-story
+            title: "{{story_title}}"
+            template: |
+              **As a** {{user_role}}
+              **I want** {{desired_capability}}
+              **So that** {{business_value}}
+              
+              **Acceptance Criteria:**
+              - {{criterion_1}}
+              - {{criterion_2}}
+              - {{criterion_3}}
+              
+              **Business Priority:** {{priority_level}}
+              **Estimated Value:** {{business_impact}}
+
+  - id: market-analysis
+    title: AO Ecosystem Market Analysis
+    instruction: |
+      Analyze the market context within the AO/Permaweb ecosystem.
+    elicit: true
+    sections:
+      - id: ecosystem-positioning
+        title: Ecosystem Positioning
+        instruction: |
+          Research and document how this process fits in the AO ecosystem:
+          
+          1. What similar processes currently exist in AO?
+          2. How does this process complement existing AO infrastructure?
+          3. What network effects could this create or benefit from?
+          4. How does this contribute to overall Permaweb adoption?
+        template: |
+          **Current AO Landscape:** {{existing_ao_processes}}
+          
+          **Competitive Advantages:** {{competitive_differentiation}}
+          
+          **Network Effects:** {{network_effects_analysis}}
+          
+          **Ecosystem Contribution:** {{permaweb_ecosystem_value}}
+
+      - id: target-market-size
+        title: Target Market Analysis
+        instruction: |
+          Estimate the addressable market within the AO ecosystem:
+          
+          1. How many potential users exist in the AO ecosystem?
+          2. What is the current market size for similar functionality?
+          3. What growth trends are relevant?
+          4. What adoption barriers need to be overcome?
+        template: |
+          **Total Addressable Market:** {{tam_analysis}}
+          
+          **Current AO User Base:** {{ao_user_metrics}}
+          
+          **Growth Projections:** {{growth_assumptions}}
+          
+          **Adoption Barriers:** {{barrier_analysis}}
+
+  - id: tokenomics
+    title: Tokenomics and Incentive Design
+    instruction: |
+      Design the token economics and incentive structures for this AO process.
+    elicit: true
+    sections:
+      - id: token-model
+        title: Token Model
+        instruction: |
+          Define the token economics for this process:
+          
+          1. How will users pay for process services?
+          2. What incentives drive desired behaviors?
+          3. How does the token model align stakeholder interests?
+          4. What prevents value extraction or gaming?
+        template: |
+          **Payment Model:** {{payment_mechanism}}
+          
+          **Token Flows:** {{token_flow_description}}
+          
+          **Incentive Alignment:** {{stakeholder_incentives}}
+          
+          **Anti-Gaming Measures:** {{security_mechanisms}}
+
+      - id: economic-parameters
+        title: Economic Parameters
+        type: table
+        columns: [Parameter, Initial Value, Rationale, Adjustment Mechanism]
+        instruction: |
+          Define key economic parameters for the process:
+          - Fee structures and pricing
+          - Reward distributions
+          - Economic security parameters
+          - Value capture mechanisms
+        examples:
+          - "| **Service Fee** | 0.1 AR | Cover compute costs | Market-driven adjustment |"
+          - "| **Staking Reward** | 5% APY | Encourage participation | Algorithmic based on usage |"
+
+      - id: value-creation
+        title: Value Creation and Capture
+        instruction: |
+          Explain how value is created and captured:
+          
+          1. What creates value in this system?
+          2. How is that value captured and distributed?
+          3. What ensures long-term sustainability?
+          4. How does value accrue to different stakeholders?
+        template: |
+          **Value Creation Sources:** {{value_creation_mechanisms}}
+          
+          **Value Distribution:** {{value_distribution_model}}
+          
+          **Sustainability Model:** {{long_term_viability}}
+          
+          **Stakeholder Value Accrual:** {{stakeholder_benefits}}
+
+  - id: functional-requirements
+    title: Functional Requirements
+    instruction: |
+      Define what the AO process must do from a business perspective.
+    elicit: true
+    sections:
+      - id: core-functionality
+        title: Core Functionality
+        instruction: |
+          List the essential business functions this process must provide:
+          
+          1. What are the primary business capabilities?
+          2. What secondary/supporting functions are needed?
+          3. What integrations with other processes are required?
+          4. What data needs to be processed or stored?
+          
+          Focus on business functions, not technical implementation.
+        repeatable: true
+        template: |
+          **Function:** {{function_name}}
+          **Description:** {{business_description}}
+          **Business Value:** {{value_provided}}
+          **Required Integrations:** {{integration_needs}}
+          **Data Requirements:** {{data_needs}}
+
+      - id: business-rules
+        title: Business Rules and Constraints
+        instruction: |
+          Define business logic and operational constraints:
+          
+          1. What business rules govern process behavior?
+          2. What regulatory or compliance requirements apply?
+          3. What operational constraints must be considered?
+          4. What governance or upgrade mechanisms are needed?
+        repeatable: true
+        template: "- **{{rule_name}}:** {{rule_description}} - _Business Rationale:_ {{business_justification}}"
+
+  - id: integration-requirements
+    title: Integration Requirements
+    instruction: |
+      Define how this process must integrate with the broader AO ecosystem.
+    elicit: true
+    sections:
+      - id: ao-process-integrations
+        title: AO Process Integrations
+        instruction: |
+          Identify required integrations with other AO processes:
+          
+          1. What existing AO processes must this integrate with?
+          2. What data or services need to be exchanged?
+          3. What communication patterns are required?
+          4. What dependencies exist on other processes?
+        repeatable: true
+        template: |
+          **Process:** {{target_process_name}}
+          **Integration Type:** {{integration_pattern}}
+          **Data Exchanged:** {{data_flows}}
+          **Business Dependency:** {{dependency_description}}
+
+      - id: permaweb-integrations
+        title: Permaweb Infrastructure Integration
+        instruction: |
+          Define integration with Permaweb infrastructure:
+          
+          1. What Arweave/Permaweb services are needed?
+          2. How should this process be discoverable?
+          3. What off-chain integrations are required?
+          4. What monitoring or analytics are needed?
+        template: |
+          **Arweave Services:** {{arweave_dependencies}}
+          
+          **Discovery Requirements:** {{discovery_mechanisms}}
+          
+          **Off-Chain Integration:** {{external_dependencies}}
+          
+          **Monitoring Needs:** {{analytics_requirements}}
+
+  - id: non-functional-requirements
+    title: Non-Functional Requirements
+    instruction: |
+      Define performance, security, and operational requirements from a business perspective.
+    elicit: true
+    sections:
+      - id: performance-requirements
+        title: Performance Requirements
+        type: table
+        columns: [Requirement, Target, Business Justification, Measurement]
+        instruction: |
+          Define performance requirements based on business needs:
+          - Response time requirements
+          - Throughput requirements  
+          - Availability requirements
+          - Scalability requirements
+        examples:
+          - "| **Response Time** | < 2 seconds | User experience | Message processing latency |"
+          - "| **Availability** | 99.9% uptime | Business continuity | AO network monitoring |"
+
+      - id: security-requirements
+        title: Security Requirements
+        instruction: |
+          Define security requirements from a business risk perspective:
+          
+          1. What are the key security risks?
+          2. What level of security is required for different functions?
+          3. What compliance or regulatory requirements apply?
+          4. What are the business consequences of security failures?
+        repeatable: true
+        template: "- **{{security_area}}:** {{security_requirement}} - _Business Risk:_ {{risk_mitigation}}"
+
+  - id: business-constraints
+    title: Business Constraints
+    instruction: |
+      Document business constraints and limitations.
+    elicit: true
+    sections:
+      - id: resource-constraints
+        title: Resource Constraints
+        instruction: |
+          Define resource limitations from a business perspective:
+          
+          1. What budget constraints exist?
+          2. What timeline constraints are there?
+          3. What skill/expertise constraints must be considered?
+          4. What technology constraints are imposed by business requirements?
+        template: |
+          **Budget Constraints:** {{budget_limitations}}
+          
+          **Timeline Requirements:** {{delivery_deadlines}}
+          
+          **Expertise Requirements:** {{skill_constraints}}
+          
+          **Technology Constraints:** {{tech_limitations}}
+
+      - id: regulatory-constraints
+        title: Regulatory and Compliance
+        instruction: |
+          Identify regulatory requirements and compliance needs:
+          
+          1. What regulatory frameworks apply?
+          2. What compliance requirements must be met?
+          3. What jurisdictional considerations exist?
+          4. What audit or reporting requirements apply?
+        template: |
+          **Applicable Regulations:** {{regulatory_framework}}
+          
+          **Compliance Requirements:** {{compliance_needs}}
+          
+          **Jurisdictional Scope:** {{legal_jurisdiction}}
+          
+          **Audit Requirements:** {{audit_reporting}}
+
+  - id: risk-analysis
+    title: Risk Analysis
+    instruction: |
+      Identify and analyze business risks.
+    elicit: true
+    sections:
+      - id: business-risks
+        title: Business Risks
+        type: table
+        columns: [Risk, Probability, Impact, Mitigation Strategy, Owner]
+        instruction: |
+          Identify key business risks and mitigation strategies:
+          - Market adoption risks
+          - Competitive risks
+          - Technology risks
+          - Regulatory risks
+          - Economic risks
+        examples:
+          - "| **Low Adoption** | Medium | High | Phased rollout with incentives | Product Owner |"
+          - "| **Competitor Launch** | Low | High | Fast to market, unique features | Business Analyst |"
+
+  - id: handoff-requirements
+    title: Technical Architecture Handoff
+    instruction: |
+      Create clear handoff documentation for the architect phase.
+    sections:
+      - id: architecture-requirements
+        title: Architecture Requirements Summary
+        instruction: |
+          Summarize key requirements for technical architecture:
+          
+          1. Critical functional requirements
+          2. Non-functional requirements and constraints
+          3. Integration requirements
+          4. Performance and scale requirements
+          5. Security and compliance requirements
+        template: |
+          **Critical Functions:** {{core_functionality_summary}}
+          
+          **Performance Requirements:** {{performance_summary}}
+          
+          **Integration Needs:** {{integration_summary}}
+          
+          **Security Requirements:** {{security_summary}}
+          
+          **Compliance Constraints:** {{compliance_summary}}
+
+      - id: architect-prompt
+        title: Architect Handoff Prompt
+        instruction: |
+          Create a clear prompt for the architect to begin technical design:
+          
+          "Based on the business requirements in this document, please design the technical architecture for {{project_name}}. Focus on:
+          
+          1. AO process handler architecture that supports the defined user stories
+          2. Message flow design for the required integrations
+          3. State management approach for the business data requirements
+          4. Security architecture that meets the identified risk mitigation needs
+          5. Scalability design that supports the target user base and performance requirements
+          
+          Use the AO Process Architecture template and ensure the technical design directly addresses each business requirement and constraint identified in this document."

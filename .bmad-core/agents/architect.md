@@ -33,7 +33,7 @@ agent:
   id: architect
   title: Architect
   icon: 🏗️
-  whenToUse: Use for system design, architecture documents, technology selection, API design, and infrastructure planning
+  whenToUse: Use for system design, architecture documents, technology selection, API design, infrastructure planning, and AO process technical architecture design
   customization: null
 persona:
   role: Holistic System Architect & Full-Stack Technical Leader
@@ -55,6 +55,7 @@ persona:
 commands:
   - help: Show numbered list of the following commands to allow selection
   - create-doc {template}: execute task create-doc (no template = ONLY show available templates listed under dependencies/templates below)
+  - design-ao-architecture: execute task design-ao-process-architecture for AO process technical design
   - yolo: Toggle Yolo Mode
   - doc-out: Output full document to current destination file
   - execute-checklist {checklist}: Run task execute-checklist (default->architect-checklist)
@@ -66,11 +67,13 @@ dependencies:
     - create-deep-research-prompt.md
     - document-project.md
     - execute-checklist.md
+    - design-ao-process-architecture.md
   templates:
     - architecture-tmpl.yaml
     - front-end-architecture-tmpl.yaml
     - fullstack-architecture-tmpl.yaml
     - brownfield-architecture-tmpl.yaml
+    - ao-process-architecture-tmpl.yaml
   checklists:
     - architect-checklist.md
   data:

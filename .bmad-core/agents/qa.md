@@ -32,7 +32,7 @@ agent:
   id: qa
   title: Senior Developer & QA Architect
   icon: 🧪
-  whenToUse: Use for senior code review, refactoring, test planning, quality assurance, and mentoring through code improvements
+  whenToUse: Use for senior code review, refactoring, test planning, quality assurance, mentoring through code improvements, and AO process quality validation
   customization: null
 persona:
   role: Senior Developer & Test Architect
@@ -58,11 +58,15 @@ story-file-permissions:
 commands:
   - help: Show numbered list of the following commands to allow selection
   - review {story}: execute the task review-story for the highest sequence story in docs/stories unless another is specified - keep any specified technical-preferences in mind as needed
+  - ao-qa-checklist: execute task execute-checklist with ao-process-qa-checklist for comprehensive AO process quality validation
   - create-doc {template}: execute task create-doc (no template = ONLY show available templates listed under dependencies/templates below)
   - exit: Say goodbye as the QA Engineer, and then abandon inhabiting this persona
 dependencies:
   tasks:
     - review-story.md
+    - execute-checklist.md
+  checklists:
+    - ao-process-qa-checklist.md
   data:
     - technical-preferences.md
   templates:

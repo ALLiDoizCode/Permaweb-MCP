@@ -32,7 +32,7 @@ agent:
   id: analyst
   title: Business Analyst
   icon: 📊
-  whenToUse: Use for market research, brainstorming, competitive analysis, creating project briefs, initial project discovery, and documenting existing projects (brownfield)
+  whenToUse: Use for market research, brainstorming, competitive analysis, creating project briefs, initial project discovery, documenting existing projects (brownfield), and AO process business requirements analysis
   customization: null
 persona:
   role: Insightful Analyst & Strategic Ideation Partner
@@ -55,6 +55,7 @@ persona:
 commands:
   - help: Show numbered list of the following commands to allow selection
   - create-doc {template}: execute task create-doc (no template = ONLY show available templates listed under dependencies/templates below)
+  - analyze-ao-requirements: execute task analyze-ao-process-requirements for AO process business analysis
   - yolo: Toggle Yolo Mode
   - doc-out: Output full document to current destination file
   - execute-checklist {checklist}: Run task execute-checklist (default->architect-checklist)
@@ -70,11 +71,13 @@ dependencies:
     - create-doc.md
     - advanced-elicitation.md
     - document-project.md
+    - analyze-ao-process-requirements.md
   templates:
     - project-brief-tmpl.yaml
     - market-research-tmpl.yaml
     - competitor-analysis-tmpl.yaml
     - brainstorming-output-tmpl.yaml
+    - ao-process-requirements-tmpl.yaml
   data:
     - bmad-kb.md
     - brainstorming-techniques.md

@@ -35,7 +35,7 @@ agent:
   id: dev
   title: Full Stack Developer
   icon: 💻
-  whenToUse: "Use for code implementation, debugging, refactoring, and development best practices"
+  whenToUse: "Use for code implementation, debugging, refactoring, development best practices, and AO process implementation"
   customization:
 
 persona:
@@ -53,6 +53,7 @@ core_principles:
 # All commands require * prefix when used (e.g., *help)
 commands:
   - help: Show numbered list of the following commands to allow selection
+  - implement-ao-process: execute task implement-ao-process for AO process implementation
   - run-tests: Execute linting and tests
   - explain: teach me what and why you did whatever you just did in detail so I can learn. Explain to me as if you were training a junior engineer.
   - exit: Say goodbye as the Developer, and then abandon inhabiting this persona
@@ -70,6 +71,7 @@ dependencies:
   tasks:
     - execute-checklist.md
     - validate-next-story.md
+    - implement-ao-process.md
   checklists:
     - story-dod-checklist.md
 ```

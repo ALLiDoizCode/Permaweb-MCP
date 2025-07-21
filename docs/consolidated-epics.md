@@ -80,77 +80,99 @@ Refactor Permamind project to align with MVP scope by streamlining tools to esse
 
 ---
 
-## Epic 2: BMAD Integration Epic - Brownfield Enhancement
+## Epic 2: BMAD Installation & Integration Tool Epic - Brownfield Enhancement
 
 ### Epic Goal
 
-Add BMAD (Build, Manage, and Deploy) methodology integration to Permamind, providing users with a comprehensive fullstack team experience that can build and deploy Permaweb applications using AOLite and Teal for process development and testing.
+Create a tool that installs the complete BMAD methodology into any user's project AND integrates BMAD functionality with Claude Code slash commands, providing seamless access to the full methodology.
 
 ### Epic Description
 
 **Existing System Context:**
 
-- Current relevant functionality: Permamind is an MCP server providing AI memory services with AO process integration, token operations, and Permaweb deployment capabilities
-- Technology stack: TypeScript, FastMCP, AO Connect, Arweave, Vitest, Node.js 20+
-- Integration points: MCP tool system, AO process communication, Arweave storage, existing service architecture
+- Current system: Permamind MCP server with existing tool infrastructure
+- Technology stack: TypeScript, FastMCP, existing MCP tool patterns
+- Integration points: UserToolFactory, command system, Claude Code slash command system
 
 **Enhancement Details:**
 
-- What's being added/changed: Integration of BMAD methodology components including task execution, document templates, workflow management, agent personas, and complete AO development toolkit (Teal + AOLite + PermawebDocs) to provide structured fullstack development capabilities
-- How it integrates: New BMAD tool factory and commands will be added to the existing MCP tool system, leveraging current service patterns, AO integration, and existing PermawebDocsService
-- Success criteria: Users can execute BMAD tasks, create documents from templates, run workflows, develop typed AO processes with local testing, and manage complete Permaweb development projects through natural language commands
+- What's being added/changed: @init tool + Claude Code slash command integration
+- Installation: Copies complete .bmad-core directory to user's project
+- Slash commands: /analyst, /architect, /dev, /pm, /qa, /sm, /ux-expert, /create-doc, /execute-checklist, etc.
+- Integration: Detects installed BMAD and provides clean slash command access
+- How it integrates: New MCP tool + Claude Code slash command registration
+- Success criteria: Users run @init once, then use clean slash commands in any Claude Code session
 
 ### Stories
 
-#### Story 2.1: BMAD Core Integration
+#### Story 2.1: Create @init MCP Tool
 
-**User Story:** As a developer using Permamind, I want to access BMAD methodology tools through MCP commands so that I can execute structured development tasks without leaving my AI-assisted workflow.
-
-**Acceptance Criteria:**
-
-- Create BMADToolFactory following existing tool factory patterns
-- Add BMAD commands: help, kb, task, create-doc, execute-checklist, yolo, doc-out, exit
-- Implement .bmad-core resource file system structure
-- Add BMAD resource loading on-demand (never pre-load)
-- Integrate with existing MCP tool registration system
-- Preserve existing tool functionality and patterns
-
-#### Story 2.2: Complete AO Development Tools Integration
-
-**User Story:** As a Permaweb developer, I want to use the complete AO development toolkit (Documentation + Teal + AOLite) through BMAD integration so that I can build, test, and deploy AO processes with full type safety and comprehensive guidance.
+**User Story:** As a developer using Permamind, I want to install the complete BMAD methodology in my project with a single command so that I can access all BMAD resources locally.
 
 **Acceptance Criteria:**
 
-- Integrate Teal typed AO process development framework with existing AO services
-- Add AOLite local testing environment for AO process validation
-- Leverage existing PermawebDocs service for real-time development guidance
-- Create complete development pipeline: Documentation → Typed Development → Local Testing → Production Deployment
-- Maintain compatibility with current AO process communication patterns
-- Support fullstack AO development workflow with type safety and comprehensive testing
+- Implement new MCP tool in Permamind UserToolFactory
+- Tool copies entire .bmad-core directory structure to target project
+- Include validation to check if BMAD already exists
+- Provide option to update/overwrite existing installation
+- Validate successful installation with basic health checks
+- Provide clear feedback on installation status and next steps
 
-#### Story 2.3: Fullstack Team Agent System
+#### Story 2.2: Implement Claude Code Slash Command Integration
 
-**User Story:** As a project manager using Permamind, I want access to BMAD agent personas and workflow automation so that I can manage fullstack development projects with AI-assisted team coordination.
+**User Story:** As a Claude Code user with BMAD installed, I want to use clean slash commands for all BMAD functionality so that I can access agents, tasks, templates, checklists, and workflows efficiently.
 
 **Acceptance Criteria:**
 
-- Implement BMAD agent personas (bmad-master, architects, developers, etc.)
-- Create workflow automation leveraging Permamind's memory and AO integration
-- Add task/template/checklist execution system
-- Enable natural language interaction with BMAD methodology
-- Integrate with existing AI memory services for project context
-- Support comprehensive development lifecycle management
+- Create agent slash commands: /analyst, /architect, /dev, /pm, /qa, /sm, /ux-expert, /bmad-master
+- Create task slash commands: /advanced-elicitation, /create-doc, /execute-checklist, /brownfield-create-epic, etc. (all 20 tasks)
+- Create template slash commands: /architecture, /prd, /story, /front-end-spec, etc. (all 15 templates)
+- Create checklist slash commands: /architect-checklist, /pm-checklist, /story-dod-checklist, etc. (all 7 checklists)
+- Create workflow slash commands: /greenfield-fullstack, /brownfield-service, etc. (all 6 workflows)
+- Ensure slash commands integrate with Claude Code's command system
+- Maintain parameter passing and execution patterns from original BMAD tools
+
+#### Story 2.3: Auto-detect BMAD Installation for Slash Commands
+
+**User Story:** As a Claude Code user, I want slash commands to automatically detect if BMAD is installed in my project so that I get helpful guidance when BMAD is not available.
+
+**Acceptance Criteria:**
+
+- Slash commands detect if .bmad-core exists in current project
+- Provide helpful error messages if BMAD not installed
+- Auto-suggest @init if user tries slash commands without installation
+- Enable slash commands to work from any directory within BMAD-enabled project
+- Support multi-project workflows where some projects have BMAD and others don't
+- Graceful degradation when BMAD resources are unavailable
+
+#### Story 2.4: Add Installation Guidance and Slash Command Documentation
+
+**User Story:** As a new BMAD user, I want comprehensive documentation and guidance so that I can understand how to install and use BMAD effectively in my projects.
+
+**Acceptance Criteria:**
+
+- Create help documentation for @init tool with usage examples
+- Document all available slash commands with examples and parameter descriptions
+- Provide post-installation usage guidance and getting started workflow
+- Include troubleshooting for common installation and usage issues
+- Create quick reference guide for all slash commands organized by category
+- Integrate documentation with existing Permamind help system
 
 ### Definition of Done
 
-- [x] All stories completed with acceptance criteria met
-- [x] Existing MCP functionality verified through testing
-- [x] BMAD integration working with AO processes and Arweave storage
-- [x] Documentation updated with BMAD usage examples
-- [x] No regression in existing memory, token, or deployment features
-- [x] Build passes: npm run build && npm run lint && npm run type-check && npm run test
-- [x] BMAD resources loadable on-demand without pre-loading
-- [x] Agent personas functional and integrated with memory services
+- [ ] @init tool implemented in Permamind
+- [ ] Complete .bmad-core directory installation working
+- [ ] All agent slash commands implemented: /analyst, /architect, /dev, /pm, /qa, /sm, /ux-expert, /bmad-master
+- [ ] All task slash commands implemented (20 commands)
+- [ ] All template slash commands implemented (15 commands)  
+- [ ] All checklist slash commands implemented (7 commands)
+- [ ] All workflow slash commands implemented (6 commands)
+- [ ] Auto-detection of BMAD installation for slash commands
+- [ ] Installation validation and conflict detection
+- [ ] Comprehensive documentation for installation and slash commands
+- [ ] Tool tested across different project types and Claude Code sessions
+- [ ] No impact on existing Permamind or Claude Code functionality
+- [ ] Build passes: npm run build && npm run lint && npm run type-check && npm run test
 
 ---
 
@@ -486,10 +508,10 @@ Transform Permamind into an intelligent multi-agent system where users can expli
 
 ### Phase 3: Advanced Capabilities (BMAD Integration)
 
-1. Integrate BMAD core methodology tools
-2. Add complete AO development toolkit (Teal + AOLite)
-3. Implement fullstack team agent system
-4. Enable comprehensive development workflows
+1. Create @init tool for BMAD installation
+2. Implement Claude Code slash command integration for all BMAD resources
+3. Add auto-detection and documentation system
+4. Enable complete BMAD methodology access through clean slash commands
 
 ### Phase 4: Revolutionary UX (Agent Enhancement)
 
@@ -554,10 +576,11 @@ Transform Permamind into an intelligent multi-agent system where users can expli
 
 ### BMAD Integration Success
 
-- Complete fullstack development methodology integrated
-- AO development pipeline: Docs → Teal → AOLite → Deploy
-- Agent personas provide comprehensive development support
+- @init tool installs complete BMAD methodology in any project
+- All 58 BMAD resources accessible via clean slash commands: 10 agents, 20 tasks, 15 templates, 7 checklists, 6 workflows
+- Auto-detection works reliably across different project types
 - No regression in existing Permamind functionality
+- Users experience seamless BMAD access through Claude Code
 
 ### Agent UX Enhancement Success
 
