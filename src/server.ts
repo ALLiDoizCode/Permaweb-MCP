@@ -210,7 +210,7 @@ async function initializeAndStart() {
     server.start({
       transportType: "stdio",
     });
-  } catch (error) {
+  } catch {
     // Silent error handling for stdio transport compatibility
     // Fallback: start server without tools if initialization fails
     server.start({
