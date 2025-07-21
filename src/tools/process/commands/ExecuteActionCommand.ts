@@ -130,7 +130,8 @@ export class ExecuteActionCommand extends ToolCommand<
       if (handler.examples && handler.examples.length > 0) {
         markdown += "Examples:\n";
         for (const example of handler.examples) {
-          markdown += `- ${example}\n`;
+          markdown += `- ${example}
+`;
         }
         markdown += "\n";
       }
