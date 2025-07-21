@@ -17,7 +17,7 @@ Permamind is an MCP (Model Context Protocol) server that provides an immortal me
 
 ### Key Directories
 
-```
+````
 src/
 ├── services/          # Core business logic services
 ├── models/           # Data models and TypeScript interfaces
@@ -26,28 +26,6 @@ src/
 ├── process.ts        # AO process creation and messaging
 ├── relay.ts          # Arweave data relay functions
 └── server.ts         # Main MCP server implementation
-
-.claude/commands/     # Claude Code slash commands
-├── cleanup.md        # Comprehensive code analysis
-├── tdd.md           # Test-driven development workflow
-├── prepush.md       # Pre-push validation
-├── ship.md          # Complete pre-GitHub push workflow
-├── epcc.md          # Explore, Plan, Code, Commit workflow
-├── prime.md         # Load all documentation context
-└── visual.md        # Visual development workflow
-```
-
-## Development Workflow
-
-### Available Commands
-
-- `/ship` - Complete pre-GitHub push workflow (cleanup → tdd → prepush)
-- `/cleanup` - Comprehensive codebase analysis and housekeeping
-- `/tdd` - Test-driven development validation
-- `/prepush` - Pre-push validation and CI simulation
-- `/epcc` - Structured development workflow
-- `/prime` - Load all documentation context
-- `/visual` - Visual development workflow
 
 ### Package Scripts
 
@@ -63,7 +41,7 @@ src/
   "test:coverage": "vitest run --coverage",
   "ci:quality": "npm run lint && npm run type-check && npm run test:coverage && npm run audit && npm run build"
 }
-```
+````
 
 ## Coding Standards
 

@@ -12,6 +12,7 @@ import {
   defaultProcessService,
   type ProcessTypeDetection,
 } from "./DefaultProcessService.js";
+import { TokenProcessTemplateService } from "./TokenProcessTemplateService.js";
 
 export interface HandlerInfo {
   action: string;
@@ -56,6 +57,7 @@ export interface ProcessCommunicationService {
     userRequest: string,
     signer: JWKInterface,
     processMarkdown?: string,
+    embeddedTemplates?: Map<string, ProcessDefinition>,
   ) => Promise<ProcessResponse>;
   interpretResponse: (
     response: AOMessageResponse,
@@ -238,6 +240,7 @@ const service = (): ProcessCommunicationService => {
       userRequest: string,
       signer: JWKInterface,
       processMarkdown?: string,
+      embeddedTemplates?: Map<string, ProcessDefinition>,
     ): Promise<ProcessResponse> => {
       try {
         // If markdown is provided, use traditional approach
@@ -248,6 +251,94 @@ const service = (): ProcessCommunicationService => {
             userRequest,
             signer,
           );
+        }
+
+        // Try embedded templates first if available
+        if (embeddedTemplates && embeddedTemplates.has("token")) {
+          const tokenTemplate = embeddedTemplates.get("token");
+          if (tokenTemplate) {
+            // First try enhanced NLS patterns for token operations
+            const tokenNLSResult =
+              TokenProcessTemplateService.processTokenRequest(
+                userRequest,
+                processId,
+              );
+
+            if (tokenNLSResult && tokenNLSResult.confidence > 0.7) {
+              // Find the handler in the template
+              const handler = tokenNLSResult.template.handlers.find(
+                (h) =>
+                  h.action.toLowerCase() ===
+                  tokenNLSResult.operation.toLowerCase(),
+              );
+
+              if (handler) {
+                // Map NLS parameters to handler parameter names
+                const mappedParameters = mapNLSParametersToHandler(
+                  tokenNLSResult.parameters,
+                  tokenNLSResult.operation,
+                );
+
+                const aoMessage = service().buildAOMessage(
+                  processId,
+                  handler,
+                  mappedParameters,
+                );
+
+                const response = await aoMessageService.executeMessage(
+                  signer,
+                  aoMessage,
+                );
+
+                const result = service().interpretResponse(response, handler);
+                return {
+                  ...result,
+                  confidence: tokenNLSResult.confidence,
+                  processType: "token",
+                  suggestions:
+                    defaultProcessService.getSuggestedOperations("token"),
+                  templateUsed: "embedded-nls",
+                };
+              }
+            }
+
+            // Fallback to standard handler matching
+            const processTemplate = {
+              ...tokenTemplate,
+              processId,
+            };
+
+            const handlerMatch = service().matchRequestToHandler(
+              userRequest,
+              processTemplate.handlers,
+            );
+
+            if (handlerMatch && handlerMatch.confidence > 0.6) {
+              const aoMessage = service().buildAOMessage(
+                processId,
+                handlerMatch.handler,
+                handlerMatch.parameters,
+              );
+
+              const response = await aoMessageService.executeMessage(
+                signer,
+                aoMessage,
+              );
+
+              const result = service().interpretResponse(
+                response,
+                handlerMatch.handler,
+              );
+              return {
+                ...result,
+                confidence: handlerMatch.confidence,
+                processType: "token",
+                suggestions:
+                  defaultProcessService.getSuggestedOperations("token"),
+                templateUsed: "embedded",
+              };
+            }
+          }
         }
 
         // Try enhanced natural language service with auto-detection
@@ -400,7 +491,7 @@ const service = (): ProcessCommunicationService => {
     },
 
     parseMarkdown: (markdown: string): ProcessDefinition => {
-      const lines = markdown.split("\n");
+      const lines = markdown.split("");
       const handlers: HandlerInfo[] = [];
       let currentHandler: null | Partial<HandlerInfo> = null;
       let processName = "Unknown Process";
@@ -623,6 +714,60 @@ const extractParameterValue = (
   }
 
   return null;
+};
+
+/**
+ * Map NLS parameters to handler parameter names
+ * Handles the parameter name mapping between NLS patterns and handler definitions
+ */
+const mapNLSParametersToHandler = (
+  nlsParameters: Record<string, unknown>,
+  operation: string,
+): Record<string, unknown> => {
+  const mappedParameters: Record<string, unknown> = {};
+
+  // Handle different operations and their parameter mappings
+  switch (operation.toLowerCase()) {
+    case "balance":
+      // NLS: { account } -> Handler: { Target }
+      if (nlsParameters.account) {
+        mappedParameters.Target = nlsParameters.account;
+      }
+      break;
+
+    case "burn":
+      // NLS: { amount } -> Handler: { Quantity }
+      if (nlsParameters.amount) {
+        mappedParameters.Quantity = String(nlsParameters.amount);
+      }
+      break;
+
+    case "mint":
+      // NLS: { recipient, amount } -> Handler: { Recipient, Quantity }
+      if (nlsParameters.recipient) {
+        mappedParameters.Recipient = nlsParameters.recipient;
+      }
+      if (nlsParameters.amount) {
+        mappedParameters.Quantity = String(nlsParameters.amount);
+      }
+      break;
+
+    case "transfer":
+      // NLS: { recipient, amount } -> Handler: { Recipient, Quantity }
+      if (nlsParameters.recipient) {
+        mappedParameters.Recipient = nlsParameters.recipient;
+      }
+      if (nlsParameters.amount) {
+        mappedParameters.Quantity = String(nlsParameters.amount);
+      }
+      break;
+
+    default:
+      // For other operations, pass through as-is
+      return nlsParameters;
+  }
+
+  return mappedParameters;
 };
 
 export const processCommunicationService = service();

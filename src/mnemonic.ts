@@ -26,7 +26,7 @@ export async function getKeyFromMnemonic(mnemonic: string) {
     },
     { privateKeyFormat: "pkcs8-der" },
   );
-  const jwk = pkcs8ToJwk(privateKey as unknown as Uint8Array);
+  const jwk = await pkcs8ToJwk(privateKey as unknown as Uint8Array);
   return jwk;
 }
 
@@ -74,13 +74,10 @@ export async function pkcs8ToJwk(
  */
 export async function validateMnemonic(mnemonic: string): Promise<boolean> {
   try {
-    // Check if it's exactly 12 words
     const words = mnemonic.trim().split(/\s+/);
     if (words.length !== 12) {
       return false;
     }
-
-    // Use bip39 validation
     const result = await bip39Validate(mnemonic, wordlists.english);
     return result;
   } catch {

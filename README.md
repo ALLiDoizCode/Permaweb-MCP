@@ -48,7 +48,11 @@ Permamind is a Model Context Protocol (MCP) server that provides an immortal mem
 
 ### 🛠 **Universal AO Integration**
 
+- **Complete Process Lifecycle**: Create → Evaluate → Communicate → Query workflows
 - **Natural Language Interface**: Talk to any AO process in plain English
+- **Lua Code Evaluation**: Execute and test code directly within AO processes
+- **Process Creation**: Spawn new AO processes with optional template support
+- **Message History**: Query and monitor all process communications
 - **Markdown Documentation**: Simple process documentation format
 - **Token Operations**: Advanced minting strategies and credit notice system
 - **Smart Templates**: Auto-detect common process types (tokens, NFTs, DAOs)
@@ -80,6 +84,7 @@ Permamind is a Model Context Protocol (MCP) server that provides an immortal mem
 ### 🌐 **Integration Guides**
 
 - **[AO Process Integration](docs/ao-integration.md)** - Connect any AO process
+- **[Process Management Workflows](docs/process-workflows.md)** - Complete lifecycle examples
 - **[Token Development](docs/token-development.md)** - Build token systems
 - **[Knowledge Graphs](docs/knowledge-graphs.md)** - Memory relationships
 - **[MCP Client Setup](docs/mcp-setup.md)** - Configure Claude, VS Code, etc.

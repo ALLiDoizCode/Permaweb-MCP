@@ -15,7 +15,7 @@ export class GetTokenBalanceCommand extends ToolCommand<
 > {
   protected metadata: ToolMetadata = {
     description:
-      "Get token balance for a specific address. Supports token names/tickers and contact names from registry.",
+      "Core MVP functionality: Get token balance for a specific address. Supports token names/tickers and contact names from registry.",
     name: "getTokenBalance",
     openWorldHint: false,
     readOnlyHint: true,

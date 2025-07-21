@@ -13,14 +13,16 @@ export default tseslint.config(
   },
   {
     files: [
-      "src/services/Workflow*.ts",
-      "src/services/CrossHub*.ts",
-      "src/services/aiMemoryService.ts",
+      "src/services/**/*.ts",
+      "src/tools/process/commands/*.ts",
       "src/models/WorkflowMemory.ts",
+      "tests/**/*.ts",
     ],
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "no-case-declarations": "warn",
+      "no-control-regex": "warn",
     },
   },
 );

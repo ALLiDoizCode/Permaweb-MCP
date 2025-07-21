@@ -45,9 +45,13 @@ export const evalProcess = async (
 ) => {
   try {
     const tags = Eval();
-    await send(signer, processId, tags, data);
-  } catch {
-    // Silent error handling for evaluation process
+    const result = await send(signer, processId, tags, data);
+    return result;
+  } catch (error) {
+    // Return error details instead of silent null
+    throw new Error(
+      `Process evaluation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 };
 

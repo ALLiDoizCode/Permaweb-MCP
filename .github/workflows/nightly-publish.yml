@@ -1,0 +1,116 @@
+name: Nightly NPM Publish
+
+on:
+  schedule:
+    # Run at 12:00 AM EST (5:00 AM UTC) every day
+    - cron: '0 5 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY_URL: 'https://registry.npmjs.org'
+
+jobs:
+  nightly-publish:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/development' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: ${{ env.REGISTRY_URL }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run quality checks
+        run: npm run ci:quality
+
+      - name: Generate nightly version
+        id: version
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Generate nightly version with timestamp
+          TIMESTAMP=$(date +"%Y%m%d%H%M%S")
+          NIGHTLY_VERSION="${CURRENT_VERSION}-nightly.${TIMESTAMP}"
+          echo "Nightly version: $NIGHTLY_VERSION"
+          
+          # Update package.json with nightly version
+          npm version $NIGHTLY_VERSION --no-git-tag-version
+          
+          # Export version for later steps
+          echo "version=$NIGHTLY_VERSION" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run final tests
+        run: npm run test:coverage
+
+      - name: Publish to NPM
+        id: npm-publish
+        run: |
+          echo "Publishing to NPM with nightly tag..."
+          npm publish --tag nightly --access public
+          echo "npm-published=true" >> $GITHUB_OUTPUT
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub release
+        id: github-release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: nightly-${{ steps.version.outputs.timestamp }}
+          name: Nightly Build ${{ steps.version.outputs.version }}
+          body: |
+            🌙 **Nightly Build** - ${{ steps.version.outputs.version }}
+            
+            This is an automated nightly build from the development branch.
+            
+            **Installation:**
+            ```bash
+            npm install permamind@nightly
+            ```
+            
+            **Changes since last release:**
+            - Built from development branch commit: ${{ github.sha }}
+            - Timestamp: ${{ steps.version.outputs.timestamp }}
+            
+            ⚠️ **Warning:** This is a pre-release version intended for testing and development purposes only.
+          draft: false
+          prerelease: true
+
+      - name: Rollback on failure
+        if: failure() && steps.npm-publish.outputs.npm-published == 'true'
+        run: |
+          echo "❌ Build failed after NPM publish. Consider manual cleanup if needed."
+          echo "Published version: ${{ steps.version.outputs.version }}"
+          echo "You may need to unpublish manually: npm unpublish permamind@${{ steps.version.outputs.version }}"
+
+      - name: Notify on success
+        if: success()
+        run: |
+          echo "✅ Nightly build ${{ steps.version.outputs.version }} published successfully"
+          echo "📦 Install with: npm install permamind@nightly"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Nightly build failed"
+          echo "Check the workflow logs for details"

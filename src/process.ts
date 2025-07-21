@@ -57,14 +57,55 @@ export const read = async (
   }
 };
 
+// Helper function to ensure wallet is in correct format for AO Connect
+function sanitizeJWKForAO(jwk: JWKInterface): JWKInterface {
+  // Create a clean JWK with only the required properties for AO Connect
+  return {
+    d: jwk.d,
+    dp: jwk.dp,
+    dq: jwk.dq,
+    e: jwk.e,
+    kty: jwk.kty,
+    n: jwk.n,
+    p: jwk.p,
+    q: jwk.q,
+    qi: jwk.qi,
+  };
+}
+
 export const createProcess = async (signer: JWKInterface) => {
-  const processId = await spawn({
-    module: AOS_MODULE(),
-    scheduler: SCHEDULER(),
-    signer: createDataItemSigner(signer),
-  });
-  await sleep(3000);
-  return processId;
+  try {
+    // Validate the signer before using it
+    if (!signer || typeof signer !== "object") {
+      throw new Error(
+        "Invalid signer: signer must be a valid JWKInterface object",
+      );
+    }
+
+    // Check for required JWK properties
+    const requiredProps = ["kty", "n", "e"];
+    for (const prop of requiredProps) {
+      if (!(prop in signer)) {
+        throw new Error(`Invalid signer: missing required property '${prop}'`);
+      }
+    }
+
+    // Sanitize the JWK for AO Connect compatibility
+    const cleanJWK = sanitizeJWKForAO(signer);
+
+    const dataItemSigner = createDataItemSigner(cleanJWK);
+    const processId = await spawn({
+      module: AOS_MODULE(),
+      scheduler: SCHEDULER(),
+      signer: dataItemSigner,
+    });
+    await sleep(3000);
+    return processId;
+  } catch (error) {
+    throw new Error(
+      `Process creation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
 };
 
 export interface TokenDeploymentConfig {
@@ -110,11 +151,38 @@ export interface TokenDeploymentConfig {
 };*/
 
 const readMessage = async (messageId: string, processId: string) => {
-  const { Error } = await result({
+  const resultData = await result({
     message: messageId,
     process: processId,
   });
+
+  const { Error, Messages, Output } = resultData;
   if (Error !== undefined) {
     throw Error;
   }
+
+  // Return the actual output from the process
+  if (Output && Output.data) {
+    try {
+      // Try to parse as JSON first, in case it's a structured response
+      const parsed = JSON.parse(Output.data);
+      // If it has a result field, return that (for eval responses)
+      if (parsed.result !== undefined) {
+        return parsed.result;
+      }
+      // Otherwise return the parsed object
+      return parsed;
+    } catch {
+      // If not JSON, return the raw data
+      return Output.data;
+    }
+  }
+
+  // If no output data, check for messages
+  if (Messages && Messages.length > 0) {
+    const lastMessage = Messages[Messages.length - 1];
+    return lastMessage.Data || lastMessage;
+  }
+
+  return null;
 };

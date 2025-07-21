@@ -5,23 +5,48 @@ import { JWKInterface } from "arweave/node/lib/wallet.js";
 import dotenv from "dotenv";
 import { FastMCP } from "fastmcp";
 
+import type { ProcessDefinition } from "./services/ProcessCommunicationService.js";
+
 import { HUB_REGISTRY_ID } from "./constants.js";
 import { getKeyFromMnemonic } from "./mnemonic.js";
 // MemoryType is now imported via the tools module
 import { ProfileCreateData } from "./models/Profile.js";
 import { defaultProcessService } from "./services/DefaultProcessService.js";
 import { hubRegistryService } from "./services/RegistryService.js";
+import { TokenProcessTemplateService } from "./services/TokenProcessTemplateService.js";
 import { ContactToolFactory } from "./tools/contact/ContactToolFactory.js";
 import { DocumentationToolFactory } from "./tools/documentation/DocumentationToolFactory.js";
 import { ToolContext, toolRegistry } from "./tools/index.js";
 import { MemoryToolFactory } from "./tools/memory/MemoryToolFactory.js";
 import { ProcessToolFactory } from "./tools/process/ProcessToolFactory.js";
-import { SystemToolFactory } from "./tools/system/SystemToolFactory.js";
-import { TokenToolFactory } from "./tools/token/TokenToolFactory.js";
+import { UserToolFactory } from "./tools/user/UserToolFactory.js";
 
 let keyPair: JWKInterface;
 let publicKey: string;
 let hubId: string;
+let embeddedTemplates: Map<string, ProcessDefinition>;
+let initializationComplete = false;
+
+// Export getters for current user state
+export const getCurrentUserState = () => ({
+  embeddedTemplates,
+  hubId,
+  initializationComplete,
+  keyPair,
+  publicKey,
+});
+
+// Export template availability checker
+export const isTemplateAvailable = (templateType: string): boolean => {
+  return embeddedTemplates?.has(templateType) ?? false;
+};
+
+// Export embedded templates getter
+export const getEmbeddedTemplates = ():
+  | Map<string, ProcessDefinition>
+  | undefined => {
+  return embeddedTemplates;
+};
 
 // Configure environment variables silently for MCP protocol compatibility
 // Suppress all output from dotenv and any other initialization
@@ -73,6 +98,21 @@ async function init() {
   // Verify default process templates are loaded (silently for MCP compatibility)
   defaultProcessService.getDefaultProcesses();
 
+  // Initialize embedded templates
+  embeddedTemplates = new Map<string, ProcessDefinition>();
+  embeddedTemplates.set(
+    "token",
+    TokenProcessTemplateService.getTokenTemplate(""),
+  );
+
+  // Verify template availability (silent verification for MCP compatibility)
+  if (!embeddedTemplates.has("token")) {
+    throw new Error("Failed to initialize embedded token template");
+  }
+
+  // Mark initialization as complete
+  initializationComplete = true;
+
   // No automatic context loading on startup for better performance
 }
 
@@ -83,10 +123,13 @@ function setupToolRegistry() {
 
   // Create tool context
   const context: ToolContext = {
+    embeddedTemplates,
     hubId,
     keyPair,
     publicKey,
   };
+
+  // Note: BMAD and Claude Code tools removed
 
   // Register Memory tools
   const memoryFactory = new MemoryToolFactory({
@@ -97,16 +140,6 @@ function setupToolRegistry() {
   });
 
   memoryFactory.registerTools(toolRegistry);
-
-  // Register Token tools
-  const tokenFactory = new TokenToolFactory({
-    categoryDescription:
-      "Token management tools for creating, transferring, and querying tokens",
-    categoryName: "Token",
-    context,
-  });
-
-  tokenFactory.registerTools(toolRegistry);
 
   // Register Contact tools
   const contactFactory = new ContactToolFactory({
@@ -135,14 +168,15 @@ function setupToolRegistry() {
 
   documentationFactory.registerTools(toolRegistry);
 
-  // Register System tools
-  const systemFactory = new SystemToolFactory({
-    categoryDescription: "System information and utility tools",
-    categoryName: "System",
+  // Register User tools
+  const userFactory = new UserToolFactory({
+    categoryDescription:
+      "User information tools for getting public key and hub ID",
+    categoryName: "User",
     context,
   });
 
-  systemFactory.registerTools(toolRegistry);
+  userFactory.registerTools(toolRegistry);
 }
 
 const server = new FastMCP({
@@ -150,94 +184,40 @@ const server = new FastMCP({
   version: "1.0.0",
 });
 
-// All tools are now registered via the tool registry
-// Start server with stdio transport (matches Claude Desktop expectation)
+// Initialize properly first, then register tools and start server
+async function initializeAndStart() {
+  try {
+    // Complete initialization first to get real keyPair and context
+    await init();
 
-// Register basic tools immediately to ensure MCP server has tools available
-// while initialization happens in background
-function registerBasicTools() {
-  // Create a minimal tool context with placeholders
-  const basicContext: ToolContext = {
-    hubId: "initializing",
-    keyPair: {} as JWKInterface, // Will be replaced after init
-    publicKey: "initializing",
-  };
+    // Now setup tool registry with proper context
+    setupToolRegistry();
 
-  // Setup tool registry with basic context
-  toolRegistry.clear();
+    // Get tool definitions with proper context and register them
+    const context: ToolContext = {
+      embeddedTemplates,
+      hubId,
+      keyPair,
+      publicKey,
+    };
 
-  // Register Memory tools
-  const memoryFactory = new MemoryToolFactory({
-    categoryDescription:
-      "AI Memory management tools for persistent storage and retrieval",
-    categoryName: "Memory",
-    context: basicContext,
-  });
-  memoryFactory.registerTools(toolRegistry);
+    const toolDefinitions = toolRegistry.getToolDefinitions(context);
+    for (const toolDefinition of toolDefinitions) {
+      server.addTool(toolDefinition);
+    }
 
-  // Register Token tools
-  const tokenFactory = new TokenToolFactory({
-    categoryDescription:
-      "Token management tools for creating, transferring, and querying tokens",
-    categoryName: "Token",
-    context: basicContext,
-  });
-  tokenFactory.registerTools(toolRegistry);
-
-  // Register Contact tools
-  const contactFactory = new ContactToolFactory({
-    categoryDescription: "Contact and address management tools",
-    categoryName: "Contact",
-    context: basicContext,
-  });
-  contactFactory.registerTools(toolRegistry);
-
-  // Register Process tools
-  const processFactory = new ProcessToolFactory({
-    categoryDescription: "AO process communication and blockchain query tools",
-    categoryName: "Process",
-    context: basicContext,
-  });
-  processFactory.registerTools(toolRegistry);
-
-  // Register Documentation tools
-  const documentationFactory = new DocumentationToolFactory({
-    categoryDescription: "Permaweb documentation and deployment tools",
-    categoryName: "Documentation",
-    context: basicContext,
-  });
-  documentationFactory.registerTools(toolRegistry);
-
-  // Register System tools
-  const systemFactory = new SystemToolFactory({
-    categoryDescription: "System information and utility tools",
-    categoryName: "System",
-    context: basicContext,
-  });
-  systemFactory.registerTools(toolRegistry);
-
-  // Get tool definitions and register them
-  const toolDefinitions = toolRegistry.getToolDefinitions(basicContext);
-  for (const toolDefinition of toolDefinitions) {
-    server.addTool(toolDefinition);
+    // Start the server with fully initialized tools
+    server.start({
+      transportType: "stdio",
+    });
+  } catch {
+    // Silent error handling for stdio transport compatibility
+    // Fallback: start server without tools if initialization fails
+    server.start({
+      transportType: "stdio",
+    });
   }
 }
 
-// Register basic tools immediately
-registerBasicTools();
-
-// Start the server immediately with basic tools
-server.start({
-  transportType: "stdio",
-});
-
-// Initialize properly in background and update tools when ready
-init()
-  .then(() => {
-    // After real initialization, update the tool registry with proper context
-    setupToolRegistry();
-    // Note: We don't call registerToolsFromRegistry again as tools are already registered
-  })
-  .catch(() => {
-    // Silent error handling for stdio transport compatibility
-  });
+// Initialize and start the server
+initializeAndStart();
