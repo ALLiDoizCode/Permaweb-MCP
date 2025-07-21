@@ -10,12 +10,14 @@ import type {
   GitContext,
 } from "../models/TeamAgent.js";
 
-import { ClaudeCodeAgentService } from "./ClaudeCodeAgentService.js";
+// ClaudeCodeAgentService removed - BMAD functionality
 
 const execAsync = promisify(exec);
 
 export class GitContextService {
-  constructor(private agentService: ClaudeCodeAgentService) {}
+  constructor() {
+    // Agent service removed - BMAD functionality
+  }
 
   async analyzeRepository(repoPath: string): Promise<GitContext> {
     try {

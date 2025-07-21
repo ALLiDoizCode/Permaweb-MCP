@@ -14,7 +14,6 @@ import {
   type TeamAgent,
 } from "../models/TeamAgent.js";
 import { type aiMemoryService } from "./aiMemoryService.js";
-import { type BMADResourceService } from "./BMADResourceService.js";
 import { type ProcessCommunicationService } from "./ProcessCommunicationService.js";
 
 export interface AgentBehavior {
@@ -378,7 +377,6 @@ export class TeamAgentServiceImpl implements TeamAgentService {
   constructor(
     private memoryService: typeof aiMemoryService,
     private processService: ProcessCommunicationService,
-    private bmadResourceService: BMADResourceService,
   ) {}
 
   async addConversationEntry(
@@ -1198,11 +1196,9 @@ export class TeamAgentServiceImpl implements TeamAgentService {
 export const createTeamAgentService = (
   memoryService: typeof aiMemoryService,
   processService: ProcessCommunicationService,
-  bmadResourceService: BMADResourceService,
 ): TeamAgentService => {
   return new TeamAgentServiceImpl(
     memoryService,
     processService,
-    bmadResourceService,
   );
 };

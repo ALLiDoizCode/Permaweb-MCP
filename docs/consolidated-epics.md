@@ -164,7 +164,7 @@ Create a tool that installs the complete BMAD methodology into any user's projec
 - [ ] Complete .bmad-core directory installation working
 - [ ] All agent slash commands implemented: /analyst, /architect, /dev, /pm, /qa, /sm, /ux-expert, /bmad-master
 - [ ] All task slash commands implemented (20 commands)
-- [ ] All template slash commands implemented (15 commands)  
+- [ ] All template slash commands implemented (15 commands)
 - [ ] All checklist slash commands implemented (7 commands)
 - [ ] All workflow slash commands implemented (6 commands)
 - [ ] Auto-detection of BMAD installation for slash commands

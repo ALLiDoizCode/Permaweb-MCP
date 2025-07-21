@@ -14,8 +14,6 @@ import { ProfileCreateData } from "./models/Profile.js";
 import { defaultProcessService } from "./services/DefaultProcessService.js";
 import { hubRegistryService } from "./services/RegistryService.js";
 import { TokenProcessTemplateService } from "./services/TokenProcessTemplateService.js";
-import { BMADToolFactory } from "./tools/bmad/BMADToolFactory.js";
-import { ClaudeCodeToolFactory } from "./tools/claudecode/ClaudeCodeToolFactory.js";
 import { ContactToolFactory } from "./tools/contact/ContactToolFactory.js";
 import { DocumentationToolFactory } from "./tools/documentation/DocumentationToolFactory.js";
 import { ToolContext, toolRegistry } from "./tools/index.js";
@@ -131,25 +129,7 @@ function setupToolRegistry() {
     publicKey,
   };
 
-  // Register BMAD tools
-  const bmadFactory = new BMADToolFactory({
-    categoryDescription:
-      "BMAD methodology tools for structured development workflows",
-    categoryName: "BMAD",
-    context,
-  });
-
-  bmadFactory.registerTools(toolRegistry);
-
-  // Register Claude Code tools
-  const claudeCodeFactory = new ClaudeCodeToolFactory({
-    categoryDescription:
-      "Claude Code agent detection and management tools for file-based agent activation",
-    categoryName: "Claude Code",
-    context,
-  });
-
-  claudeCodeFactory.registerTools(toolRegistry);
+  // Note: BMAD and Claude Code tools removed
 
   // Register Memory tools
   const memoryFactory = new MemoryToolFactory({
