@@ -177,8 +177,7 @@ export class TokenProcessTemplateService {
       if (handler.examples && handler.examples.length > 0) {
         markdown += "Examples:\n";
         for (const example of handler.examples) {
-          markdown += `- ${example}
-`;
+          markdown += `- ${example}\n`;
         }
         markdown += "\n";
       }

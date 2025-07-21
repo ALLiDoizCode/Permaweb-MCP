@@ -659,7 +659,7 @@ const generateStageGuidance = (
 
 const generateActionItems = (
   stage: "deploy" | "develop" | "test",
-  processDefinition: TealProcessDefinition,
+  _processDefinition: TealProcessDefinition,
 ): string[] => {
   const items = [];
 
@@ -688,7 +688,7 @@ const generateActionItems = (
 
 const getStageExamples = (
   stage: "deploy" | "develop" | "test",
-  processDefinition: TealProcessDefinition,
+  _processDefinition: TealProcessDefinition,
 ): AOCodeExample[] => {
   // Return stage-specific examples
   return generateCodeExamples(`${stage} examples`, { stage });
@@ -696,7 +696,7 @@ const getStageExamples = (
 
 const generateTroubleshootingGuides = (
   _stage: "deploy" | "develop" | "test",
-  processDefinition: TealProcessDefinition,
+  _processDefinition: TealProcessDefinition,
 ): AOTroubleshootingGuide[] => {
   const guides: AOTroubleshootingGuide[] = [];
 
@@ -975,7 +975,7 @@ Handlers.add("my-handler", Handlers.utils.hasMatchingTag("Action", "MyAction"), 
 };
 
 const generateRelevantPatterns = (
-  processDefinition: TealProcessDefinition,
+  _processDefinition: TealProcessDefinition,
   currentTask: string,
 ): AOPattern[] => {
   const patterns: AOPattern[] = [];
@@ -1019,7 +1019,7 @@ end`,
 };
 
 const generateSuggestedImplementations = (
-  processDefinition: TealProcessDefinition,
+  _processDefinition: TealProcessDefinition,
   currentTask: string,
 ): AOCodeExample[] => {
   return generateCodeExamples(currentTask, { processType: "generic" });
