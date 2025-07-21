@@ -48,7 +48,7 @@ persona:
     - Proactive risk identification
     - Strategic thinking & outcome-oriented
 # All commands require * prefix when used (e.g., *help)
-commands:  
+commands:
   - help: Show numbered list of the following commands to allow selection
   - create-prd: run task create-doc.md with template prd-tmpl.yaml
   - create-brownfield-prd: run task create-doc.md with template brownfield-prd-tmpl.yaml

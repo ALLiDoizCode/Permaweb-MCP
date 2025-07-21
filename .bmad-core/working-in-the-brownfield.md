@@ -206,7 +206,6 @@ The PO ensures:
 Follow the enhanced IDE Development Workflow:
 
 1. **Ensure documents are in project**:
-
    - Copy `docs/prd.md` (or brownfield-prd.md)
    - Copy `docs/architecture.md` (or brownfield-architecture.md)
 

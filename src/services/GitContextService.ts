@@ -75,7 +75,7 @@ export class GitContextService {
 
       // Development context indicators
       if (
-        commitMessages.match(/\b(feat|fix|refactor|perf)\b/i) ||
+        commitMessages.match(/(feat|fix|refactor|perf)/i) ||
         fileExtensions.some((ext) =>
           [".go", ".java", ".js", ".py", ".ts"].includes(ext),
         )
@@ -85,7 +85,7 @@ export class GitContextService {
 
       // Documentation context indicators
       if (
-        commitMessages.match(/\b(docs|readme|documentation)\b/i) ||
+        commitMessages.match(/(docs|readme|documentation)/i) ||
         fileExtensions.some((ext) => [".md", ".rst", ".txt"].includes(ext))
       ) {
         return "pm"; // PM often handles documentation
@@ -93,7 +93,7 @@ export class GitContextService {
 
       // Test context indicators
       if (
-        commitMessages.match(/\b(test|spec|coverage)\b/i) ||
+        commitMessages.match(/(test|spec|coverage)/i) ||
         gitContext.modifiedFiles.some((file) => file.includes("test"))
       ) {
         return "qa";
@@ -101,7 +101,7 @@ export class GitContextService {
 
       // Architecture context indicators
       if (
-        commitMessages.match(/\b(architect|design|structure)\b/i) ||
+        commitMessages.match(/(architect|design|structure)/i) ||
         gitContext.modifiedFiles.some((file) => file.includes("architecture"))
       ) {
         return "architect";

@@ -210,7 +210,7 @@ jobs:
 
       - name: Create GitHub Release
         if: github.event.inputs.dry_run != 'true' && github.event_name == 'push'
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

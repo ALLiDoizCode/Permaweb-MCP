@@ -1197,8 +1197,5 @@ export const createTeamAgentService = (
   memoryService: typeof aiMemoryService,
   processService: ProcessCommunicationService,
 ): TeamAgentService => {
-  return new TeamAgentServiceImpl(
-    memoryService,
-    processService,
-  );
+  return new TeamAgentServiceImpl(memoryService, processService);
 };

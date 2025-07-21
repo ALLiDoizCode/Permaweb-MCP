@@ -121,8 +121,7 @@ export class ExecuteActionCommand extends ToolCommand<
       if (handler.parameters && handler.parameters.length > 0) {
         for (const param of handler.parameters) {
           const required = param.required ? "required" : "optional";
-          markdown += `- ${param.name}: ${param.description} (${required})
-`;
+          markdown += `- ${param.name}: ${param.description} (${required})\n`;
         }
         markdown += "\n";
       }
@@ -130,7 +129,8 @@ export class ExecuteActionCommand extends ToolCommand<
       if (handler.examples && handler.examples.length > 0) {
         markdown += "Examples:\n";
         for (const example of handler.examples) {
-          markdown += `- ${example}\n`;
+          markdown += `- ${example}
+`;
         }
         markdown += "\n";
       }
