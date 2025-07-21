@@ -121,8 +121,7 @@ export class ExecuteActionCommand extends ToolCommand<
       if (handler.parameters && handler.parameters.length > 0) {
         for (const param of handler.parameters) {
           const required = param.required ? "required" : "optional";
-          markdown += `- ${param.name}: ${param.description} (${required})
-`;
+          markdown += `- ${param.name}: ${param.description} (${required})\n`;
         }
         markdown += "\n";
       }
