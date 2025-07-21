@@ -454,7 +454,7 @@ const buildEnhancedQuery = (
 
 const extractDevelopmentGuidance = (
   results: PermawebDocsResult[],
-  context?: AODevelopmentContext,
+  _context?: AODevelopmentContext,
 ): string => {
   if (results.length === 0) {
     return "No specific guidance found. Consider checking the AO documentation for general development patterns.";
@@ -628,7 +628,7 @@ const buildProcessContextQuery = (
 const generateStageGuidance = (
   stage: "deploy" | "develop" | "test",
   processDefinition: TealProcessDefinition,
-  results: PermawebDocsResult[],
+  _results: PermawebDocsResult[],
 ): string => {
   switch (stage) {
     case "deploy":
@@ -695,8 +695,8 @@ const getStageExamples = (
 };
 
 const generateTroubleshootingGuides = (
-  stage: "deploy" | "develop" | "test",
-  processDefinition: TealProcessDefinition,
+  _stage: "deploy" | "develop" | "test",
+  _processDefinition: TealProcessDefinition,
 ): AOTroubleshootingGuide[] => {
   const guides: AOTroubleshootingGuide[] = [];
 

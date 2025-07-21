@@ -493,7 +493,7 @@ ${results.artifacts
         }
 
         return true;
-      } catch (error) {
+      } catch {
         return false;
       }
     },
@@ -642,9 +642,9 @@ const executeTestStage = async (
 
 const executeDeployStage = async (
   stage: AODevelopmentStage,
-  pipeline: AODevelopmentPipeline,
-  deployService: PermawebDeployService,
-  signer: JWKInterface,
+  _pipeline: AODevelopmentPipeline,
+  _deployService: PermawebDeployService,
+  _signer: JWKInterface,
 ): Promise<any> => {
   // This would deploy the compiled process
   return {
