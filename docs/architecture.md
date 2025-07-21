@@ -212,9 +212,15 @@ Centralized tool management with category organization:
 
 **Process Tools** (`src/tools/process/`)
 
+- `CreateProcessCommand` - Spawn new AO processes with template support
+- `EvalProcessCommand` - Execute Lua code within processes for testing/setup
 - `ExecuteActionCommand` - Smart process communication
 - `ExecuteProcessActionCommand` - Markdown-driven execution
 - `QueryAOProcessMessagesCommand` - Message history analysis
+
+The Process Tools provide complete AO process lifecycle management:
+**Create → Evaluate → Communicate → Query** workflows enable comprehensive
+process development, testing, and monitoring capabilities.
 
 **Documentation Tools** (`src/tools/documentation/`)
 
@@ -475,19 +481,120 @@ sequenceDiagram
 
 ### Planned Enhancements
 
-1. **Distributed Caching**: Redis/memcached integration
-2. **Event Streaming**: Real-time memory updates
-3. **Advanced Analytics**: Machine learning integration
-4. **Multi-Network Support**: Cross-chain compatibility
-5. **Federated Architecture**: Distributed server networks
+1. **Agent UX Revolution**: Dual-platform collaborative AI teams
+2. **Distributed Caching**: Redis/memcached integration
+3. **Event Streaming**: Real-time memory updates
+4. **Advanced Analytics**: Machine learning integration
+5. **Multi-Network Support**: Cross-chain compatibility
+6. **Federated Architecture**: Distributed server networks
+
+### Agent UX Enhancement Architecture
+
+The future Agent UX system will transform Permamind into a collaborative AI team platform:
+
+#### Dual-Platform Integration
+
+**Claude Desktop Architecture:**
+
+```mermaid
+graph TB
+    subgraph "Project Workspace"
+        PC[Project Container]
+        PM[PM Conversation]
+        DEV[Dev Conversation]
+        UX[UX Conversation]
+        QA[QA Conversation]
+    end
+
+    subgraph "Agent Orchestration Layer"
+        CD[Conversation Detector]
+        AL[Agent Loader]
+        PS[Persona Service]
+        CM[Context Manager]
+    end
+
+    subgraph "Shared Intelligence"
+        HUB[Permamind Hub]
+        MT[Memory Tagging]
+        CS[Context Sharing]
+    end
+
+    PM --> CD
+    DEV --> CD
+    UX --> CD
+    QA --> CD
+
+    CD --> AL
+    AL --> PS
+    PS --> CM
+
+    CM --> HUB
+    HUB --> MT
+    MT --> CS
+```
+
+**Claude Code Architecture:**
+
+```mermaid
+graph TB
+    subgraph "File System"
+        CLI[CLI Commands]
+        BMAD[.bmad/ Directory]
+        GIT[Git Operations]
+        FILES[Project Files]
+    end
+
+    subgraph "Detection Layer"
+        FD[File Detector]
+        CMD[Command Parser]
+        GD[Git Detector]
+    end
+
+    subgraph "Agent State"
+        AC[Agent Config]
+        WS[Workflow State]
+        HS[Handoff System]
+    end
+
+    CLI --> CMD
+    FILES --> FD
+    GIT --> GD
+
+    CMD --> AC
+    FD --> AC
+    GD --> AC
+
+    AC --> WS
+    WS --> HS
+    HS --> HUB
+```
+
+#### Memory-Driven Collaboration
+
+**Context Sharing Architecture:**
+
+- **Single Hub Design**: All agents share one Permamind hub
+- **Smart Tagging**: Memory tagged with agent roles and sharing permissions
+- **Workflow Awareness**: Context filtered by project stage and agent specialization
+- **Cross-Platform Sync**: Seamless context transfer between Claude Desktop and Claude Code
+
+#### Persona Management System
+
+**Dynamic Persona Loading:**
+
+- **Workflow Integration**: Personas adapt to BMad workflow stages
+- **Team Coordination**: Complementary personalities for optimal collaboration
+- **Evolution Engine**: Personas improve based on user feedback and performance
+- **Context Optimization**: Agent-specific memory filtering for focused interactions
 
 ### Extensibility Points
 
-1. **Plugin Architecture**: Custom tool development
-2. **Protocol Extensions**: New MCP capabilities
-3. **Storage Backends**: Alternative persistence layers
-4. **AI Model Integration**: Custom reasoning engines
-5. **Workflow Engines**: Advanced process orchestration
+1. **Agent Persona System**: Dynamic AI team member personalities
+2. **Plugin Architecture**: Custom tool development
+3. **Protocol Extensions**: New MCP capabilities
+4. **Storage Backends**: Alternative persistence layers
+5. **AI Model Integration**: Custom reasoning engines
+6. **Workflow Engines**: Advanced process orchestration
 
 ## Conclusion
 

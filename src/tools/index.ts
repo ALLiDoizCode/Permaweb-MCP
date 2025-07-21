@@ -1,4 +1,3 @@
-export * from "./bmad/index.js";
 export * from "./contact/index.js";
 export * from "./core/index.js";
 export * from "./documentation/index.js";

@@ -449,25 +449,7 @@ describe("TeamAgentService", () => {
 
       // Mock successful message delivery
       const mockAgent = {
-        id: "mock-agent",
-        name: "Mock Agent",
-        role: "developer",
-        description: "Mock agent for testing",
         capabilities: ["testing"],
-        state: { 
-          conversationHistory: [],
-          lastActivity: new Date().toISOString(),
-          projectContext: {
-            constraints: [],
-            objectives: [],
-            phase: "testing",
-            projectId: "test-project",
-            projectName: "Test Project",
-            resources: [],
-            stakeholders: [],
-          },
-          status: "active" as const,
-        },
         context: {
           collaborators: [],
           environment: "test",
@@ -481,10 +463,10 @@ describe("TeamAgentService", () => {
             progress: 0,
           },
         },
+        description: "Mock agent for testing",
+        id: "mock-agent",
         memory: {
           longTerm: [],
-          shortTerm: [],
-          working: [],
           preferences: {
             collaboration: {
               feedbackStyle: "constructive" as const,
@@ -492,12 +474,34 @@ describe("TeamAgentService", () => {
               preferredTools: [],
             },
             communicationStyle: "formal" as const,
-            notifications: { enabled: true, frequency: "immediate" as const, types: [] },
+            notifications: {
+              enabled: true,
+              frequency: "immediate" as const,
+              types: [],
+            },
             workingHours: { end: "17:00", start: "09:00", timezone: "UTC" },
           },
+          shortTerm: [],
+          working: [],
+        },
+        name: "Mock Agent",
+        role: "developer",
+        state: {
+          conversationHistory: [],
+          lastActivity: new Date().toISOString(),
+          projectContext: {
+            constraints: [],
+            objectives: [],
+            phase: "testing",
+            projectId: "test-project",
+            projectName: "Test Project",
+            resources: [],
+            stakeholders: [],
+          },
+          status: "active" as const,
         },
       };
-      
+
       mockMemoryService.searchAdvanced.mockResolvedValue([
         { content: JSON.stringify(mockAgent) },
       ]);

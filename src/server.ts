@@ -14,7 +14,6 @@ import { ProfileCreateData } from "./models/Profile.js";
 import { defaultProcessService } from "./services/DefaultProcessService.js";
 import { hubRegistryService } from "./services/RegistryService.js";
 import { TokenProcessTemplateService } from "./services/TokenProcessTemplateService.js";
-import { BMADToolFactory } from "./tools/bmad/BMADToolFactory.js";
 import { ContactToolFactory } from "./tools/contact/ContactToolFactory.js";
 import { DocumentationToolFactory } from "./tools/documentation/DocumentationToolFactory.js";
 import { ToolContext, toolRegistry } from "./tools/index.js";
@@ -130,15 +129,7 @@ function setupToolRegistry() {
     publicKey,
   };
 
-  // Register BMAD tools
-  const bmadFactory = new BMADToolFactory({
-    categoryDescription:
-      "BMAD methodology tools for structured development workflows",
-    categoryName: "BMAD",
-    context,
-  });
-
-  bmadFactory.registerTools(toolRegistry);
+  // Note: BMAD and Claude Code tools removed
 
   // Register Memory tools
   const memoryFactory = new MemoryToolFactory({
@@ -193,103 +184,40 @@ const server = new FastMCP({
   version: "1.0.0",
 });
 
-// All tools are now registered via the tool registry
-// Start server with stdio transport (matches Claude Desktop expectation)
+// Initialize properly first, then register tools and start server
+async function initializeAndStart() {
+  try {
+    // Complete initialization first to get real keyPair and context
+    await init();
 
-// Register basic tools immediately to ensure MCP server has tools available
-// while initialization happens in background
-function registerBasicTools() {
-  // Create a minimal tool context with placeholders
-  // Initialize embedded templates immediately for token NLS availability
-  const basicEmbeddedTemplates = new Map<string, ProcessDefinition>();
-  basicEmbeddedTemplates.set(
-    "token",
-    TokenProcessTemplateService.getTokenTemplate(""),
-  );
+    // Now setup tool registry with proper context
+    setupToolRegistry();
 
-  const basicContext: ToolContext = {
-    embeddedTemplates: basicEmbeddedTemplates,
-    hubId: "initializing",
-    keyPair: {} as JWKInterface, // Will be replaced after init
-    publicKey: "initializing",
-  };
+    // Get tool definitions with proper context and register them
+    const context: ToolContext = {
+      embeddedTemplates,
+      hubId,
+      keyPair,
+      publicKey,
+    };
 
-  // Setup tool registry with basic context
-  toolRegistry.clear();
+    const toolDefinitions = toolRegistry.getToolDefinitions(context);
+    for (const toolDefinition of toolDefinitions) {
+      server.addTool(toolDefinition);
+    }
 
-  // Register BMAD tools
-  const bmadFactory = new BMADToolFactory({
-    categoryDescription:
-      "BMAD methodology tools for structured development workflows",
-    categoryName: "BMAD",
-    context: basicContext,
-  });
-  bmadFactory.registerTools(toolRegistry);
-
-  // Register Memory tools
-  const memoryFactory = new MemoryToolFactory({
-    categoryDescription:
-      "AI Memory management tools for persistent storage and retrieval",
-    categoryName: "Memory",
-    context: basicContext,
-  });
-  memoryFactory.registerTools(toolRegistry);
-
-  // Register Contact tools
-  const contactFactory = new ContactToolFactory({
-    categoryDescription: "Contact and address management tools",
-    categoryName: "Contact",
-    context: basicContext,
-  });
-  contactFactory.registerTools(toolRegistry);
-
-  // Register Process tools
-  const processFactory = new ProcessToolFactory({
-    categoryDescription: "AO process communication and blockchain query tools",
-    categoryName: "Process",
-    context: basicContext,
-  });
-  processFactory.registerTools(toolRegistry);
-
-  // Register Documentation tools
-  const documentationFactory = new DocumentationToolFactory({
-    categoryDescription: "Permaweb documentation and deployment tools",
-    categoryName: "Documentation",
-    context: basicContext,
-  });
-  documentationFactory.registerTools(toolRegistry);
-
-  // Register User tools
-  const userFactory = new UserToolFactory({
-    categoryDescription:
-      "User information tools for getting public key and hub ID",
-    categoryName: "User",
-    context: basicContext,
-  });
-  userFactory.registerTools(toolRegistry);
-
-  // Get tool definitions and register them
-  const toolDefinitions = toolRegistry.getToolDefinitions(basicContext);
-  for (const toolDefinition of toolDefinitions) {
-    server.addTool(toolDefinition);
+    // Start the server with fully initialized tools
+    server.start({
+      transportType: "stdio",
+    });
+  } catch (error) {
+    // Silent error handling for stdio transport compatibility
+    // Fallback: start server without tools if initialization fails
+    server.start({
+      transportType: "stdio",
+    });
   }
 }
 
-// Register basic tools immediately
-registerBasicTools();
-
-// Start the server immediately with basic tools
-server.start({
-  transportType: "stdio",
-});
-
-// Initialize properly in background and update tools when ready
-init()
-  .then(() => {
-    // After real initialization, update the tool registry with proper context
-    setupToolRegistry();
-    // Note: We don't call registerToolsFromRegistry again as tools are already registered
-  })
-  .catch(() => {
-    // Silent error handling for stdio transport compatibility
-  });
+// Initialize and start the server
+initializeAndStart();
