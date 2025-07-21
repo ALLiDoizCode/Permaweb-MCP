@@ -11,6 +11,7 @@ This document consolidates all epic initiatives for the Permamind project, provi
 3. [Token Tools NLS Migration Epic](#token-tools-nls-migration-epic)
 4. [Agent UX Enhancement Epic - Revolutionary Interface](#agent-ux-enhancement-epic---revolutionary-interface)
 5. [AO Process Management Tools Epic](#ao-process-management-tools-epic)
+6. [Prompt-Based Agent Activation Epic](#prompt-based-agent-activation-epic)
 
 ---
 
@@ -244,18 +245,15 @@ Transform Permamind from single AI interactions to collaborative AI team experie
 
 ### Stories
 
-#### Story 4.1: Claude Desktop Conversation-Based Agent Teams
+#### Story 4.1: Claude Desktop Conversation-Based Agent Teams ⚠️ DEPRECATED
 
-**User Story:** As a Claude Desktop user, I want to create project conversations with agent role names (PM, Dev, UX, QA) so that each conversation automatically activates the appropriate specialist agent with relevant context and cross-conversation awareness.
+**Status:** Deprecated - Superseded by Epic 6 (Prompt-Based Agent Activation)
 
-**Acceptance Criteria:**
+**Reason:** MCP servers cannot access Claude Desktop conversation metadata (names, titles), making conversation-based detection technically infeasible. Epic 6 provides a superior prompt-based approach for the same user value.
 
-- Implement conversation name detection system for automatic agent activation
-- Create agent role mapping system (PM, Dev, UX, QA, SM patterns)
-- Enable cross-conversation context sharing through Permamind memory tagging
-- Support project-based organization with nested conversation structure
-- Maintain conversation-specific context while enabling team collaboration
-- Integrate with existing BMad agent personas and workflow system
+**User Story:** ~~As a Claude Desktop user, I want to create project conversations with agent role names (PM, Dev, UX, QA) so that each conversation automatically activates the appropriate specialist agent with relevant context and cross-conversation awareness.~~
+
+**Replacement:** See Epic 6 for prompt-based agent activation (`@dev ProjectX`, `get me a PM`) which provides the same collaborative agent experience through a technically feasible approach.
 
 #### Story 4.2: Claude Code File-Based Agent Detection
 
@@ -376,6 +374,100 @@ Add comprehensive AO process lifecycle management capabilities to Permamind by i
 
 ---
 
+## Epic 6: Prompt-Based Agent Activation Epic
+
+### Epic Goal
+
+Transform Permamind into an intelligent multi-agent system where users can explicitly invoke specialized AI agents through natural language prompts, enabling team-based collaboration through clear, user-controlled agent activation patterns.
+
+### Epic Description
+
+**Existing System Context:**
+
+- Current functionality: Individual AI interactions through MCP tools with single-context sessions
+- Technology stack: FastMCP + TypeScript + Permamind memory system + AO Connect + existing TeamAgent infrastructure
+- Integration points: MCP server, AI memory services, BMad workflow system, existing agent personas
+
+**Enhancement Details:**
+
+- What's being added/changed: Prompt-based agent detection and activation system where users invoke agents via `@dev ProjectX`, `get me a PM for Y`, or `I need UX help with Z`
+- How it integrates: Extends existing TeamAgent system with prompt analysis, leverages Permamind memory for context sharing, integrates with BMad agent personas
+- Success criteria: Users experience natural AI team collaboration through explicit, predictable agent activation with intelligent context sharing
+
+**Why This Approach:**
+
+- MCP servers cannot access Claude Desktop conversation metadata, making conversation-based detection infeasible
+- User-controlled activation is more predictable and reliable than automatic detection
+- Natural language patterns are intuitive and flexible for users
+- Maintains compatibility with existing Permamind architecture and TeamAgent system
+
+### Stories
+
+#### Story 6.1: Prompt Detection and Parsing Foundation
+
+**User Story:** As a Permamind user, I want to invoke AI agents through natural language prompts so that I can explicitly control when and which specialist agents assist me with my tasks.
+
+**Acceptance Criteria:**
+
+- Parse `@agent` notation (e.g., `@dev`, `@pm`, `@qa`) and natural language agent requests
+- Extract project context from user prompts (`@dev ProjectX`, `get me a PM for ProjectY`)
+- Build confidence scoring system for agent detection accuracy
+- Create MCP tool for prompt analysis and agent pattern recognition
+- Support fallback detection for unclear or ambiguous prompts
+- Handle multiple agent patterns in single prompts
+
+#### Story 6.2: Agent Activation and State Management
+
+**User Story:** As a user working with AI agents, I want activated agents to maintain their specialized personas and context throughout our conversation so that I get consistent, role-appropriate assistance.
+
+**Acceptance Criteria:**
+
+- Load agent personas and capabilities based on prompt detection results
+- Maintain agent state throughout conversation sessions with proper context isolation
+- Handle agent switching and deactivation when users request different agents
+- Integrate with existing TeamAgent system and agent role definitions
+- Support agent state persistence across conversation boundaries
+- Provide clear feedback about which agent is currently active
+
+#### Story 6.3: Project Context and Memory Integration
+
+**User Story:** As a user working on multiple projects, I want agents to automatically load relevant context when I specify a project so that they understand my current work without manual context setting.
+
+**Acceptance Criteria:**
+
+- Extract and maintain project context across agent interactions
+- Load relevant memories when agents are activated for specific projects
+- Implement agent-specific memory filtering based on role and project relevance
+- Support project switching within conversations with proper context transitions
+- Integrate with existing AIMemoryService for intelligent context loading
+- Maintain project context isolation to prevent cross-project information leakage
+
+#### Story 6.4: Multi-Agent Collaboration and Handoffs
+
+**User Story:** As a user managing complex projects, I want different AI agents to share relevant context intelligently so that insights from one agent (e.g., PM requirements) are available to other agents (e.g., Dev implementation) working on the same project.
+
+**Acceptance Criteria:**
+
+- Enable smooth handoffs between different agent types within same project
+- Share context intelligently between agents on same project through memory tagging
+- Integrate with BMad workflow system and existing agent personas
+- Implement collaborative memory tagging for cross-agent context sharing
+- Support team-based workflows where multiple agents contribute to same objectives
+- Maintain agent specialization while enabling intelligent team collaboration
+
+### Definition of Done
+
+- [ ] Users can invoke agents through `@agent` notation and natural language prompts
+- [ ] Agent activation loads appropriate personas with project-specific context
+- [ ] Project context extraction and memory loading works reliably across conversations
+- [ ] Cross-agent context sharing enables intelligent team collaboration
+- [ ] Integration with existing TeamAgent system and BMad personas is seamless
+- [ ] No regression in existing Permamind memory services or MCP functionality
+- [ ] Users experience natural AI team collaboration through explicit agent control
+- [ ] Build passes: npm run build && npm run lint && npm run type-check && npm run test
+
+---
+
 ## Implementation Priorities
 
 ### Phase 1: Foundation (MVP Refactoring)
@@ -401,9 +493,9 @@ Add comprehensive AO process lifecycle management capabilities to Permamind by i
 
 ### Phase 4: Revolutionary UX (Agent Enhancement)
 
-1. Implement dual-platform agent detection and activation
-2. Create conversation-based and file-based agent systems
-3. Build unified memory-driven context sharing architecture
+1. ~~Implement dual-platform agent detection and activation~~ (Story 4.1 deprecated)
+2. Create file-based agent systems for Claude Code (Story 4.2)
+3. Build unified memory-driven context sharing architecture (Story 4.3)
 4. Enable natural AI team collaboration experiences
 
 ### Phase 5: AO Process Infrastructure (Process Management Tools)
@@ -412,6 +504,13 @@ Add comprehensive AO process lifecycle management capabilities to Permamind by i
 2. Add evalProcess MCP tool for Lua code evaluation
 3. Integrate with existing ProcessToolFactory and infrastructure
 4. Enable complete AO development lifecycle management
+
+### Phase 6: Prompt-Based Agent Activation (Epic 6)
+
+1. Implement prompt detection and parsing foundation for agent invocation
+2. Create agent activation and state management system
+3. Integrate project context and memory loading for intelligent agent behavior
+4. Enable multi-agent collaboration and handoffs through shared context
 
 ---
 
@@ -476,6 +575,16 @@ Add comprehensive AO process lifecycle management capabilities to Permamind by i
 - Tools leverage existing createProcess() and evalProcess() functions correctly
 - No regression in existing process communication or workflow capabilities
 
+### Prompt-Based Agent Activation Success
+
+- Users can invoke agents through `@agent` notation and natural language prompts
+- Agent activation loads appropriate personas with project-specific context automatically
+- Project context extraction works reliably across conversations and agent switches
+- Cross-agent context sharing enables intelligent team collaboration on shared projects
+- Integration with existing TeamAgent system and BMad personas is seamless
+- Users experience natural AI team collaboration through explicit, predictable agent control
+- No regression in existing Permamind memory services or MCP functionality
+
 ---
 
 ## Team Coordination
@@ -486,7 +595,8 @@ Add comprehensive AO process lifecycle management capabilities to Permamind by i
 2. **Epic 3 (Token NLS Migration)** - Enhanced user experience
 3. **Epic 5 (AO Process Management Tools)** - Core infrastructure expansion
 4. **Epic 2 (BMAD Integration)** - Advanced development capabilities
-5. **Epic 4 (Agent UX Enhancement)** - Revolutionary team collaboration interface
+5. **Epic 4 (Agent UX Enhancement)** - File-based agents and memory sharing (Stories 4.2, 4.3)
+6. **Epic 6 (Prompt-Based Agent Activation)** - Claude Desktop agent invocation system
 
 ### Quality Gates
 
