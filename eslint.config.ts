@@ -16,6 +16,8 @@ export default tseslint.config(
       "src/services/Workflow*.ts",
       "src/services/CrossHub*.ts",
       "src/services/aiMemoryService.ts",
+      "src/services/AODevelopment*.ts",
+      "src/services/AOLiteTestService.ts",
       "src/models/WorkflowMemory.ts",
     ],
     rules: {
