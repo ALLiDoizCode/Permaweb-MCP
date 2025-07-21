@@ -369,10 +369,12 @@ ${handlers
 
 ${handler.description}
 
-${handler.parameters.map((param: any) => `- ${param.name}: ${param.description}`).join("\n")}
+${handler.parameters.map((param: any) => `- ${param.name}: ${param.description}`).join("
+")}
 `,
   )
-  .join("\n")}
+  .join("
+")}
 
 ## Type Definitions
 
@@ -388,11 +390,13 @@ ${typedef.definition}
 \`\`\`
 `,
   )
-  .join("\n")}
+  .join("
+")}
 
 ## Dependencies
 
-${processDefinition.dependencies.map((dep) => `- ${dep}`).join("\n")}
+${processDefinition.dependencies.map((dep) => `- ${dep}`).join("
+")}
 
 ## Usage Examples
 

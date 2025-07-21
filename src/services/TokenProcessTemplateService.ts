@@ -168,17 +168,22 @@ export class TokenProcessTemplateService {
       if (handler.parameters && handler.parameters.length > 0) {
         for (const param of handler.parameters) {
           const required = param.required ? "required" : "optional";
-          markdown += `- ${param.name}: ${param.description} (${required})\n`;
+          markdown += `- ${param.name}: ${param.description} (${required})
+`;
         }
-        markdown += "\n";
+        markdown += "
+";
       }
 
       if (handler.examples && handler.examples.length > 0) {
-        markdown += "Examples:\n";
+        markdown += "Examples:
+";
         for (const example of handler.examples) {
-          markdown += `- ${example}\n`;
+          markdown += `- ${example}
+`;
         }
-        markdown += "\n";
+        markdown += "
+";
       }
     }
 
