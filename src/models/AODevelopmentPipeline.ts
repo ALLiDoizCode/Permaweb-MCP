@@ -10,13 +10,13 @@ export interface AODevelopmentPipeline {
 }
 
 export interface AODevelopmentStage {
-  configuration: any;
+  configuration: Record<string, unknown>;
   duration?: number;
   endTime?: Date;
   error?: string;
   id: string;
   name: "deploy" | "develop" | "docs" | "test";
-  results?: any;
+  results?: unknown;
   service: string; // Service responsible for this stage
   startTime?: Date;
   status: "completed" | "failed" | "pending" | "running";
@@ -35,7 +35,7 @@ export interface AOPipelineArtifact {
   checksum?: string;
   content: string;
   id: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   name: string;
   size: number;
   type: "compiled" | "deployment" | "documentation" | "source" | "test";
@@ -83,7 +83,7 @@ export interface AOStageResult {
   duration: number;
   error?: string;
   name: string;
-  output?: any;
+  output?: unknown;
   stageId: string;
   status: "completed" | "failed" | "skipped";
 }
@@ -93,12 +93,12 @@ export interface AOWorkflowCondition {
   operator?: "and" | "or";
   target: string;
   type: "contains" | "equals" | "exists" | "matches";
-  value: any;
+  value: unknown;
 }
 
 export interface AOWorkflowConfiguration {
   concurrent?: boolean;
-  environment?: Record<string, any>;
+  environment?: Record<string, unknown>;
   maxConcurrency?: number;
   retries?: number;
   timeout?: number;
@@ -107,7 +107,7 @@ export interface AOWorkflowConfiguration {
 
 export interface AOWorkflowStage {
   conditions?: AOWorkflowCondition[];
-  configuration: any;
+  configuration: Record<string, unknown>;
   dependencies: string[];
   id: string;
   name: string;
@@ -116,7 +116,7 @@ export interface AOWorkflowStage {
 
 export interface AOWorkflowTrigger {
   conditions?: AOWorkflowCondition[];
-  configuration: any;
+  configuration: Record<string, unknown>;
   id: string;
   type: "file_change" | "manual" | "schedule" | "webhook";
 }

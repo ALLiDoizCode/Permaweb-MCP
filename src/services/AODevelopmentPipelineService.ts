@@ -590,7 +590,8 @@ const executeDevelopStage = async (
   // This would compile the Teal source and validate it
   const compileResult = await tealCompilerService.compileTealToLua(
     "-- Placeholder Teal source",
-    stage.configuration.compileOptions,
+    stage.configuration
+      .compileOptions as import("../models/TealProcess.js").TealCompileOptions,
   );
 
   return {

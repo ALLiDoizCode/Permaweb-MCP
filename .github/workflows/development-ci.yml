@@ -11,6 +11,7 @@ on:
 env:
   NODE_VERSION: '22'
   CI: true
+  SEED_PHRASE: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'  # Test seed phrase for CI
 
 concurrency:
   group: development-ci-${{ github.ref }}
@@ -93,6 +94,8 @@ jobs:
           echo "✅ Package structure validation passed"
 
       - name: Integration smoke test
+        env:
+          SEED_PHRASE: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'  # Test seed phrase
         run: |
           echo "🧪 Running integration smoke tests..."
           

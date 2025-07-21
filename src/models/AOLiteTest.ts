@@ -1,6 +1,6 @@
 export interface AOLiteAssertion {
   customValidator?: string; // JavaScript function as string
-  expected: any;
+  expected: unknown;
   id: string;
   message?: string;
   target: string; // JSONPath or property name
@@ -8,9 +8,9 @@ export interface AOLiteAssertion {
 }
 
 export interface AOLiteAssertionResult {
-  actual: any;
+  actual: unknown;
   assertionId: string;
-  expected: any;
+  expected: unknown;
   message?: string;
   status: "failed" | "passed";
 }
@@ -21,14 +21,14 @@ export interface AOLiteEnvironment {
   messageQueue: AOLiteTestMessage[];
   processId: string;
   processSource: string;
-  state: any;
+  state: Record<string, unknown>;
 }
 
 export interface AOLiteMessageResult {
   duration: number;
   error?: string;
   messageId: string;
-  response?: any;
+  response?: unknown;
   status: "failed" | "sent" | "timeout";
 }
 
@@ -69,9 +69,9 @@ export interface AOLiteTestCoverage {
 
 export interface AOLiteTestMessage {
   action: string;
-  data?: any;
+  data?: unknown;
   delay?: number;
-  expectedResponse?: any;
+  expectedResponse?: unknown;
   id: string;
   tags?: { name: string; value: string }[];
 }
@@ -90,9 +90,9 @@ export interface AOLiteTestResults {
 
 export interface AOLiteTestSetup {
   dependencies?: string[];
-  environment?: Record<string, any>;
+  environment?: Record<string, unknown>;
   initializeProcess?: boolean;
-  initialState?: any;
+  initialState?: Record<string, unknown>;
   processSource?: string;
 }
 

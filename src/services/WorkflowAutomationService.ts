@@ -538,10 +538,14 @@ export class WorkflowAutomationServiceImpl
 
   async deleteWorkflow(workflowId: string, hubId: string): Promise<boolean> {
     try {
+      const workflow = await this.getWorkflow(workflowId, hubId);
+      if (!workflow) {
+        return false;
+      }
       // Mark workflow as archived
       return await this.updateWorkflow(
         workflowId,
-        { metadata: { ...({} as any), status: "archived" } },
+        { metadata: { ...workflow.metadata, status: "archived" } },
         hubId,
       );
     } catch (error) {

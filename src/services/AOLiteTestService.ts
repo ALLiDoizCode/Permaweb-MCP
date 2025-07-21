@@ -402,7 +402,9 @@ const service = (
         switch (assertion.type) {
           case "contains":
             passed =
-              typeof actual === "string" && actual.includes(assertion.expected);
+              typeof actual === "string" &&
+              typeof assertion.expected === "string" &&
+              actual.includes(assertion.expected);
             break;
           case "custom":
             if (assertion.customValidator) {
@@ -422,7 +424,9 @@ const service = (
             passed = actual !== undefined && actual !== null;
             break;
           case "matches":
-            passed = new RegExp(assertion.expected).test(String(actual));
+            passed =
+              typeof assertion.expected === "string" &&
+              new RegExp(assertion.expected).test(String(actual));
             break;
         }
 
