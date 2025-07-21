@@ -696,7 +696,7 @@ const getStageExamples = (
 
 const generateTroubleshootingGuides = (
   _stage: "deploy" | "develop" | "test",
-  _processDefinition: TealProcessDefinition,
+  processDefinition: TealProcessDefinition,
 ): AOTroubleshootingGuide[] => {
   const guides: AOTroubleshootingGuide[] = [];
 
@@ -797,7 +797,7 @@ const identifyPrerequisites = (
 
 const generateBestPractices = (
   category: "ao" | "deployment" | "teal" | "testing",
-  processType?: string,
+  _processType?: string,
 ): AOBestPractice[] => {
   const practices: AOBestPractice[] = [];
 
@@ -858,7 +858,7 @@ const generateBestPractices = (
 
 const generateAntiPatterns = (
   category: "ao" | "deployment" | "teal" | "testing",
-  processType?: string,
+  _processType?: string,
 ): AOAntiPattern[] => {
   const antiPatterns: AOAntiPattern[] = [];
 
