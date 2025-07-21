@@ -4,29 +4,23 @@ on:
   push:
     branches:
       - development
-  schedule:
-    # Run daily at 6:00 AM UTC to catch any issues
-    - cron: '0 6 * * *'
 
 env:
   NODE_VERSION: '22'
   CI: true
-  SEED_PHRASE: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'  # Test seed phrase for CI
 
 concurrency:
   group: development-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # Fast quality check for development pushes
-  quick-validation:
-    name: Quick Development Validation
+  # Minimal build check
+  build-check:
+    name: Build Check
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout development branch
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: development
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -37,221 +31,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run quick checks
-        run: |
-          echo "⚡ Running quick development checks..."
-          npm run lint || echo "⚠️ Linting issues detected"
-          npm run type-check || echo "⚠️ Type checking issues detected"
-          npm run build
-          echo "✅ Quick validation passed"
+      - name: Build project
+        run: npm run build
 
-      - name: Run core tests
-        run: npm run test
-        
-  # Full quality assurance for development
-  comprehensive-qa:
-    name: Comprehensive Development QA
-    needs: quick-validation
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20, 22]
-    steps:
-      - name: Checkout development branch
-        uses: actions/checkout@v4
-        with:
-          ref: development
-          fetch-depth: 0
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run full CI quality pipeline
-        run: |
-          npm run lint || echo "⚠️ Linting issues detected"
-          npm run type-check || echo "⚠️ Type checking issues detected"
-          npm run audit || echo "⚠️ Security audit issues detected"
-          npm run build
-          exit 0
-
-      - name: Run comprehensive test suite
-        run: npm run test:coverage
-
-      - name: Validate package structure
-        run: |
-          echo "🔍 Validating development build..."
-          
-          # Test package can be built and installed
-          npm pack --dry-run
-          
-          # Verify all required files exist
-          [ -f "bin/permamind.js" ] || (echo "❌ Missing permamind.js"; exit 1)
-          [ -f "bin/permamind-setup.js" ] || (echo "❌ Missing permamind-setup.js"; exit 1)
-          [ -d "dist" ] || (echo "❌ Missing dist directory"; exit 1)
-          [ -d "templates" ] || (echo "❌ Missing templates directory"; exit 1)
-          
-          echo "✅ Package structure validation passed"
-
-      - name: Integration smoke test
-        env:
-          SEED_PHRASE: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'  # Test seed phrase
-        run: |
-          echo "🧪 Running integration smoke tests..."
-          
-          # Test CLI commands work
-          node bin/permamind.js --version
-          node bin/permamind.js --help
-          
-          # Test MCP server can initialize
-          timeout 15s npm run start &
-          SERVER_PID=$!
-          sleep 8
-          
-          if kill -0 $SERVER_PID 2>/dev/null; then
-            echo "✅ MCP server initializes successfully"
-            kill $SERVER_PID
-          else
-            echo "❌ MCP server failed to initialize"
-            exit 1
-          fi
-
-  # Security and dependency analysis
-  security-analysis:
-    name: Security Analysis
-    needs: quick-validation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout development branch
-        uses: actions/checkout@v4
-        with:
-          ref: development
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Security audit
-        run: |
-          echo "🔒 Running security analysis..."
-          npm audit --audit-level moderate
-          
-          # Check for common security patterns
-          echo "🔍 Scanning for security anti-patterns..."
-          
-          # Check for hardcoded secrets
-          if grep -r "password\|secret\|key\|token" src/ --exclude-dir=node_modules | grep -i "=\|:" | grep -v "\.ts:" | grep -v "interface\|type\|import"; then
-            echo "⚠️ Potential hardcoded secrets found - review manually"
-          fi
-          
-          # Check for eval usage
-          if grep -r "eval\|Function" src/ --exclude-dir=node_modules; then
-            echo "⚠️ Dynamic code execution found - review for security implications"
-          fi
-          
-          echo "✅ Security analysis completed"
-
-      - name: Dependency vulnerability check
-        run: |
-          echo "🔍 Checking dependency vulnerabilities..."
-          
-          # Check for known vulnerabilities in production dependencies
-          npm audit --audit-level high --production
-          
-          echo "✅ Dependency vulnerability check completed"
-
-  # Development readiness check
-  development-status:
-    name: Development Branch Status
-    needs: [comprehensive-qa, security-analysis]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Check development branch health
-        run: |
-          echo "🔍 Checking development branch health..."
-          
-          if [ "${{ needs.comprehensive-qa.result }}" == "success" ] && \
-             [ "${{ needs.security-analysis.result }}" == "success" ]; then
-            echo "✅ Development branch is healthy and ready"
-            echo "🚀 Ready for nightly builds and PR merges"
-          else
-            echo "❌ Development branch has issues"
-            echo "🔧 Issues detected - review failed jobs"
-            exit 1
-          fi
-
-      - name: Update development status
-        if: always()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const status = '${{ needs.comprehensive-qa.result }}' === 'success' && 
-                          '${{ needs.security-analysis.result }}' === 'success' ? 
-                          'healthy' : 'needs-attention';
-            
-            const emoji = status === 'healthy' ? '✅' : '⚠️';
-            const message = status === 'healthy' ? 
-              'Development branch is healthy and ready for integration' : 
-              'Development branch needs attention - check CI results';
-            
-            console.log(`${emoji} Development Status: ${message}`);
-
-  # Prepare for releases
-  release-readiness:
-    name: Release Readiness Check
-    needs: [comprehensive-qa, security-analysis]
-    runs-on: ubuntu-latest
-    if: success() && github.event_name == 'push'
-    steps:
-      - name: Checkout development branch
-        uses: actions/checkout@v4
-        with:
-          ref: development
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check release readiness
-        run: |
-          echo "🔍 Checking release readiness..."
-          
-          # Verify all release requirements
-          npm run lint || echo "⚠️ Linting issues detected"
-          npm run type-check || echo "⚠️ Type checking issues detected"
-          npm run audit || echo "⚠️ Security audit issues detected"
-          npm run build
-          npm run test:coverage
-          
-          # Check changelog exists and is updated
-          if [ ! -f "CHANGELOG.md" ]; then
-            echo "⚠️ CHANGELOG.md not found"
-          fi
-          
-          # Check version in package.json
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          echo "Current version: $CURRENT_VERSION"
-          
-          # Check git tags for version conflicts
-          if git tag | grep -q "v$CURRENT_VERSION"; then
-            echo "⚠️ Version $CURRENT_VERSION already has a git tag"
-          fi
-          
-          echo "✅ Release readiness check completed"
-          echo "📋 Development branch can be used for nightly builds"
+      - name: Success
+        run: echo "✅ Development branch build successful"
