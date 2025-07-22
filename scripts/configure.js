@@ -4,9 +4,6 @@
  * Provides utilities for setup and configuration management
  */
 
-const fs = require("fs");
-const path = require("path");
-
 const commands = {
   list: () => {
     console.log("Available Permamind configurations:");
