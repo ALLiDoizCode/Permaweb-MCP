@@ -102,15 +102,18 @@ jobs:
           }
           
           echo "📦 Creating actual tarball..."
-          TARBALL=$(npm pack 2>&1 | tail -1 | sed 's/^npm notice //')
-          PACK_EXIT=$?
           
-          if [ $PACK_EXIT -ne 0 ]; then
+          # Run npm pack and capture output to temp file
+          if npm pack > /tmp/pack_output.txt 2>&1; then
+            TARBALL=$(cat /tmp/pack_output.txt | grep '\.tgz$' || echo "permamind-2.18.2.tgz")
+            echo "Created tarball: $TARBALL"
+          else
+            PACK_EXIT=$?
             echo "❌ npm pack failed with exit code $PACK_EXIT"
+            echo "npm pack output:"
+            cat /tmp/pack_output.txt
             exit 1
           fi
-          
-          echo "Created tarball: $TARBALL"
           
           # Validate tarball exists and contents
           if [ -f "$TARBALL" ]; then
