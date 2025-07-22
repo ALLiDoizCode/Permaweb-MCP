@@ -457,7 +457,6 @@ function getBasicMintTemplate(config: BasicMintConfig): string {
 BuyToken = "${buyToken}"
 Multiplier = ${multiplier}
 MaxMint = "${maxMint}"
-table.insert(ao.authorities, "5btmdnmjWiFugymH7BepSig8cq1_zE-EQVumcXn0i_4")
 -- Basic Minting Handler
 Handlers.prepend('BasicMint', 
   function(msg)
@@ -551,7 +550,6 @@ MaxMint = "${maxMint}"
 BaseMintLimit = "${baseMintLimit}"
 IncrementBlocks = ${incrementBlocks}
 MaxCascadeLimit = "${maxCascadeLimit}"
-table.insert(ao.authorities, "5btmdnmjWiFugymH7BepSig8cq1_zE-EQVumcXn0i_4")
 -- Calculate current mint limit based on block height
 local function getCurrentMintLimit()
     local currentHeight = bint(ao.block or "0")
@@ -675,7 +673,6 @@ MaxMint = "${maxMint}"
 BuyTokenMultipliers = {
 ${buyTokenConfigs}
 }
-table.insert(ao.authorities, "5btmdnmjWiFugymH7BepSig8cq1_zE-EQVumcXn0i_4")
 -- Double Minting Handler
 Handlers.prepend('DoubleMint',
   function(msg)
