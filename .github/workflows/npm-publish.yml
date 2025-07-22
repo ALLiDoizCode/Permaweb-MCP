@@ -90,19 +90,37 @@ jobs:
       - name: Test package installation (dry-run)
         run: |
           echo "🧪 Testing package installation..."
-          npm pack --dry-run 2>&1
+          echo "Current directory: $(pwd)"
+          echo "Disk space: $(df -h . | tail -1)"
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
           
-          # Test global installation simulation
-          TARBALL=$(npm pack 2>/dev/null)
+          echo "📋 Running npm pack --dry-run..."
+          npm pack --dry-run || {
+            echo "❌ npm pack --dry-run failed with exit code $?"
+            exit 1
+          }
+          
+          echo "📦 Creating actual tarball..."
+          TARBALL=$(npm pack 2>&1 | tail -1 | sed 's/^npm notice //')
+          PACK_EXIT=$?
+          
+          if [ $PACK_EXIT -ne 0 ]; then
+            echo "❌ npm pack failed with exit code $PACK_EXIT"
+            exit 1
+          fi
+          
           echo "Created tarball: $TARBALL"
           
-          # Validate tarball contents
+          # Validate tarball exists and contents
           if [ -f "$TARBALL" ]; then
             echo "📦 Validating tarball contents..."
-            tar -tzf "$TARBALL" | head -10
+            tar -tzf "$TARBALL" | head -5
             echo "✅ Package installation test passed"
           else
-            echo "❌ Failed to create tarball"
+            echo "❌ Tarball file not found: $TARBALL"
+            echo "Files in directory:"
+            ls -la *.tgz 2>/dev/null || echo "No .tgz files found"
             exit 1
           fi
 
