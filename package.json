@@ -1,7 +1,7 @@
 {
   "name": "permamind",
-  "version": "1.0.0",
-  "main": "dist/index.js",
+  "version": "2.18.2",
+  "main": "dist/server.js",
   "bin": {
     "permamind": "./bin/permamind.js",
     "permamind-setup": "./bin/permamind-setup.js"
