@@ -17,17 +17,17 @@ vi.mock("../../../../src/tools/token/utils/TokenResolver.js", () => ({
 describe("TransferTokensCommand", () => {
   let command: TransferTokensCommand;
   let mockContext: ToolContext;
-  let mockRead: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-  let mockSend: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-  let mockResolveToken: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-  let mockResolveAddress: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  let mockRead: any;
+  let mockSend: any;
+  let mockResolveToken: any;
+  let mockResolveAddress: any;
 
   beforeEach(async () => {
     vi.clearAllMocks();
 
     mockContext = {
       hubId: "test-hub-id",
-      keyPair: {} as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      keyPair: {} as any,
       publicKey: "test-public-key",
     };
 

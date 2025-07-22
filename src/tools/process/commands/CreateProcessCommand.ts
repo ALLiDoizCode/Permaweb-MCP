@@ -3,7 +3,8 @@ import { z } from "zod";
 import { createProcess } from "../../../process.js";
 import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
 
-interface CreateProcessArgs {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface CreateProcessArgs extends Record<string, never> {
   // No parameters required for basic process creation
 }
 

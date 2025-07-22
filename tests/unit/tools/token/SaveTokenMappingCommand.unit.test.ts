@@ -17,14 +17,14 @@ vi.mock("../../../../src/services/aiMemoryService.js", () => ({
 describe("SaveTokenMappingCommand", () => {
   let command: SaveTokenMappingCommand;
   let mockContext: ToolContext;
-  let mockEvent: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  let mockEvent: any;
 
   beforeEach(async () => {
     vi.clearAllMocks();
 
     mockContext = {
       hubId: "test-hub-id",
-      keyPair: { mockKey: "value" } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      keyPair: { mockKey: "value" } as any,
       publicKey: "test-public-key",
     };
 

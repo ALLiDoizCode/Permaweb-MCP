@@ -19,6 +19,7 @@ import { DocumentationToolFactory } from "./tools/documentation/DocumentationToo
 import { ToolContext, toolRegistry } from "./tools/index.js";
 import { MemoryToolFactory } from "./tools/memory/MemoryToolFactory.js";
 import { ProcessToolFactory } from "./tools/process/ProcessToolFactory.js";
+import { TokenToolFactory } from "./tools/token/TokenToolFactory.js";
 import { UserToolFactory } from "./tools/user/UserToolFactory.js";
 
 let keyPair: JWKInterface;
@@ -158,6 +159,16 @@ function setupToolRegistry() {
   });
 
   processFactory.registerTools(toolRegistry);
+
+  // Register Token tools
+  const tokenFactory = new TokenToolFactory({
+    categoryDescription:
+      "Token operations for balance, transfer, and info queries",
+    categoryName: "Token",
+    context,
+  });
+
+  tokenFactory.registerTools(toolRegistry);
 
   // Register Documentation tools
   const documentationFactory = new DocumentationToolFactory({

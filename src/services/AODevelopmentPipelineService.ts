@@ -403,8 +403,7 @@ ${stage.output ? `- **Output**: ${JSON.stringify(stage.output, null, 2)}` : ""}
 
 ${results.artifacts
   .map(
-    (artifact) => `
-### ${artifact.name}
+    (artifact) => `\n### ${artifact.name}
 - **Type**: ${artifact.type}
 - **Size**: ${artifact.size} bytes
 - **Checksum**: ${artifact.checksum || "N/A"}

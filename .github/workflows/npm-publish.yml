@@ -2,6 +2,8 @@ name: NPM Package Publishing
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
   workflow_dispatch:
@@ -153,7 +155,7 @@ jobs:
     needs: [validate-package, cross-platform-test]
     runs-on: ubuntu-latest
     environment: release
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -171,12 +173,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Version bump (manual trigger only)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Version bump
+        if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          npm version ${{ github.event.inputs.version_type }}
+          
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual trigger with specified version type
+            npm version ${{ github.event.inputs.version_type }}
+          else
+            # Automatic patch version bump for main branch
+            npm version patch
+          fi
           git push --tags
 
       - name: Build for publishing
@@ -208,14 +217,22 @@ jobs:
           
           echo "✅ Package published and verified successfully!"
 
+      - name: Get version for release
+        if: github.event.inputs.dry_run != 'true' && github.ref == 'refs/heads/main'
+        id: get-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=v$VERSION" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
-        if: github.event.inputs.dry_run != 'true' && github.event_name == 'push'
+        if: github.event.inputs.dry_run != 'true' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ steps.get-version.outputs.tag_name }}
+          name: Release ${{ steps.get-version.outputs.version }}
           body: |
             ## 🧠 Permamind MCP Server Release
             
