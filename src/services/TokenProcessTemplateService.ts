@@ -171,19 +171,15 @@ export class TokenProcessTemplateService {
           markdown += `- ${param.name}: ${param.description} (${required})
 `;
         }
-        markdown += "
-";
+        markdown += "\n";
       }
 
       if (handler.examples && handler.examples.length > 0) {
-        markdown += "Examples:
-";
+        markdown += "Examples:\n";
         for (const example of handler.examples) {
-          markdown += `- ${example}
-`;
+          markdown += `- ${example}\n`;
         }
-        markdown += "
-";
+        markdown += "\n";
       }
     }
 

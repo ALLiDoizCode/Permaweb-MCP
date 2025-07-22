@@ -352,64 +352,19 @@ const service = (
         const handlers = extractHandlersFromLua(processDefinition.compiledLua);
 
         // Generate markdown documentation
-        const documentation = `# ${processDefinition.name}
-
-${processDefinition.metadata.description}
-
-**Version:** ${processDefinition.metadata.version}  
-**Author:** ${processDefinition.metadata.author}  
-**AO Version:** ${processDefinition.metadata.aoVersion}
-
-## Handlers
-
-${handlers
+        const documentation = `# ${processDefinition.name}\n\n${processDefinition.metadata.description}\n\n**Version:** ${processDefinition.metadata.version}  \n**Author:** ${processDefinition.metadata.author}  \n**AO Version:** ${processDefinition.metadata.aoVersion}\n\n## Handlers\n\n${handlers
   .map(
-    (handler) => `
-### ${handler.name}
-
-${handler.description}
-
-${handler.parameters.map((param: any) => `- ${param.name}: ${param.description}`).join("
-")}
-`,
+    (handler) => `\n### ${handler.name}\n\n${handler.description}\n\n${handler.parameters.map((param: any) => `- ${param.name}: ${param.description}`).join("\n")}\n`,
   )
-  .join("
-")}
-
-## Type Definitions
-
-${processDefinition.typeDefinitions
+  .join("\n")}\n\n## Type Definitions\n\n${processDefinition.typeDefinitions
   .map(
-    (typedef) => `
-### ${typedef.name}
-
-${typedef.documentation || ""}
-
-\`\`\`teal
-${typedef.definition}
-\`\`\`
-`,
+    (typedef) => `\n### ${typedef.name}\n\n${typedef.documentation || ""}\n\n\`\`\`teal\n${typedef.definition}\n\`\`\`\n`,
   )
-  .join("
-")}
-
-## Dependencies
-
-${processDefinition.dependencies.map((dep) => `- ${dep}`).join("
-")}
-
-## Usage Examples
-
-\`\`\`teal
-${generateUsageExamples(processDefinition)}
-\`\`\`
-`;
+  .join("\n")}\n\n## Dependencies\n\n${processDefinition.dependencies.map((dep) => `- ${dep}`).join("\n")}\n\n## Usage Examples\n\n\`\`\`teal\n${generateUsageExamples(processDefinition)}\n\`\`\`\n`;
 
         return documentation;
       } catch (error) {
-        return `# ${processDefinition.name}
-
-Documentation generation failed: ${error instanceof Error ? error.message : "Unknown error"}`;
+        return `# ${processDefinition.name}\n\nDocumentation generation failed: ${error instanceof Error ? error.message : "Unknown error"}`;
       }
     },
 
@@ -553,22 +508,7 @@ const extractHandlersFromLua = (lua: string): any[] => {
 const generateUsageExamples = (
   processDefinition: TealProcessDefinition,
 ): string => {
-  return `
--- Example usage for ${processDefinition.name}
-local msg = {
-  Id = "example-message-id",
-  From = "sender-address",
-  Tags = {
-    Action = "Info"
-  },
-  Data = "",
-  Timestamp = os.time()
-}
-
--- Process the message
-local result = process(msg)
-print(result.Output)
-`;
+  return `\n-- Example usage for ${processDefinition.name}\nlocal msg = {\n  Id = "example-message-id",\n  From = "sender-address",\n  Tags = {\n    Action = "Info"\n  },\n  Data = "",\n  Timestamp = os.time()\n}\n\n-- Process the message\nlocal result = process(msg)\nprint(result.Output)\n`;
 };
 
 const generatePipelineId = (): string => {

@@ -370,62 +370,15 @@ const service = (
       results: AOPipelineResults,
     ): Promise<string> => {
       try {
-        const report = `# AO Development Pipeline Report
-
-## Pipeline Information
-- **Name**: ${pipeline.name}
-- **ID**: ${pipeline.id}
-- **Status**: ${results.status}
-- **Duration**: ${results.duration}ms
-- **Created**: ${pipeline.createdAt.toISOString()}
-- **Updated**: ${pipeline.updatedAt.toISOString()}
-
-## Execution Summary
-- **Total Stages**: ${results.totalStages}
-- **Completed**: ${results.completedStages}
-- **Failed**: ${results.failedStages}
-- **Success Rate**: ${((results.completedStages / results.totalStages) * 100).toFixed(1)}%
-
-## Stage Results
-
-${results.stageResults
+        const report = `# AO Development Pipeline Report\n\n## Pipeline Information\n- **Name**: ${pipeline.name}\n- **ID**: ${pipeline.id}\n- **Status**: ${results.status}\n- **Duration**: ${results.duration}ms\n- **Created**: ${pipeline.createdAt.toISOString()}\n- **Updated**: ${pipeline.updatedAt.toISOString()}\n\n## Execution Summary\n- **Total Stages**: ${results.totalStages}\n- **Completed**: ${results.completedStages}\n- **Failed**: ${results.failedStages}\n- **Success Rate**: ${((results.completedStages / results.totalStages) * 100).toFixed(1)}%\n\n## Stage Results\n\n${results.stageResults
   .map(
-    (stage) => `
-### ${stage.name} (${stage.status})
-- **Duration**: ${stage.duration}ms
-${stage.error ? `- **Error**: ${stage.error}` : ""}
-${stage.output ? `- **Output**: ${JSON.stringify(stage.output, null, 2)}` : ""}
-`,
+    (stage) => `\n### ${stage.name} (${stage.status})\n- **Duration**: ${stage.duration}ms\n${stage.error ? `- **Error**: ${stage.error}` : ""}\n${stage.output ? `- **Output**: ${JSON.stringify(stage.output, null, 2)}` : ""}\n`,
   )
-  .join("
-")}
-
-## Artifacts Generated
-
-${results.artifacts
+  .join("\n")}\n\n## Artifacts Generated\n\n${results.artifacts
   .map(
-    (artifact) => `
-### ${artifact.name}
-- **Type**: ${artifact.type}
-- **Size**: ${artifact.size} bytes
-- **Checksum**: ${artifact.checksum || "N/A"}
-`,
+    (artifact) => `\n### ${artifact.name}\n- **Type**: ${artifact.type}\n- **Size**: ${artifact.size} bytes\n- **Checksum**: ${artifact.checksum || "N/A"}\n`,
   )
-  .join("
-")}
-
-## Configuration
-- **Auto Advance**: ${pipeline.configuration.autoAdvance || false}
-- **Stop on Error**: ${pipeline.configuration.stopOnError || false}
-- **Parallel Execution**: ${pipeline.configuration.parallelExecution || false}
-- **Timeout**: ${pipeline.configuration.timeout || "Default"}
-
-## Metadata
-- **Author**: ${pipeline.metadata.author}
-- **Version**: ${pipeline.metadata.version}
-- **AO Version**: ${pipeline.metadata.aoVersion}
-- **Tags**: ${pipeline.metadata.tags.join(", ")}
-`;
+  .join("\n")}\n\n## Configuration\n- **Auto Advance**: ${pipeline.configuration.autoAdvance || false}\n- **Stop on Error**: ${pipeline.configuration.stopOnError || false}\n- **Parallel Execution**: ${pipeline.configuration.parallelExecution || false}\n- **Timeout**: ${pipeline.configuration.timeout || "Default"}\n\n## Metadata\n- **Author**: ${pipeline.metadata.author}\n- **Version**: ${pipeline.metadata.version}\n- **AO Version**: ${pipeline.metadata.aoVersion}\n- **Tags**: ${pipeline.metadata.tags.join(", ")}\n`;
 
         return report;
       } catch (error) {

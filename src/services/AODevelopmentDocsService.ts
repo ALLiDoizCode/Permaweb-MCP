@@ -464,9 +464,7 @@ const extractDevelopmentGuidance = (
   const topResults = results.slice(0, 3);
   const guidance = topResults
     .map((result) => result.content)
-    .join("
-
-")
+    .join("\n\n")
     .substring(0, 1000);
 
   return guidance;
