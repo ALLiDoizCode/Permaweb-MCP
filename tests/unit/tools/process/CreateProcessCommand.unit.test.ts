@@ -11,14 +11,14 @@ vi.mock("../../../../src/process.js", () => ({
 describe("CreateProcessCommand", () => {
   let command: CreateProcessCommand;
   let mockContext: ToolContext;
-  let mockCreateProcess: any;  
+  let mockCreateProcess: any;
 
   beforeEach(async () => {
     vi.clearAllMocks();
 
     mockContext = {
       hubId: "test-hub-id",
-      keyPair: { kty: "RSA" } as any,  
+      keyPair: { kty: "RSA" } as any,
       publicKey: "test-public-key",
     };
 
@@ -31,7 +31,7 @@ describe("CreateProcessCommand", () => {
 
   describe("metadata", () => {
     it("should have correct metadata", () => {
-      const metadata = (command as any).metadata;  
+      const metadata = (command as any).metadata;
       expect(metadata.name).toBe("createProcess");
       expect(metadata.title).toBe("Create AO Process");
       expect(metadata.readOnlyHint).toBe(false);
@@ -44,13 +44,13 @@ describe("CreateProcessCommand", () => {
 
   describe("parametersSchema", () => {
     it("should accept empty parameters", () => {
-      const schema = (command as any).parametersSchema;  
+      const schema = (command as any).parametersSchema;
       const result = schema.safeParse({});
       expect(result.success).toBe(true);
     });
 
     it("should accept no additional parameters", () => {
-      const schema = (command as any).parametersSchema;  
+      const schema = (command as any).parametersSchema;
       const result = schema.safeParse({});
       expect(result.success).toBe(true);
     });
@@ -121,7 +121,7 @@ describe("CreateProcessCommand", () => {
 
     it("should pass correct signer to createProcess", async () => {
       const mockProcessId = "test-process-id-67890";
-      const customKeyPair = { custom: "key", kty: "RSA" } as any;  
+      const customKeyPair = { custom: "key", kty: "RSA" } as any;
       const customContext = { ...mockContext, keyPair: customKeyPair };
 
       mockCreateProcess.mockResolvedValue(mockProcessId);

@@ -63,7 +63,9 @@ export class CreateTokenCommand extends ToolCommand<CreateTokenArgs, string> {
       const { generateTokenLua } = await import(
         "../../../services/TokenLuaService.js"
       );
-      const { tokenService } = await import("../../../services/tokenservice.js");
+      const { tokenService } = await import(
+        "../../../services/tokenservice.js"
+      );
 
       // Build token configuration
       const tokenConfig = {

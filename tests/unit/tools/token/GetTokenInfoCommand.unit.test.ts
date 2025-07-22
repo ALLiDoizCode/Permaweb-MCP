@@ -15,15 +15,15 @@ vi.mock("../../../../src/tools/token/utils/TokenResolver.js", () => ({
 describe("GetTokenInfoCommand", () => {
   let command: GetTokenInfoCommand;
   let mockContext: ToolContext;
-  let mockRead: any;  
-  let mockResolveToken: any;  
+  let mockRead: any;
+  let mockResolveToken: any;
 
   beforeEach(async () => {
     vi.clearAllMocks();
 
     mockContext = {
       hubId: "test-hub-id",
-      keyPair: {} as any,  
+      keyPair: {} as any,
       publicKey: "test-public-key",
     };
 

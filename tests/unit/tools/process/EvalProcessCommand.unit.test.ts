@@ -11,14 +11,14 @@ vi.mock("../../../../src/relay.js", () => ({
 describe("EvalProcessCommand", () => {
   let command: EvalProcessCommand;
   let mockContext: ToolContext;
-  let mockEvalProcess: any;  
+  let mockEvalProcess: any;
 
   beforeEach(async () => {
     vi.clearAllMocks();
 
     mockContext = {
       hubId: "test-hub-id",
-      keyPair: { kty: "RSA" } as any,  
+      keyPair: { kty: "RSA" } as any,
       publicKey: "test-public-key",
     };
 
@@ -31,7 +31,7 @@ describe("EvalProcessCommand", () => {
 
   describe("metadata", () => {
     it("should have correct metadata", () => {
-      const metadata = (command as any).metadata;  
+      const metadata = (command as any).metadata;
       expect(metadata.name).toBe("evalProcess");
       expect(metadata.title).toBe("Evaluate Process Code");
       expect(metadata.readOnlyHint).toBe(false);
@@ -44,7 +44,7 @@ describe("EvalProcessCommand", () => {
 
   describe("parametersSchema", () => {
     it("should accept valid processId and code", () => {
-      const schema = (command as any).parametersSchema;  
+      const schema = (command as any).parametersSchema;
       const result = schema.safeParse({
         code: "return 2 + 2",
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
@@ -53,7 +53,7 @@ describe("EvalProcessCommand", () => {
     });
 
     it("should reject invalid processId length", () => {
-      const schema = (command as any).parametersSchema;  
+      const schema = (command as any).parametersSchema;
       const result = schema.safeParse({
         code: "return 2 + 2",
         processId: "short",
@@ -62,7 +62,7 @@ describe("EvalProcessCommand", () => {
     });
 
     it("should reject empty code", () => {
-      const schema = (command as any).parametersSchema;  
+      const schema = (command as any).parametersSchema;
       const result = schema.safeParse({
         code: "",
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
@@ -71,7 +71,7 @@ describe("EvalProcessCommand", () => {
     });
 
     it("should reject code that is too long", () => {
-      const schema = (command as any).parametersSchema;  
+      const schema = (command as any).parametersSchema;
       const longCode = "x".repeat(10001);
       const result = schema.safeParse({
         code: longCode,
@@ -81,7 +81,7 @@ describe("EvalProcessCommand", () => {
     });
 
     it("should accept multi-line Lua code", () => {
-      const schema = (command as any).parametersSchema;  
+      const schema = (command as any).parametersSchema;
       const multiLineCode = `
         local function test()
           return "Hello, World!"
@@ -205,7 +205,7 @@ describe("EvalProcessCommand", () => {
 
     it("should pass correct parameters to evalProcess", async () => {
       const mockResult = { output: "Hello, World!" };
-      const customKeyPair = { custom: "key", kty: "RSA" } as any;  
+      const customKeyPair = { custom: "key", kty: "RSA" } as any;
       const customContext = { ...mockContext, keyPair: customKeyPair };
 
       mockEvalProcess.mockResolvedValue(mockResult);

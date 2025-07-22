@@ -14,14 +14,14 @@ vi.mock("../../../../src/services/ArweaveGraphQLService.js", () => ({
 describe("QueryAOProcessMessagesCommand", () => {
   let command: QueryAOProcessMessagesCommand;
   let mockContext: ToolContext;
-  let mockArweaveGraphQLService: any;  
+  let mockArweaveGraphQLService: any;
 
   beforeEach(async () => {
     vi.clearAllMocks();
 
     mockContext = {
       hubId: "test-hub-id",
-      keyPair: { kty: "RSA" } as any,  
+      keyPair: { kty: "RSA" } as any,
       publicKey: "test-public-key",
     };
 
@@ -36,7 +36,7 @@ describe("QueryAOProcessMessagesCommand", () => {
 
   describe("metadata", () => {
     it("should have correct metadata", () => {
-      const metadata = (command as any).metadata;  
+      const metadata = (command as any).metadata;
       expect(metadata.name).toBe("queryAOProcessMessages");
       expect(metadata.title).toBe("Query AO Process Messages");
       expect(metadata.readOnlyHint).toBe(true);

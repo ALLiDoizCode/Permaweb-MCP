@@ -17,14 +17,14 @@ vi.mock("../../../../src/services/aiMemoryService.js", () => ({
 describe("ListTokensCommand", () => {
   let command: ListTokensCommand;
   let mockContext: ToolContext;
-  let mockFetchEvents: any;  
+  let mockFetchEvents: any;
 
   beforeEach(async () => {
     vi.clearAllMocks();
 
     mockContext = {
       hubId: "test-hub-id",
-      keyPair: {} as any,  
+      keyPair: {} as any,
       publicKey: "test-public-key",
     };
 

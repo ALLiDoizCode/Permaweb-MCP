@@ -137,7 +137,6 @@ const aiService = (): AIMemoryService => {
       try {
         await event(signer, hubId, tags);
         return JSON.stringify(tags);
-         
       } catch (error) {
         // Error adding enhanced memory - silent for MCP compatibility
         return JSON.stringify(tags);
@@ -278,7 +277,6 @@ const aiService = (): AIMemoryService => {
         });
 
         return cycles;
-         
       } catch (error) {
         // Error detecting circular references - silent for MCP compatibility
         return [];
@@ -338,7 +336,6 @@ const aiService = (): AIMemoryService => {
         }
 
         return []; // No path found
-         
       } catch (error) {
         // Error finding shortest path - silent for MCP compatibility
         return [];
@@ -450,7 +447,6 @@ const aiService = (): AIMemoryService => {
               "references") as RelationshipType,
           };
         });
-         
       } catch (error) {
         // Error getting memory relationships - silent for MCP compatibility
         return [];
@@ -543,7 +539,6 @@ const aiService = (): AIMemoryService => {
           topRelationshipTypes,
           totalLinks,
         };
-         
       } catch (error) {
         // Error getting relationship analytics - silent for MCP compatibility
         return {
