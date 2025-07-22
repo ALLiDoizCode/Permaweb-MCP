@@ -90,16 +90,21 @@ jobs:
       - name: Test package installation (dry-run)
         run: |
           echo "🧪 Testing package installation..."
-          npm pack --dry-run
+          npm pack --dry-run 2>&1
           
           # Test global installation simulation
-          TARBALL=$(npm pack)
+          TARBALL=$(npm pack 2>/dev/null)
           echo "Created tarball: $TARBALL"
           
           # Validate tarball contents
-          tar -tzf $TARBALL | head -20
-          
-          echo "✅ Package installation test passed"
+          if [ -f "$TARBALL" ]; then
+            echo "📦 Validating tarball contents..."
+            tar -tzf "$TARBALL" | head -10
+            echo "✅ Package installation test passed"
+          else
+            echo "❌ Failed to create tarball"
+            exit 1
+          fi
 
       - name: Test executable permissions
         run: |
