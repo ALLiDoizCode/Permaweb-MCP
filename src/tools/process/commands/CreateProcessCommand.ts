@@ -3,7 +3,7 @@ import { z } from "zod";
 import { createProcess } from "../../../process.js";
 import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
 
-interface CreateProcessArgs {
+interface CreateProcessArgs extends Record<string, never> {
   // No parameters required for basic process creation
 }
 

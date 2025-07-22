@@ -5,9 +5,7 @@ export function AOS_MODULE(): string {
 }
 
 export function ARWEAVE_URL(): string {
-  return isMainnet()
-    ? "arweave.net"
-    : "arweave.velocity.cloudnet.marshal.ao";
+  return isMainnet() ? "arweave.net" : "arweave.velocity.cloudnet.marshal.ao";
 }
 
 export function CU_URL(): string {

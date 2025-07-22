@@ -353,14 +353,20 @@ const service = (
 
         // Generate markdown documentation
         const documentation = `# ${processDefinition.name}\n\n${processDefinition.metadata.description}\n\n**Version:** ${processDefinition.metadata.version}  \n**Author:** ${processDefinition.metadata.author}  \n**AO Version:** ${processDefinition.metadata.aoVersion}\n\n## Handlers\n\n${handlers
-  .map(
-    (handler) => `\n### ${handler.name}\n\n${handler.description}\n\n${handler.parameters.map((param: any) => `- ${param.name}: ${param.description}`).join("\n")}\n`,
-  )
-  .join("\n")}\n\n## Type Definitions\n\n${processDefinition.typeDefinitions
-  .map(
-    (typedef) => `\n### ${typedef.name}\n\n${typedef.documentation || ""}\n\n\`\`\`teal\n${typedef.definition}\n\`\`\`\n`,
-  )
-  .join("\n")}\n\n## Dependencies\n\n${processDefinition.dependencies.map((dep) => `- ${dep}`).join("\n")}\n\n## Usage Examples\n\n\`\`\`teal\n${generateUsageExamples(processDefinition)}\n\`\`\`\n`;
+          .map(
+            (handler) =>
+              `\n### ${handler.name}\n\n${handler.description}\n\n${handler.parameters.map((param: any) => `- ${param.name}: ${param.description}`).join("\n")}\n`,
+          )
+          .join(
+            "\n",
+          )}\n\n## Type Definitions\n\n${processDefinition.typeDefinitions
+          .map(
+            (typedef) =>
+              `\n### ${typedef.name}\n\n${typedef.documentation || ""}\n\n\`\`\`teal\n${typedef.definition}\n\`\`\`\n`,
+          )
+          .join(
+            "\n",
+          )}\n\n## Dependencies\n\n${processDefinition.dependencies.map((dep) => `- ${dep}`).join("\n")}\n\n## Usage Examples\n\n\`\`\`teal\n${generateUsageExamples(processDefinition)}\n\`\`\`\n`;
 
         return documentation;
       } catch (error) {

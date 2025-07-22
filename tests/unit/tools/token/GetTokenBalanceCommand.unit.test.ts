@@ -16,16 +16,16 @@ vi.mock("../../../../src/tools/token/utils/TokenResolver.js", () => ({
 describe("GetTokenBalanceCommand", () => {
   let command: GetTokenBalanceCommand;
   let mockContext: ToolContext;
-  let mockRead: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-  let mockResolveToken: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-  let mockResolveAddress: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  let mockRead: any;  
+  let mockResolveToken: any;  
+  let mockResolveAddress: any;  
 
   beforeEach(async () => {
     vi.clearAllMocks();
 
     mockContext = {
       hubId: "test-hub-id",
-      keyPair: {} as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      keyPair: {} as any,  
       publicKey: "test-public-key",
     };
 
