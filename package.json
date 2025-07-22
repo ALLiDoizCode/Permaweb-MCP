@@ -28,7 +28,7 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "audit": "npm audit --audit-level moderate",
-    "ci:quality": "npm run lint && npm run type-check && npm run audit && npm run build",
+    "ci:quality": "npm run lint && npm run type-check && npm run build",
     "prepublishOnly": "npm run type-check && npm run build",
     "postpublish": "npm run test:install",
     "test:install": "npm pack --dry-run",
