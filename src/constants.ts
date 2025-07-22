@@ -1,22 +1,25 @@
 export function AOS_MODULE(): string {
-  return "28gHGe_ARwPfCL7zYD2HB5oGvvP74mbfbHLESNFo55o";
+  return isMainnet()
+    ? "Md-unO1WeOFeDev8hsetrk-JYhzZDuB73ypzxKiE4Hc" // TODO: Replace with actual mainnet AOS module ID (set in Release 27 - 2025-02-20)
+    : "28gHGe_ARwPfCL7zYD2HB5oGvvP74mbfbHLESNFo55o";
 }
 
 export function ARWEAVE_URL(): string {
-  /*
-    case "production": {
-            return "arweave.net";
-        }
-    */
-  return "arweave.velocity.cloudnet.marshal.ao";
+  return isMainnet()
+    ? "arweave.net"
+    : "arweave.velocity.cloudnet.marshal.ao";
 }
 
 export function CU_URL(): string {
-  return "https://cu.velocity.cloudnet.marshal.ao";
+  return isMainnet()
+    ? "https://cu.ao-testnet.xyz" // Official AO mainnet CU URL (despite "testnet" in domain name)
+    : "https://cu.velocity.cloudnet.marshal.ao";
 }
 
 export function GATEWAY_URL(): string {
-  return "https://gateway.velocity.cloudnet.marshal.ao";
+  return isMainnet()
+    ? "https://arweave.net"
+    : "https://gateway.velocity.cloudnet.marshal.ao";
 }
 
 export function HUB_REGISTRY_ID(): string {
@@ -24,7 +27,9 @@ export function HUB_REGISTRY_ID(): string {
 }
 
 export function MU_URL(): string {
-  return "https://mu.velocity.cloudnet.marshal.ao";
+  return isMainnet()
+    ? "https://mu.ao-testnet.xyz" // Official AO mainnet MU URL (despite "testnet" in domain name)
+    : "https://mu.velocity.cloudnet.marshal.ao";
 }
 
 export function ProcessHub(): string {
@@ -32,7 +37,9 @@ export function ProcessHub(): string {
 }
 
 export function SCHEDULER(): string {
-  return "Tm7v2ddwSr_5UxjmuCmhkMSZpzhtKJkkpLMZK_p6mQU";
+  return isMainnet()
+    ? "_GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA" // Default scheduler from ao-deploy (may need update to actual mainnet scheduler)
+    : "Tm7v2ddwSr_5UxjmuCmhkMSZpzhtKJkkpLMZK_p6mQU";
 }
 
 export function toUrl(tx: string) {
@@ -41,6 +48,10 @@ export function toUrl(tx: string) {
 
 export function WAR_TOKEN(): string {
   return "WPyLgOqELOyN_BoTNdeEMZp5sz3RxDL19IGcs3A9IPc";
+}
+
+function isMainnet(): boolean {
+  return process.env.NODE_ENV === "production";
 }
 
 export const DEFAULT_QUANTITY = "1000000000000000000";

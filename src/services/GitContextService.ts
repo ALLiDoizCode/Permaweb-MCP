@@ -149,7 +149,8 @@ export class GitContextService {
         { cwd: repoPath },
       );
 
-      const commits = stdout.split("\n").filter((line) => line.trim());
+      const commits = stdout.split("
+").filter((line) => line.trim());
       const patterns: Record<string, number> = {};
 
       for (const commit of commits) {
@@ -246,7 +247,8 @@ export class GitContextService {
           cwd: repoPath,
         },
       );
-      return stdout.split("\n").filter((branch) => branch.trim());
+      return stdout.split("
+").filter((branch) => branch.trim());
     } catch {
       return [];
     }
@@ -276,7 +278,8 @@ export class GitContextService {
         renamed: [],
       };
 
-      for (const line of stdout.split("\n")) {
+      for (const line of stdout.split("
+")) {
         if (!line.trim()) continue;
 
         const status = line.substring(0, 2);
@@ -320,7 +323,8 @@ export class GitContextService {
       });
 
       return stdout
-        .split("\n")
+        .split("
+")
         .filter((line) => line.trim())
         .map((line) => line.substring(3)); // Remove status prefix
     } catch {
@@ -339,7 +343,8 @@ export class GitContextService {
       );
 
       return stdout
-        .split("\n")
+        .split("
+")
         .filter((line) => line.trim())
         .map((line) => {
           const [hash, message, author, timestamp] = line.split("|");
@@ -363,7 +368,8 @@ export class GitContextService {
           cwd: repoPath,
         },
       );
-      return stdout.split("\n").filter((branch) => branch.trim());
+      return stdout.split("
+").filter((branch) => branch.trim());
     } catch {
       return [];
     }

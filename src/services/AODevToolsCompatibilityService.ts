@@ -129,7 +129,8 @@ ${results.endToEnd.stageResults
 - **Issues**: ${stage.issues.length}
 `,
   )
-  .join("\n")}
+  .join("
+")}
 
 ## Critical Issues
 
@@ -144,15 +145,18 @@ ${results.overall.issues
 - **Affected Components**: ${issue.affectedComponents.join(", ")}
 `,
   )
-  .join("\n")}
+  .join("
+")}
 
 ## Recommendations
 
-${results.overall.recommendations.map((rec) => `- ${rec}`).join("\n")}
+${results.overall.recommendations.map((rec) => `- ${rec}`).join("
+")}
 
 ## Warnings
 
-${results.overall.warnings.map((warn) => `- ${warn}`).join("\n")}
+${results.overall.warnings.map((warn) => `- ${warn}`).join("
+")}
 
 ---
 

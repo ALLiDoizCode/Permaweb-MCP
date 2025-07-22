@@ -124,15 +124,19 @@ export class ExecuteActionCommand extends ToolCommand<
           markdown += `- ${param.name}: ${param.description} (${required})
 `;
         }
-        markdown += "\n";
+        markdown += "
+";
       }
 
       if (handler.examples && handler.examples.length > 0) {
-        markdown += "Examples:\n";
+        markdown += "Examples:
+";
         for (const example of handler.examples) {
-          markdown += `- ${example}\n`;
+          markdown += `- ${example}
+`;
         }
-        markdown += "\n";
+        markdown += "
+";
       }
     }
 
