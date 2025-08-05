@@ -238,7 +238,7 @@ const DOC_SOURCES: DocSource[] = [
       ],
       technical: [
         "flat@1.0",
-        "structured@1.0", 
+        "structured@1.0",
         "httpsig@1.0",
         "erlang",
         "wasm",
@@ -256,7 +256,10 @@ const DOC_SOURCES: DocSource[] = [
 export class PermawebDocs {
   private cache = new Map<PermawebDomain, CachedDoc>();
   private readonly cacheMaxAge = 24 * 60 * 60 * 1000; // 24 hours
-  private readonly chunkSize = parseInt(process.env.CONTEXT_CHUNK_SIZE || "2000", 10);
+  private readonly chunkSize = parseInt(
+    process.env.CONTEXT_CHUNK_SIZE || "2000",
+    10,
+  );
   private readonly debugMode = process.env.DEBUG === "true";
   private readonly defaultMaxResults = 20;
   private readonly fetchTimeoutMs = 30000; // 30 seconds
@@ -356,200 +359,50 @@ export class PermawebDocs {
     maxResults: number = this.defaultMaxResults,
   ): Promise<PermawebDocsResult[]> {
     // Strategy 1: Standard search with detected domains
-    const results = await this.executeSearchStrategy(query, requestedDomains, maxResults, "standard");
-    
+    const results = await this.executeSearchStrategy(
+      query,
+      requestedDomains,
+      maxResults,
+      "standard",
+    );
+
     if (results.length > 0) {
       return results;
     }
 
     // Strategy 2: Expanded query search (if no results from strategy 1)
-    const expandedResults = await this.executeSearchStrategy(query, requestedDomains, maxResults, "expanded");
-    
+    const expandedResults = await this.executeSearchStrategy(
+      query,
+      requestedDomains,
+      maxResults,
+      "expanded",
+    );
+
     if (expandedResults.length > 0) {
       return expandedResults;
     }
 
     // Strategy 3: Broad domain search (search all available domains)
-    const broadResults = await this.executeSearchStrategy(query, requestedDomains, maxResults, "broad");
-    
+    const broadResults = await this.executeSearchStrategy(
+      query,
+      requestedDomains,
+      maxResults,
+      "broad",
+    );
+
     if (broadResults.length > 0) {
       return broadResults;
     }
 
     // Strategy 4: Relaxed matching (lower threshold, partial word matching)
-    const relaxedResults = await this.executeSearchStrategy(query, requestedDomains, maxResults, "relaxed");
-    
+    const relaxedResults = await this.executeSearchStrategy(
+      query,
+      requestedDomains,
+      maxResults,
+      "relaxed",
+    );
+
     return relaxedResults;
-  }
-
-  /**
-   * Execute a specific search strategy
-   */
-  private async executeSearchStrategy(
-    query: string,
-    requestedDomains: string[] | undefined,
-    maxResults: number,
-    strategy: "standard" | "expanded" | "broad" | "relaxed"
-  ): Promise<PermawebDocsResult[]> {
-    let domains: PermawebDomain[];
-    let searchQuery = query;
-    let threshold = this.relevanceThreshold;
-
-    // Configure strategy-specific parameters
-    switch (strategy) {
-      case "standard":
-        domains = this.getSearchDomains(query, requestedDomains);
-        break;
-        
-      case "expanded":
-        domains = this.getSearchDomains(query, requestedDomains);
-        searchQuery = this.expandQuery(query);
-        break;
-        
-      case "broad":
-        // Search all available domains regardless of detection
-        domains = this.getAvailableDomains();
-        break;
-        
-      case "relaxed":
-        domains = this.getAvailableDomains();
-        threshold = Math.max(1, this.relevanceThreshold - 2); // Lower threshold
-        break;
-    }
-
-    if (this.debugMode) {
-      console.log(`[PermawebDocs] Trying ${strategy} search strategy with domains: ${domains.join(', ')}`);
-    }
-
-    // Load required documents
-    await this.ensureDocsLoaded(domains);
-    
-    const results: PermawebDocsResult[] = [];
-    
-    for (const domain of domains) {
-      let cached = this.cache.get(domain);
-      
-      // Fallback: use stale cached content if available and fresh loading failed
-      if (!cached || !this.isDocLoaded(domain)) {
-        cached = this.cache.get(domain); // Get potentially stale content
-        if (!cached) continue;
-        
-        if (this.debugMode) {
-          console.log(`[PermawebDocs] Using potentially stale cached content for ${domain}`);
-        }
-      }
-      
-      const url = DOC_SOURCES.find((s) => s.domain === domain)!.url;
-      const chunks = this.chunkContent(domain, cached.content);
-      
-      for (const chunk of chunks) {
-        const relevanceScore = this.calculateChunkRelevance(searchQuery, chunk, domain);
-        
-        // Adjust matching criteria based on strategy
-        const queryWords = searchQuery.toLowerCase().split(/\s+/);
-        let containsQueryWord: boolean;
-        
-        if (strategy === "relaxed") {
-          // More flexible matching for relaxed strategy
-          containsQueryWord = queryWords.some((word) => {
-            if (word.length >= 3) {
-              // Partial word matching
-              return chunk.toLowerCase().includes(word.substring(0, Math.min(word.length, 4)));
-            }
-            return chunk.toLowerCase().includes(word);
-          });
-        } else {
-          // Standard exact word matching
-          containsQueryWord = queryWords.some((word) =>
-            chunk.toLowerCase().includes(word),
-          );
-        }
-        
-        if (relevanceScore >= threshold && containsQueryWord) {
-          results.push({
-            content: chunk,
-            domain,
-            isFullDocument: false,
-            relevanceScore,
-            url,
-          });
-        }
-      }
-    }
-    
-    // Sort by relevance and return results
-    return results
-      .sort((a, b) => b.relevanceScore - a.relevanceScore)
-      .slice(0, maxResults);
-  }
-
-  /**
-   * Get search domains based on query and requested domains
-   */
-  private getSearchDomains(query: string, requestedDomains?: string[]): PermawebDomain[] {
-    if (requestedDomains && requestedDomains.length > 0) {
-      return requestedDomains.filter((d) =>
-        this.getAvailableDomains().includes(d as PermawebDomain),
-      ) as PermawebDomain[];
-    }
-    
-    const domains = this.detectRelevantDomains(query);
-    
-    // Always include glossary for definition/what is queries
-    if (
-      /what is|define|definition|glossary|meaning|explain/i.test(query) &&
-      !domains.includes("permaweb-glossary")
-    ) {
-      domains.push("permaweb-glossary");
-    }
-    
-    return domains;
-  }
-
-  /**
-   * Expand query with synonyms and related terms
-   */
-  private expandQuery(originalQuery: string): string {
-    const expansions = new Map([
-      // Technology synonyms
-      ["hyperbeam", "hyperbeam distributed computing wasm erlang"],
-      ["arweave", "arweave permaweb blockchain permanent storage"],
-      ["ao", "ao computer autonomous objects processes"],
-      ["ario", "ar.io gateway infrastructure hosting"],
-      ["wao", "wao hyperbeam devices codec hashpath distributed computing"],
-      
-      // Concept expansions
-      ["migrate", "migrate migration move transition switch"],
-      ["benefits", "benefits advantages pros features capabilities"],
-      ["architecture", "architecture design structure implementation"],
-      ["deployment", "deployment deploy hosting publishing"],
-      ["development", "development dev building creating implementation"],
-      
-      // Common permaweb terms
-      ["token", "token cryptocurrency digital asset pst"],
-      ["process", "process autonomous object computation"],
-      ["gateway", "gateway node infrastructure ar.io"],
-      ["wallet", "wallet arweave key management"],
-      
-      // Technical computing terms
-      ["devices", "devices codec hyperbeam wao modular computational"],
-      ["codec", "codec encoding decoding tabm flat structured httpsig"],
-      ["hashpath", "hashpath verification provenance chained hashes"],
-      ["testing", "testing framework in-memory ao unit emulation"],
-      ["nif", "nif erlang native implemented functions wasm"],
-      ["encoding", "encoding decoding message codec tabm binary"],
-    ]);
-
-    let expandedQuery = originalQuery;
-    const queryWords = originalQuery.toLowerCase().split(/\s+/);
-    
-    for (const word of queryWords) {
-      if (expansions.has(word)) {
-        expandedQuery += " " + expansions.get(word);
-      }
-    }
-    
-    return expandedQuery;
   }
 
   /**
@@ -578,6 +431,68 @@ export class PermawebDocs {
     return score;
   }
 
+  /**
+   * Split content into size-constrained chunks while preserving semantic boundaries.
+   * @param content The content to chunk
+   * @returns Array of size-appropriate chunks
+   */
+  private chunkBySizeAndSemantics(content: string): string[] {
+    if (content.length <= this.chunkSize) {
+      return [content];
+    }
+
+    const chunks: string[] = [];
+    let remaining = content;
+
+    while (remaining.length > this.chunkSize) {
+      // Try to find the best semantic boundary within chunk size
+      const boundaries = [
+        { pattern: /\n\n/g, priority: 1 }, // Paragraph breaks (highest priority)
+        { pattern: /\. /g, priority: 2 }, // Sentence endings
+        { pattern: / /g, priority: 3 }, // Word boundaries (lowest priority)
+      ];
+
+      let bestBoundary = -1;
+      for (const { pattern } of boundaries) {
+        pattern.lastIndex = 0; // Reset regex state
+        const searchText = remaining.substring(0, this.chunkSize);
+        let match;
+        let lastMatch = -1;
+
+        while ((match = pattern.exec(searchText)) !== null) {
+          lastMatch = match.index + match[0].length;
+          // Prevent infinite loops with zero-width matches
+          if (match[0].length === 0) {
+            pattern.lastIndex = match.index + 1;
+          }
+        }
+
+        if (lastMatch > bestBoundary) {
+          bestBoundary = lastMatch;
+        }
+      }
+
+      // If no good boundary found, split at chunk size
+      if (bestBoundary === -1) {
+        bestBoundary = this.chunkSize;
+      }
+
+      // Extract chunk and update remaining content
+      const chunk = remaining.substring(0, bestBoundary).trim();
+      if (chunk) {
+        chunks.push(chunk);
+      }
+
+      remaining = remaining.substring(bestBoundary).trim();
+    }
+
+    // Add any remaining content
+    if (remaining) {
+      chunks.push(remaining);
+    }
+
+    return chunks;
+  }
 
   /**
    * Split documentation content into logical chunks by domain with size constraints.
@@ -615,69 +530,6 @@ export class PermawebDocs {
     }
 
     return finalChunks;
-  }
-
-  /**
-   * Split content into size-constrained chunks while preserving semantic boundaries.
-   * @param content The content to chunk
-   * @returns Array of size-appropriate chunks
-   */
-  private chunkBySizeAndSemantics(content: string): string[] {
-    if (content.length <= this.chunkSize) {
-      return [content];
-    }
-
-    const chunks: string[] = [];
-    let remaining = content;
-
-    while (remaining.length > this.chunkSize) {
-      // Try to find the best semantic boundary within chunk size
-      const boundaries = [
-        { pattern: /\n\n/g, priority: 1 }, // Paragraph breaks (highest priority)
-        { pattern: /\. /g, priority: 2 },   // Sentence endings
-        { pattern: / /g, priority: 3 },     // Word boundaries (lowest priority)
-      ];
-
-      let bestBoundary = -1;
-      for (const { pattern } of boundaries) {
-        pattern.lastIndex = 0; // Reset regex state
-        const searchText = remaining.substring(0, this.chunkSize);
-        let match;
-        let lastMatch = -1;
-        
-        while ((match = pattern.exec(searchText)) !== null) {
-          lastMatch = match.index + match[0].length;
-          // Prevent infinite loops with zero-width matches
-          if (match[0].length === 0) {
-            pattern.lastIndex = match.index + 1;
-          }
-        }
-        
-        if (lastMatch > bestBoundary) {
-          bestBoundary = lastMatch;
-        }
-      }
-
-      // If no good boundary found, split at chunk size
-      if (bestBoundary === -1) {
-        bestBoundary = this.chunkSize;
-      }
-
-      // Extract chunk and update remaining content
-      const chunk = remaining.substring(0, bestBoundary).trim();
-      if (chunk) {
-        chunks.push(chunk);
-      }
-      
-      remaining = remaining.substring(bestBoundary).trim();
-    }
-
-    // Add any remaining content
-    if (remaining) {
-      chunks.push(remaining);
-    }
-
-    return chunks;
   }
 
   /**
@@ -746,27 +598,212 @@ export class PermawebDocs {
    */
   private async ensureDocsLoaded(domains: PermawebDomain[]): Promise<void> {
     const domainsToLoad = domains.filter((domain) => !this.isDocLoaded(domain));
-    
+
     if (domainsToLoad.length === 0) {
       return; // All domains already loaded
     }
 
-    const loadPromises = domainsToLoad.map((domain) => 
+    const loadPromises = domainsToLoad.map((domain) =>
       this.loadDocumentationWithRetry(domain)
-        .then(() => ({ domain, success: true, error: null }))
-        .catch((error) => ({ domain, success: false, error }))
+        .then(() => ({ domain, error: null, success: true }))
+        .catch((error) => ({ domain, error, success: false })),
     );
-    
+
     const results = await Promise.all(loadPromises);
-    
+
     // Log warnings for failed domains but don't throw
     for (const result of results) {
       if (!result.success) {
         if (this.debugMode) {
-          console.warn(`[PermawebDocs] Failed to load ${result.domain}: ${result.error?.message || 'Unknown error'}`);
+          console.warn(
+            `[PermawebDocs] Failed to load ${result.domain}: ${result.error?.message || "Unknown error"}`,
+          );
         }
       }
     }
+  }
+
+  /**
+   * Execute a specific search strategy
+   */
+  private async executeSearchStrategy(
+    query: string,
+    requestedDomains: string[] | undefined,
+    maxResults: number,
+    strategy: "broad" | "expanded" | "relaxed" | "standard",
+  ): Promise<PermawebDocsResult[]> {
+    let domains: PermawebDomain[];
+    let searchQuery = query;
+    let threshold = this.relevanceThreshold;
+
+    // Configure strategy-specific parameters
+    switch (strategy) {
+      case "broad":
+        // Search all available domains regardless of detection
+        domains = this.getAvailableDomains();
+        break;
+
+      case "expanded":
+        domains = this.getSearchDomains(query, requestedDomains);
+        searchQuery = this.expandQuery(query);
+        break;
+
+      case "relaxed":
+        domains = this.getAvailableDomains();
+        threshold = Math.max(1, this.relevanceThreshold - 2); // Lower threshold
+        break;
+
+      case "standard":
+        domains = this.getSearchDomains(query, requestedDomains);
+        break;
+    }
+
+    if (this.debugMode) {
+      console.log(
+        `[PermawebDocs] Trying ${strategy} search strategy with domains: ${domains.join(", ")}`,
+      );
+    }
+
+    // Load required documents
+    await this.ensureDocsLoaded(domains);
+
+    const results: PermawebDocsResult[] = [];
+
+    for (const domain of domains) {
+      let cached = this.cache.get(domain);
+
+      // Fallback: use stale cached content if available and fresh loading failed
+      if (!cached || !this.isDocLoaded(domain)) {
+        cached = this.cache.get(domain); // Get potentially stale content
+        if (!cached) continue;
+
+        if (this.debugMode) {
+          console.log(
+            `[PermawebDocs] Using potentially stale cached content for ${domain}`,
+          );
+        }
+      }
+
+      const url = DOC_SOURCES.find((s) => s.domain === domain)!.url;
+      const chunks = this.chunkContent(domain, cached.content);
+
+      for (const chunk of chunks) {
+        const relevanceScore = this.calculateChunkRelevance(
+          searchQuery,
+          chunk,
+          domain,
+        );
+
+        // Adjust matching criteria based on strategy
+        const queryWords = searchQuery.toLowerCase().split(/\s+/);
+        let containsQueryWord: boolean;
+
+        if (strategy === "relaxed") {
+          // More flexible matching for relaxed strategy
+          containsQueryWord = queryWords.some((word) => {
+            if (word.length >= 3) {
+              // Partial word matching
+              return chunk
+                .toLowerCase()
+                .includes(word.substring(0, Math.min(word.length, 4)));
+            }
+            return chunk.toLowerCase().includes(word);
+          });
+        } else {
+          // Standard exact word matching
+          containsQueryWord = queryWords.some((word) =>
+            chunk.toLowerCase().includes(word),
+          );
+        }
+
+        if (relevanceScore >= threshold && containsQueryWord) {
+          results.push({
+            content: chunk,
+            domain,
+            isFullDocument: false,
+            relevanceScore,
+            url,
+          });
+        }
+      }
+    }
+
+    // Sort by relevance and return results
+    return results
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, maxResults);
+  }
+
+  /**
+   * Expand query with synonyms and related terms
+   */
+  private expandQuery(originalQuery: string): string {
+    const expansions = new Map([
+      ["ao", "ao computer autonomous objects processes"],
+      ["architecture", "architecture design structure implementation"],
+      ["ario", "ar.io gateway infrastructure hosting"],
+      ["arweave", "arweave permaweb blockchain permanent storage"],
+      ["benefits", "benefits advantages pros features capabilities"],
+
+      ["codec", "codec encoding decoding tabm flat structured httpsig"],
+      ["deployment", "deployment deploy hosting publishing"],
+      ["development", "development dev building creating implementation"],
+      // Technical computing terms
+      ["devices", "devices codec hyperbeam wao modular computational"],
+      ["encoding", "encoding decoding message codec tabm binary"],
+
+      ["gateway", "gateway node infrastructure ar.io"],
+      ["hashpath", "hashpath verification provenance chained hashes"],
+      // Technology synonyms
+      ["hyperbeam", "hyperbeam distributed computing wasm erlang"],
+      // Concept expansions
+      ["migrate", "migrate migration move transition switch"],
+
+      ["nif", "nif erlang native implemented functions wasm"],
+      ["process", "process autonomous object computation"],
+      ["testing", "testing framework in-memory ao unit emulation"],
+      // Common permaweb terms
+      ["token", "token cryptocurrency digital asset pst"],
+      ["wallet", "wallet arweave key management"],
+      ["wao", "wao hyperbeam devices codec hashpath distributed computing"],
+    ]);
+
+    let expandedQuery = originalQuery;
+    const queryWords = originalQuery.toLowerCase().split(/\s+/);
+
+    for (const word of queryWords) {
+      if (expansions.has(word)) {
+        expandedQuery += " " + expansions.get(word);
+      }
+    }
+
+    return expandedQuery;
+  }
+
+  /**
+   * Get search domains based on query and requested domains
+   */
+  private getSearchDomains(
+    query: string,
+    requestedDomains?: string[],
+  ): PermawebDomain[] {
+    if (requestedDomains && requestedDomains.length > 0) {
+      return requestedDomains.filter((d) =>
+        this.getAvailableDomains().includes(d as PermawebDomain),
+      ) as PermawebDomain[];
+    }
+
+    const domains = this.detectRelevantDomains(query);
+
+    // Always include glossary for definition/what is queries
+    if (
+      /what is|define|definition|glossary|meaning|explain/i.test(query) &&
+      !domains.includes("permaweb-glossary")
+    ) {
+      domains.push("permaweb-glossary");
+    }
+
+    return domains;
   }
 
   private async loadDocumentation(domain: PermawebDomain): Promise<void> {
@@ -798,17 +835,24 @@ export class PermawebDocs {
       // Check content size and warn if extremely large
       const contentSizeMB = content.length / (1024 * 1024);
       if (this.debugMode && contentSizeMB > 5) {
-        console.warn(`Large documentation file for ${domain}: ${contentSizeMB.toFixed(2)}MB`);
+        console.warn(
+          `Large documentation file for ${domain}: ${contentSizeMB.toFixed(2)}MB`,
+        );
       }
 
       // Validate content can be chunked without issues
       try {
-        const testChunks = this.chunkContent(domain, content.substring(0, Math.min(content.length, 10000)));
+        const testChunks = this.chunkContent(
+          domain,
+          content.substring(0, Math.min(content.length, 10000)),
+        );
         if (testChunks.length === 0) {
           throw new Error("Content chunking produced no results");
         }
       } catch (chunkError) {
-        throw new Error(`Content chunking failed: ${chunkError instanceof Error ? chunkError.message : "Unknown chunking error"}`);
+        throw new Error(
+          `Content chunking failed: ${chunkError instanceof Error ? chunkError.message : "Unknown chunking error"}`,
+        );
       }
 
       this.cache.set(domain, {
@@ -818,7 +862,9 @@ export class PermawebDocs {
 
       if (this.debugMode) {
         const chunkCount = this.chunkContent(domain, content).length;
-        console.log(`Successfully loaded ${domain}: ${chunkCount} chunks from ${contentSizeMB.toFixed(2)}MB`);
+        console.log(
+          `Successfully loaded ${domain}: ${chunkCount} chunks from ${contentSizeMB.toFixed(2)}MB`,
+        );
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
