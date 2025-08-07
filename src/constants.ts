@@ -64,3 +64,12 @@ export function formatNumber(num: number) {
 }
 
 //Y3EMIurCZKqO8Dm_86dsbdHNdwM86Yswk7v4hsGp45I Hello test
+
+// Cache Configuration
+export const CACHE_DIR = ".permamind";
+export const KEYS_CACHE_DIR = "keys";
+export const CACHE_DIR_PERMISSIONS = 0o700;
+export const CACHE_FILE_PERMISSIONS = 0o600;
+export const CACHE_VERSION = "1.0.0";
+export const CACHE_EXPIRATION_HOURS = 24 * 7; // 1 week default
+export const MEMORY_CACHE_MAX_SIZE = 100; // Maximum number of keys in memory cache
