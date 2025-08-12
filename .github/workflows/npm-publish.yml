@@ -219,7 +219,7 @@ jobs:
           git push --tags
 
       - name: Build for publishing
-        run: npm run build
+        run: npm run build:prod
 
       - name: Publish to NPM (dry-run)
         if: github.event.inputs.dry_run == 'true'
@@ -232,6 +232,7 @@ jobs:
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_ENV: production
 
       - name: Post-publish verification
         if: github.event.inputs.dry_run != 'true'
