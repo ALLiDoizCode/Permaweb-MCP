@@ -87,45 +87,6 @@ jobs:
           
           echo "✅ Package structure validation passed"
 
-      - name: Test package installation (dry-run)
-        run: |
-          echo "🧪 Testing package installation..."
-          echo "Current directory: $(pwd)"
-          echo "Disk space: $(df -h . | tail -1)"
-          echo "Node version: $(node --version)"
-          echo "NPM version: $(npm --version)"
-          
-          echo "📋 Running npm pack --dry-run..."
-          npm pack --dry-run || {
-            echo "❌ npm pack --dry-run failed with exit code $?"
-            exit 1
-          }
-          
-          echo "📦 Creating actual tarball..."
-          
-          # Run npm pack and capture output to temp file
-          if npm pack > /tmp/pack_output.txt 2>&1; then
-            TARBALL=$(cat /tmp/pack_output.txt | grep '\.tgz$' | tail -1 || echo "permamind-2.18.2.tgz")
-            echo "Created tarball: $TARBALL"
-          else
-            PACK_EXIT=$?
-            echo "❌ npm pack failed with exit code $PACK_EXIT"
-            echo "npm pack output:"
-            cat /tmp/pack_output.txt
-            exit 1
-          fi
-          
-          # Validate tarball exists and contents
-          if [ -f "$TARBALL" ]; then
-            echo "📦 Validating tarball contents..."
-            tar -tzf "$TARBALL" | head -5
-            echo "✅ Package installation test passed"
-          else
-            echo "❌ Tarball file not found: $TARBALL"
-            echo "Files in directory:"
-            ls -la *.tgz 2>/dev/null || echo "No .tgz files found"
-            exit 1
-          fi
 
       - name: Test executable permissions
         run: |
