@@ -87,32 +87,6 @@ jobs:
           
           echo "✅ Package structure validation passed"
 
-      - name: Test package installation (dry-run)
-        run: |
-          echo "🧪 Testing package installation..."
-          echo "Current directory: $(pwd)"
-          echo "Node version: $(node --version)"
-          echo "NPM version: $(npm --version)"
-          echo "Shell: $0"
-          echo "PATH: $PATH"
-          echo "User: $(whoami)"
-          
-          echo "📋 Testing which npm..."
-          which npm || echo "npm not found in PATH"
-          
-          echo "📋 Testing npm help..."
-          npm help || echo "npm help failed"
-          
-          echo "📋 Running npm pack --dry-run..."
-          npm pack --dry-run || echo "npm pack --dry-run failed with exit code $?"
-          
-          echo "📦 Creating actual tarball..."
-          npm pack || echo "npm pack failed with exit code $?"
-          
-          echo "📋 Listing all files..."
-          ls -la
-          
-          echo "✅ Debug test completed"
 
       - name: Test executable permissions
         run: |
