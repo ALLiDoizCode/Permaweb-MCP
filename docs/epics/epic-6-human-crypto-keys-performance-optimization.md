@@ -22,11 +22,13 @@ Optimize the `getKeyPairFromSeed` function performance in the Permamind project 
 ## Performance Analysis Summary
 
 ### Root Cause Identified
+
 - **Primary Bottleneck**: Node-Forge RSA generation with custom PRNG disables native OpenSSL APIs
 - **Secondary Issues**: 4096-bit keys vs 2048-bit (4x slower), pure JavaScript implementation, variable generation times (978ms to 33,167ms)
 - **Bundle Impact**: Large dependency footprint from cryptographic modules
 
 ### Optimization Targets
+
 - **Target Performance**: <500ms generation time (75% improvement minimum)
 - **Security Constraint**: 4096-bit RSA is mandatory (non-negotiable)
 - **Compatibility**: Zero breaking changes to existing API surface
@@ -52,24 +54,26 @@ Optimize the `getKeyPairFromSeed` function performance in the Permamind project 
 ```typescript
 // Enhanced caching in mnemonic.ts
 const keyCache = new Map<string, JWKInterface>();
-const CACHE_DIR = join(process.cwd(), '.permamind', 'keys');
+const CACHE_DIR = join(process.cwd(), ".permamind", "keys");
 
-async function getKeyFromMnemonicCached(mnemonic: string): Promise<JWKInterface> {
-  const mnemonicHash = createHash('sha256').update(mnemonic).digest('hex');
-  
+async function getKeyFromMnemonicCached(
+  mnemonic: string,
+): Promise<JWKInterface> {
+  const mnemonicHash = createHash("sha256").update(mnemonic).digest("hex");
+
   // Memory cache check
   if (keyCache.has(mnemonicHash)) {
     return keyCache.get(mnemonicHash)!;
   }
-  
+
   // Disk cache check
   const cacheFile = join(CACHE_DIR, `${mnemonicHash}.json`);
   if (existsSync(cacheFile)) {
-    const cachedKey = JSON.parse(readFileSync(cacheFile, 'utf8'));
+    const cachedKey = JSON.parse(readFileSync(cacheFile, "utf8"));
     keyCache.set(mnemonicHash, cachedKey);
     return cachedKey;
   }
-  
+
   // Generate and cache
   const jwk = await generateKeyFromSeed(mnemonic);
   keyCache.set(mnemonicHash, jwk);
@@ -96,7 +100,7 @@ async function getKeyFromMnemonicCached(mnemonic: string): Promise<JWKInterface>
 
 ```typescript
 // mnemonic-worker.ts
-import { parentPort, workerData } from 'worker_threads';
+import { parentPort, workerData } from "worker_threads";
 
 async function generateKeyInWorker() {
   const { mnemonic } = workerData;
@@ -108,18 +112,18 @@ async function generateKeyInWorker() {
 // Enhanced mnemonic.ts with worker support
 export async function getKeyFromMnemonicNonBlocking(
   mnemonic: string,
-  onProgress?: (stage: string) => void
+  onProgress?: (stage: string) => void,
 ): Promise<JWKInterface> {
-  onProgress?.('Generating 4096-bit RSA key (10-30 seconds)...');
-  
+  onProgress?.("Generating 4096-bit RSA key (10-30 seconds)...");
+
   return new Promise((resolve, reject) => {
-    const worker = new Worker(join(__dirname, 'mnemonic-worker.js'), {
-      workerData: { mnemonic }
+    const worker = new Worker(join(__dirname, "mnemonic-worker.js"), {
+      workerData: { mnemonic },
     });
-    
-    worker.on('message', (result) => {
+
+    worker.on("message", (result) => {
       if (result.success) {
-        onProgress?.('Key generation complete');
+        onProgress?.("Key generation complete");
         resolve(result.key);
       } else {
         reject(new Error(result.error));
@@ -152,11 +156,11 @@ export class SeedBasedKeyGenerator {
     let counter = 0;
     return {
       getRandomBytes: (length: number): Buffer => {
-        const hash = createHash('sha256');
+        const hash = createHash("sha256");
         hash.update(seed);
         hash.update(Buffer.from(counter.toString()));
         counter++;
-        
+
         let result = Buffer.alloc(0);
         while (result.length < length) {
           const chunk = hash.digest();
@@ -164,7 +168,7 @@ export class SeedBasedKeyGenerator {
           hash.update(chunk);
         }
         return result.slice(0, length);
-      }
+      },
     };
   }
 
@@ -178,7 +182,7 @@ export class SeedBasedKeyGenerator {
 ## Definition of Done
 
 - [ ] Memory and disk caching system implemented with secure key handling
-- [ ] Worker thread architecture prevents main thread blocking during generation  
+- [ ] Worker thread architecture prevents main thread blocking during generation
 - [ ] Cache hit ratio >95% for repeated mnemonic usage scenarios
 - [ ] Effective generation time <500ms for cached keys (instant response)
 - [ ] First-time generation remains secure with progress feedback
@@ -193,14 +197,17 @@ export class SeedBasedKeyGenerator {
 ## Risk Mitigation
 
 ### Primary Risk: Security Compromise Through Caching
+
 - **Mitigation**: Secure file permissions, encrypted cache files, memory protection
 - **Validation**: Security audit of cache implementation, key exposure testing
 
 ### Secondary Risk: Cache Corruption or Poisoning
+
 - **Mitigation**: Checksum validation, corruption detection, automatic recovery
 - **Fallback**: Graceful degradation to original implementation
 
 ### Tertiary Risk: Worker Thread Complexity
+
 - **Mitigation**: Comprehensive error handling, graceful shutdown, resource cleanup
 - **Testing**: Load testing, memory leak detection, concurrent operation validation
 
@@ -213,4 +220,4 @@ export class SeedBasedKeyGenerator {
 
 ---
 
-*This epic addresses critical performance bottlenecks while maintaining the project's security-first approach and ensuring zero disruption to existing functionality.*
+_This epic addresses critical performance bottlenecks while maintaining the project's security-first approach and ensuring zero disruption to existing functionality._

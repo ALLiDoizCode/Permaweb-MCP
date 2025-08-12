@@ -464,7 +464,7 @@ Optimize the `getKeyPairFromSeed` function performance in the Permamind project 
 ### Definition of Done
 
 - [ ] Memory and disk caching system implemented with secure key handling
-- [ ] Worker thread architecture prevents main thread blocking during generation  
+- [ ] Worker thread architecture prevents main thread blocking during generation
 - [ ] Cache hit ratio >95% for repeated mnemonic usage scenarios
 - [ ] Effective generation time <500ms for cached keys (instant response)
 - [ ] First-time generation remains secure with progress feedback

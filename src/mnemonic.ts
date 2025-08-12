@@ -106,7 +106,18 @@ export async function generateMnemonic() {
  *
  */
 
-export async function getKeyFromMnemonic(mnemonic: string) {
+export async function getKeyFromMnemonic(
+  mnemonic: string,
+  options: {
+    nonBlocking?: boolean;
+    onProgress?: (
+      stage: string,
+      percentage: number,
+      estimatedTimeMs?: number,
+    ) => void;
+    priority?: "high" | "low" | "normal";
+  } = {},
+) {
   // Generate hash for cache lookup
   const mnemonicHash = getMnemonicHash(mnemonic);
 
@@ -117,7 +128,43 @@ export async function getKeyFromMnemonic(mnemonic: string) {
   }
 
   // Cache miss - generate new key
+  // Use worker thread if non-blocking is enabled (default: true)
+  const useWorkerThread = options.nonBlocking !== false;
+
+  if (useWorkerThread) {
+    try {
+      const { getWorkerPool } = await import("./worker-pool.js");
+      const workerPool = getWorkerPool();
+
+      const jwk = await workerPool.generateKey(mnemonic, {
+        onProgress: options.onProgress,
+        priority: options.priority,
+      });
+
+      // Cache the generated key
+      await setCachedKey(mnemonicHash, jwk);
+
+      return jwk;
+    } catch (error) {
+      // Fallback to synchronous generation on worker failure
+      console.warn(
+        "Worker thread failed, falling back to synchronous generation:",
+        error,
+      );
+    }
+  }
+
+  // Synchronous generation (fallback or explicitly requested)
+  if (options.onProgress) {
+    options.onProgress("initialization", 0, 4000);
+  }
+
   const seedBuffer = await mnemonicToSeed(mnemonic);
+
+  if (options.onProgress) {
+    options.onProgress("key_generation", 50, 2000);
+  }
+
   const { privateKey } = await getKeyPairFromSeed(
     // @ts-expect-error: seedBuffer type mismatch with library expectations
     seedBuffer,
@@ -127,7 +174,16 @@ export async function getKeyFromMnemonic(mnemonic: string) {
     },
     { privateKeyFormat: "pkcs8-der" },
   );
+
+  if (options.onProgress) {
+    options.onProgress("jwk_conversion", 75, 500);
+  }
+
   const jwk = await pkcs8ToJwk(privateKey as unknown as Uint8Array);
+
+  if (options.onProgress) {
+    options.onProgress("complete", 100, 0);
+  }
 
   // Cache the generated key
   await setCachedKey(mnemonicHash, jwk);
@@ -455,18 +511,40 @@ async function setCachedKey(
 
 // Secure memory cleanup on process exit
 function setupProcessExitHandlers(): void {
-  const cleanup = () => {
+  const cleanup = async () => {
     try {
       memoryCache.clear();
+
+      // Shutdown worker pool if it was created
+      const { shutdownWorkerPool } = await import("./worker-pool.js").catch(
+        () => ({ shutdownWorkerPool: null }),
+      );
+      if (shutdownWorkerPool) {
+        await shutdownWorkerPool().catch(() => {
+          // Ignore worker pool shutdown errors during exit
+        });
+      }
     } catch {
       // Ignore cleanup errors
     }
   };
 
-  process.on("exit", cleanup);
-  process.on("SIGINT", cleanup);
-  process.on("SIGTERM", cleanup);
-  process.on("uncaughtException", cleanup);
+  process.on("exit", () => cleanup().catch(() => {}));
+  process.on("SIGINT", () =>
+    cleanup()
+      .then(() => process.exit())
+      .catch(() => process.exit()),
+  );
+  process.on("SIGTERM", () =>
+    cleanup()
+      .then(() => process.exit())
+      .catch(() => process.exit()),
+  );
+  process.on("uncaughtException", () =>
+    cleanup()
+      .then(() => process.exit(1))
+      .catch(() => process.exit(1)),
+  );
 }
 
 /**
