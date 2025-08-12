@@ -103,15 +103,17 @@ jobs:
           
           echo "📦 Creating actual tarball..."
           
-          # Run npm pack and capture output to temp file
-          if npm pack > /tmp/pack_output.txt 2>&1; then
-            TARBALL=$(cat /tmp/pack_output.txt | grep '\.tgz$' | tail -1 || echo "permamind-$(node -p "require('./package.json').version").tgz")
+          # Get expected tarball name from package.json
+          EXPECTED_TARBALL="permamind-$(node -p "require('./package.json').version").tgz"
+          echo "Expected tarball: $EXPECTED_TARBALL"
+          
+          # Run npm pack
+          if npm pack; then
+            TARBALL="$EXPECTED_TARBALL"
             echo "Created tarball: $TARBALL"
           else
             PACK_EXIT=$?
             echo "❌ npm pack failed with exit code $PACK_EXIT"
-            echo "npm pack output:"
-            cat /tmp/pack_output.txt
             exit 1
           fi
           
