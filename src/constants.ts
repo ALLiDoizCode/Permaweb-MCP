@@ -64,3 +64,19 @@ export function formatNumber(num: number) {
 }
 
 //Y3EMIurCZKqO8Dm_86dsbdHNdwM86Yswk7v4hsGp45I Hello test
+
+// Cache Configuration
+export const CACHE_DIR = ".permamind";
+export const KEYS_CACHE_DIR = "keys";
+export const CACHE_DIR_PERMISSIONS = 0o700;
+export const CACHE_FILE_PERMISSIONS = 0o600;
+export const CACHE_VERSION = "1.0.0";
+export const CACHE_EXPIRATION_HOURS = 24 * 7; // 1 week default
+export const MEMORY_CACHE_MAX_SIZE = 100; // Maximum number of keys in memory cache
+
+// Worker Thread Configuration
+export const DEFAULT_MAX_WORKERS = 2; // Maximum number of worker threads
+export const DEFAULT_MAX_QUEUE_SIZE = 50; // Maximum number of queued requests
+export const DEFAULT_WORKER_TIMEOUT_MS = 30000; // 30 second timeout per worker task
+export const DEFAULT_ENABLE_PRE_GENERATION = false; // Background pre-generation disabled by default
+export const DEFAULT_PRE_GENERATION_IDLE_THRESHOLD_MS = 60000; // 1 minute idle threshold
