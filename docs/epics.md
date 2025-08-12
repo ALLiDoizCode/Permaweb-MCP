@@ -11,6 +11,7 @@ This document consolidates all epic initiatives for the Permamind project, provi
 3. [Token Tools NLS Migration Epic](#token-tools-nls-migration-epic)
 4. [Agent UX Enhancement Epic - Revolutionary Interface](#agent-ux-enhancement-epic---revolutionary-interface)
 5. [AO Process Management Tools Epic](#ao-process-management-tools-epic)
+6. [Human Crypto Keys Performance Optimization Epic - Brownfield Enhancement](#human-crypto-keys-performance-optimization-epic---brownfield-enhancement)
 
 ---
 
@@ -395,6 +396,88 @@ Add comprehensive AO process lifecycle management capabilities to Permamind by i
 
 ---
 
+## Epic 6: Human Crypto Keys Performance Optimization Epic - Brownfield Enhancement
+
+### Epic Goal
+
+Optimize the `getKeyPairFromSeed` function performance in the Permamind project by implementing caching, alternative implementations, and architectural improvements to reduce 4096-bit RSA key generation latency by 75%+ while maintaining mandatory security requirements.
+
+### Epic Description
+
+**Existing System Context:**
+
+- Current functionality: Arweave wallet key generation using `human-crypto-keys@0.1.4` with 4096-bit RSA keys
+- Technology stack: TypeScript + Node.js 20+ + human-crypto-keys + bip39-web-crypto + Web Crypto API
+- Integration points: `src/mnemonic.ts:20` - `getKeyFromMnemonic()` function, AO process creation, wallet operations
+- Current performance: 2-30 seconds per key generation (Node-Forge bottleneck with custom PRNG)
+
+**Enhancement Details:**
+
+- What's being added/changed: Multi-layered performance optimization including memory/disk caching, worker thread implementation, pre-generation strategies, and custom implementation exploration
+- How it integrates: Maintains existing `JWKInterface` compatibility, preserves cryptographic security standards, extends current `mnemonic.ts` module
+- Success criteria: <500ms effective generation time from current 2-30 seconds, zero API breaking changes, maintained security compliance
+
+### Stories
+
+#### Story 6.1: Implement Memory and Disk Caching System
+
+**User Story:** As a Permamind user, I want key generation to be instant for previously used mnemonics so that I don't wait for the same computation repeatedly.
+
+**Acceptance Criteria:**
+
+- Implement secure memory cache for generated keys using mnemonic hash as key
+- Create persistent disk cache in `.permamind/keys/` directory with proper file permissions
+- Add cache validation and corruption recovery mechanisms
+- Implement cache expiration policies and cleanup routines
+- Ensure secure memory handling prevents key exposure in memory dumps
+- Maintain existing `getKeyFromMnemonic()` function signature with transparent caching
+- Add cache statistics and monitoring for performance metrics
+
+#### Story 6.2: Implement Worker Thread Architecture
+
+**User Story:** As a Permamind user, I want the system to remain responsive during key generation so that other operations are not blocked by cryptographic computation.
+
+**Acceptance Criteria:**
+
+- Create dedicated worker thread for CPU-intensive key generation
+- Implement non-blocking key generation with progress callbacks
+- Add queue management for multiple concurrent key generation requests
+- Provide user feedback during generation process with time estimates
+- Maintain error handling and recovery in worker thread context
+- Support graceful shutdown and worker thread cleanup
+- Enable background pre-generation during system idle time
+
+#### Story 6.3: Explore Custom Implementation Alternatives
+
+**User Story:** As a Permamind developer, I want to evaluate custom key generation implementations so that we can achieve optimal performance while maintaining security requirements.
+
+**Acceptance Criteria:**
+
+- Research and prototype custom deterministic RSA key generation using Node.js native crypto
+- Implement proof-of-concept using direct OpenSSL bindings via Node.js crypto.generateKeyPair()
+- Create deterministic PRNG implementation for seed-based generation
+- Conduct comprehensive testing against existing human-crypto-keys output for compatibility
+- Perform security analysis of custom implementation approach
+- Benchmark performance improvements vs current implementation
+- Document risks, benefits, and migration strategy for custom solution
+
+### Definition of Done
+
+- [ ] Memory and disk caching system implemented with secure key handling
+- [ ] Worker thread architecture prevents main thread blocking during generation
+- [ ] Cache hit ratio >95% for repeated mnemonic usage scenarios
+- [ ] Effective generation time <500ms for cached keys (instant response)
+- [ ] First-time generation remains secure with progress feedback
+- [ ] Custom implementation proof-of-concept completed with security analysis
+- [ ] Performance benchmarking confirms 75%+ improvement in user-perceived latency
+- [ ] Zero breaking changes to existing `getKeyFromMnemonic()` API
+- [ ] All existing test coverage maintained with additional performance tests
+- [ ] Security audit confirms no degradation in cryptographic security
+- [ ] Build passes: npm run build && npm run lint && npm run type-check && npm run test
+- [ ] Documentation updated with performance characteristics and caching behavior
+
+---
+
 ---
 
 ## Implementation Priorities
@@ -433,6 +516,13 @@ Add comprehensive AO process lifecycle management capabilities to Permamind by i
 2. Add evalProcess MCP tool for Lua code evaluation
 3. Integrate with existing ProcessToolFactory and infrastructure
 4. Enable complete AO development lifecycle management
+
+### Phase 6: Performance Optimization (Human Crypto Keys Enhancement)
+
+1. Implement memory and disk caching system for key generation
+2. Create worker thread architecture for non-blocking key generation
+3. Explore custom implementation alternatives using Node.js native crypto
+4. Achieve 75%+ performance improvement while maintaining security
 
 ---
 
@@ -498,6 +588,15 @@ Add comprehensive AO process lifecycle management capabilities to Permamind by i
 - Tools leverage existing createProcess() and evalProcess() functions correctly
 - No regression in existing process communication or workflow capabilities
 
+### Human Crypto Keys Performance Optimization Success
+
+- Key generation latency reduced by 75%+ from 2-30 seconds to <500ms effective time
+- Memory and disk caching system achieving >95% cache hit ratio for repeated mnemonics
+- Worker thread architecture providing non-blocking key generation with progress feedback
+- Custom implementation proof-of-concept evaluated with comprehensive security analysis
+- Zero breaking changes to existing `getKeyFromMnemonic()` API surface
+- Maintained 4096-bit RSA security requirements with enhanced performance characteristics
+
 ---
 
 ## Team Coordination
@@ -507,8 +606,9 @@ Add comprehensive AO process lifecycle management capabilities to Permamind by i
 1. **Epic 1 (MVP Refactoring)** - Foundation simplification
 2. **Epic 3 (Token NLS Migration)** - Enhanced user experience
 3. **Epic 5 (AO Process Management Tools)** - Core infrastructure expansion
-4. **Epic 2 (BMAD Integration)** - Advanced development capabilities
-5. **Epic 4 (Agent UX Enhancement)** - File-based agents and memory sharing (Stories 4.2, 4.3)
+4. **Epic 6 (Human Crypto Keys Performance Optimization)** - Critical performance enhancement
+5. **Epic 2 (BMAD Integration)** - Advanced development capabilities
+6. **Epic 4 (Agent UX Enhancement)** - File-based agents and memory sharing (Stories 4.2, 4.3)
 
 ### Quality Gates
 
