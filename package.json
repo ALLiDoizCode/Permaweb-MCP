@@ -17,6 +17,7 @@
   "preferGlobal": true,
   "scripts": {
     "build": "tsc",
+    "build:prod": "NODE_ENV=production tsc",
     "start": "tsx src/server.ts",
     "dev": "fastmcp dev src/server.ts",
     "lint": "prettier --check . && eslint . && tsc --noEmit",
