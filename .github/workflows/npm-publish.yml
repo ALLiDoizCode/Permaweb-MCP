@@ -164,6 +164,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Clean up old tarballs
+        run: |
+          echo "🧹 Cleaning up old tarball files..."
+          rm -f *.tgz
+          git add -A
+          if ! git diff --staged --quiet; then
+            git commit -m "Clean up old tarball files before version bump"
+          fi
+
       - name: Version bump
         if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
         run: |
@@ -177,6 +186,9 @@ jobs:
             # Automatic patch version bump for main branch
             npm version patch
           fi
+          
+          # Push the version commit and tags
+          git push origin main
           git push --tags
 
       - name: Build for publishing
