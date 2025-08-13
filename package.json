@@ -1,6 +1,6 @@
 {
   "name": "permamind",
-  "version": "2.19.0",
+  "version": "2.19.1",
   "main": "dist/server.js",
   "bin": {
     "permamind": "./bin/permamind.js",
