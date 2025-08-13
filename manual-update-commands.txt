@@ -1,0 +1,26 @@
+MANUAL UPDATE COMMANDS FOR PERMAMIND:
+
+Run these commands one by one (will ask for sudo password):
+
+1. Create backup:
+sudo cp /usr/local/lib/node_modules/permamind/bin/permamind.js /usr/local/lib/node_modules/permamind/bin/permamind.js.backup
+
+2. Copy updated binary:
+sudo cp /Users/jonathangreen/Documents/MCP/Permamind/package/bin/permamind.js /usr/local/lib/node_modules/permamind/bin/permamind.js
+
+3. Copy updated server:
+sudo cp /Users/jonathangreen/Documents/MCP/Permamind/package/dist/server.js /usr/local/lib/node_modules/permamind/dist/server.js
+
+4. Copy updated process file:
+sudo cp /Users/jonathangreen/Documents/MCP/Permamind/package/dist/process.js /usr/local/lib/node_modules/permamind/dist/process.js
+
+5. Copy updated constants:
+sudo cp /Users/jonathangreen/Documents/MCP/Permamind/package/dist/constants.js /usr/local/lib/node_modules/permamind/dist/constants.js
+
+6. Set permissions:
+sudo chmod +x /usr/local/lib/node_modules/permamind/bin/permamind.js
+
+After running these commands:
+- Restart Claude (quit and reopen)
+- Test Permamind tools
+- Check logs for actual error messages

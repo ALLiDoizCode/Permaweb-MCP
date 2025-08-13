@@ -58,11 +58,9 @@ globalThis.console.error = () => {};
 
 dotenv.config({ debug: false });
 
-// Only restore console after dotenv is loaded (for MCP protocol compatibility)
-if (process.env.NODE_ENV !== "production") {
-  globalThis.console.log = originalLog;
-  globalThis.console.error = originalError;
-}
+// Restore console after dotenv is loaded (required for MCP protocol compatibility)
+globalThis.console.log = originalLog;
+globalThis.console.error = originalError;
 
 async function init() {
   const arweave = Arweave.init({});
@@ -221,9 +219,10 @@ async function initializeAndStart() {
     server.start({
       transportType: "stdio",
     });
-  } catch {
-    // Silent error handling for stdio transport compatibility
-    // Fallback: start server without tools if initialization fails
+  } catch (error) {
+    // Error during initialization - log and start without tools
+    console.error("❌ Server initialization failed:", error);
+    console.error("Starting server without tools due to initialization failure");
     server.start({
       transportType: "stdio",
     });

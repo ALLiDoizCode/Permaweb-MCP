@@ -250,7 +250,7 @@ describe("ServiceName", () => {
 
 ```bash
 SEED_PHRASE=your_arweave_wallet_mnemonic
-NODE_ENV=development|production
+NODE_ENV=production  # Default: production (set to development for local dev)
 ```
 
 ### Optional Configuration
