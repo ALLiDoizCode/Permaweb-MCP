@@ -153,6 +153,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -179,6 +180,10 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
+          # Ensure we're on the main branch for version bumping
+          git checkout main
+          git pull origin main
+          
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             # Manual trigger with specified version type
             npm version ${{ github.event.inputs.version_type }}
@@ -187,9 +192,9 @@ jobs:
             npm version patch
           fi
           
-          # Push the version commit and tags to current branch and main
-          git push origin HEAD:main
-          git push --tags
+          # Push the version commit and tags
+          git push origin main
+          git push origin --tags
 
       - name: Build for publishing
         run: npm run build:prod
