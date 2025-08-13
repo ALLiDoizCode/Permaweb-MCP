@@ -1,6 +1,6 @@
 {
   "name": "permamind",
-  "version": "2.18.4",
+  "version": "2.18.5",
   "main": "dist/server.js",
   "bin": {
     "permamind": "./bin/permamind.js",
@@ -11,13 +11,13 @@
     "bin/**/*",
     "templates/**/*",
     "scripts/**/*",
-    ".env",
     "README.md",
     "LICENSE"
   ],
   "preferGlobal": true,
   "scripts": {
     "build": "tsc",
+    "build:prod": "NODE_ENV=production tsc",
     "start": "tsx src/server.ts",
     "dev": "fastmcp dev src/server.ts",
     "lint": "prettier --check . && eslint . && tsc --noEmit",
@@ -30,7 +30,7 @@
     "test:watch": "vitest",
     "audit": "npm audit --audit-level moderate",
     "ci:quality": "npm run lint && npm run type-check && npm run build",
-    "prepublishOnly": "npm run type-check && npm run build",
+    "prepublishOnly": "npm run type-check && npm run build:prod",
     "postpublish": "npm run test:install",
     "test:install": "npm pack --dry-run",
     "version:patch": "npm version patch && git push --tags",

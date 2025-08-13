@@ -1,11 +1,17 @@
 export function AOS_MODULE(): string {
   return isMainnet()
-    ? "Md-unO1WeOFeDev8hsetrk-JYhzZDuB73ypzxKiE4Hc" // TODO: Replace with actual mainnet AOS module ID (set in Release 27 - 2025-02-20)
+    ? "ISShJH1ij-hPPt9St5UFFr_8Ys3Kj5cyg7zrMGt7H9s" // Production mainnet AOS module
     : "28gHGe_ARwPfCL7zYD2HB5oGvvP74mbfbHLESNFo55o";
 }
 
 export function ARWEAVE_URL(): string {
   return isMainnet() ? "arweave.net" : "arweave.velocity.cloudnet.marshal.ao";
+}
+
+export function AUTHORITY(): string {
+  return isMainnet()
+    ? "fcoN_xJeisVsPXA-trzVAuIiqO3ydLQxM-L4XbrQKzY"
+    : "5btmdnmjWiFugymH7BepSig8cq1_zE-EQVumcXn0i_4";
 }
 
 export function CU_URL(): string {
@@ -36,7 +42,7 @@ export function ProcessHub(): string {
 
 export function SCHEDULER(): string {
   return isMainnet()
-    ? "_GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA" // Default scheduler from ao-deploy (may need update to actual mainnet scheduler)
+    ? "_GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA"
     : "Tm7v2ddwSr_5UxjmuCmhkMSZpzhtKJkkpLMZK_p6mQU";
 }
 
@@ -48,7 +54,7 @@ export function WAR_TOKEN(): string {
   return "WPyLgOqELOyN_BoTNdeEMZp5sz3RxDL19IGcs3A9IPc";
 }
 
-function isMainnet(): boolean {
+export function isMainnet(): boolean {
   return process.env.NODE_ENV === "production";
 }
 
