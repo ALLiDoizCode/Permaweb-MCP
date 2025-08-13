@@ -222,7 +222,9 @@ async function initializeAndStart() {
   } catch (error) {
     // Error during initialization - log and start without tools
     console.error("❌ Server initialization failed:", error);
-    console.error("Starting server without tools due to initialization failure");
+    console.error(
+      "Starting server without tools due to initialization failure",
+    );
     server.start({
       transportType: "stdio",
     });

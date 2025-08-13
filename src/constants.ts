@@ -30,6 +30,10 @@ export function HUB_REGISTRY_ID(): string {
   return "g_eSbkmD4LzfZtXaCLmeMcLIBQrqxnY-oFQJJNMIn4w";
 }
 
+export function isMainnet(): boolean {
+  return process.env.NODE_ENV === "production";
+}
+
 export function MU_URL(): string {
   return isMainnet()
     ? "https://mu.ao-testnet.xyz" // Official AO mainnet MU URL (despite "testnet" in domain name)
@@ -52,10 +56,6 @@ export function toUrl(tx: string) {
 
 export function WAR_TOKEN(): string {
   return "WPyLgOqELOyN_BoTNdeEMZp5sz3RxDL19IGcs3A9IPc";
-}
-
-export function isMainnet(): boolean {
-  return process.env.NODE_ENV === "production";
 }
 
 export const DEFAULT_QUANTITY = "1000000000000000000";
