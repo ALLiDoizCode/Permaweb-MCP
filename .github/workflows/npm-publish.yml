@@ -187,8 +187,8 @@ jobs:
             npm version patch
           fi
           
-          # Push the version commit and tags
-          git push origin main
+          # Push the version commit and tags to current branch and main
+          git push origin HEAD:main
           git push --tags
 
       - name: Build for publishing
