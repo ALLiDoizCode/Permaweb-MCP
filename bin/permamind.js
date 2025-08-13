@@ -352,6 +352,9 @@ async function startServer(configPath) {
   try {
     const serverPath = join(__dirname, '..', 'dist', 'server.js');
     
+    // Set production environment for live server
+    process.env.NODE_ENV = 'production';
+    
     // Check if server file exists
     const fs = await import('fs');
     if (!fs.existsSync(serverPath)) {
