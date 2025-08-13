@@ -221,8 +221,12 @@ async function initializeAndStart() {
     server.start({
       transportType: "stdio",
     });
-  } catch {
-    // Silent error handling for stdio transport compatibility
+  } catch (error) {
+    // Log initialization error for debugging while maintaining stdio compatibility
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Permamind initialization failed:", error);
+    }
+    
     // Fallback: start server without tools if initialization fails
     server.start({
       transportType: "stdio",
