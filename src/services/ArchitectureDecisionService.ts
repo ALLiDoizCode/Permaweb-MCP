@@ -364,8 +364,10 @@ export class ArchitectureDecisionService {
     // Increase score based on detected patterns
     if (requirements.detectedPatterns.includes("token-contract")) score += 0.3;
     if (requirements.detectedPatterns.includes("dao-governance")) score += 0.5;
-    if (requirements.detectedPatterns.includes("state-management")) score += 0.3;
-    if (requirements.detectedPatterns.includes("process-communication")) score += 0.4;
+    if (requirements.detectedPatterns.includes("state-management"))
+      score += 0.3;
+    if (requirements.detectedPatterns.includes("process-communication"))
+      score += 0.4;
 
     // Increase score based on keywords indicating data complexity
     const complexDataKeywords = [
@@ -501,8 +503,10 @@ export class ArchitectureDecisionService {
     processType: ProcessType,
     patternResult: any,
   ): DocumentationExample[] {
-    const processTypeKey = processType === "multi-process" ? "multiProcess" : processType;
-    const relevantPatterns = patternResult?.processTypes?.[processTypeKey]?.patterns || [];
+    const processTypeKey =
+      processType === "multi-process" ? "multiProcess" : processType;
+    const relevantPatterns =
+      patternResult?.processTypes?.[processTypeKey]?.patterns || [];
 
     return relevantPatterns.slice(0, 3).flatMap((pattern: any) =>
       (pattern.examples || []).map((example: any) => ({

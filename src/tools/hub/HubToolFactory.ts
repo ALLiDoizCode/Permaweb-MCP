@@ -1,11 +1,12 @@
 import { BaseToolFactory, ToolCommand, ToolContext } from "../core/index.js";
 import {
-  GenerateKeypairCommand,
-  GetUserPublicKeyCommand,
+  CreateHubCommand,
+  GetHubCommand,
+  InitializeHubCommand,
 } from "./commands/index.js";
 
-export class UserToolFactory extends BaseToolFactory {
+export class HubToolFactory extends BaseToolFactory {
   protected getToolClasses(): Array<new (context: ToolContext) => ToolCommand> {
-    return [GenerateKeypairCommand, GetUserPublicKeyCommand];
+    return [CreateHubCommand, GetHubCommand, InitializeHubCommand];
   }
 }

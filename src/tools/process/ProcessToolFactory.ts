@@ -1,12 +1,11 @@
 import { BaseToolFactory, ToolCommand, ToolContext } from "../core/index.js";
 import { AnalyzeProcessArchitectureCommand } from "./commands/AnalyzeProcessArchitectureCommand.js";
-import { CreateGuidedProcessCommand } from "./commands/CreateGuidedProcessCommand.js";
-import { CreateProcessCommand } from "./commands/CreateProcessCommand.js";
 import { EvalProcessCommand } from "./commands/EvalProcessCommand.js";
 import { ExecuteActionCommand } from "./commands/ExecuteActionCommand.js";
 import { GenerateLuaProcessCommand } from "./commands/GenerateLuaProcessCommand.js";
-import { OrchestateProcessWorkflowCommand } from "./commands/OrchestateProcessWorkflowCommand.js";
 import { QueryAOProcessMessagesCommand } from "./commands/QueryAOProcessMessagesCommand.js";
+import { SendMessageCommand } from "./commands/SendMessageCommand.js";
+import { SpawnProcessCommand } from "./commands/SpawnProcessCommand.js";
 
 /**
  * Factory for creating AO process management tools that provide comprehensive
@@ -16,9 +15,10 @@ import { QueryAOProcessMessagesCommand } from "./commands/QueryAOProcessMessages
  * complete AO process workflows:
  *
  * **Process Lifecycle Management:**
- * - `CreateProcessCommand` - Spawn new AO processes with optional template support
- * - `EvalProcessCommand` - Execute Lua code within existing processes for testing/setup
- * - `ExecuteActionCommand` - Send natural language requests to processes via markdown docs
+ * - `SpawnProcessCommand` - Spawn new AO processes with optional template support
+ * - `EvalProcessCommand` - Deploy Lua code to processes (handlers, modules) - NOT for messaging
+ * - `SendMessageCommand` - Send direct messages to processes with specific actions - SIMPLE messaging
+ * - `ExecuteActionCommand` - Send messages to processes using natural language - SMART messaging
  * - `QueryAOProcessMessagesCommand` - Query process message history and communication logs
  *
  * **Integration Capabilities:**
@@ -35,13 +35,13 @@ import { QueryAOProcessMessagesCommand } from "./commands/QueryAOProcessMessages
  * // 1. Create a new AO process
  * await createProcessTool.execute({});
  *
- * // 2. Evaluate initial setup code
+ * // 2. Deploy handler code using evalProcess (for Lua code deployment)
  * await evalProcessTool.execute({
  *   processId: "new-process-id",
  *   code: "Handlers.add('ping', Handlers.utils.hasMatchingTag('Action', 'Ping'), ...)"
  * });
  *
- * // 3. Communicate with the process
+ * // 3. Send messages to the process using executeAction (for messaging)
  * await executeActionTool.execute({
  *   processId: "new-process-id",
  *   request: "Send a ping message",
@@ -72,7 +72,7 @@ import { QueryAOProcessMessagesCommand } from "./commands/QueryAOProcessMessages
  * processFactory.registerTools(toolRegistry);
  * ```
  *
- * @see {@link CreateProcessCommand} For AO process creation
+ * @see {@link SpawnProcessCommand} For AO process creation
  * @see {@link EvalProcessCommand} For process code evaluation
  * @see {@link ExecuteActionCommand} For natural language process communication
  * @see {@link QueryAOProcessMessagesCommand} For process message querying
@@ -85,10 +85,11 @@ export class ProcessToolFactory extends BaseToolFactory {
    * Returns the array of tool command classes that this factory creates.
    *
    * The tools are returned in a logical workflow order:
-   * 1. CreateProcessCommand - Process creation
+   * 1. SpawnProcessCommand - Process creation
    * 2. EvalProcessCommand - Code evaluation and setup
-   * 3. ExecuteActionCommand - Process communication
-   * 4. QueryAOProcessMessagesCommand - Message history and monitoring
+   * 3. SendMessageCommand - Direct message sending
+   * 4. ExecuteActionCommand - Smart natural language communication
+   * 5. QueryAOProcessMessagesCommand - Message history and monitoring
    *
    * Each tool is instantiated with the factory's ToolContext, ensuring
    * consistent access to user credentials, embedded templates, and
@@ -101,13 +102,12 @@ export class ProcessToolFactory extends BaseToolFactory {
   protected getToolClasses(): Array<new (context: ToolContext) => ToolCommand> {
     return [
       AnalyzeProcessArchitectureCommand,
-      CreateGuidedProcessCommand,
-      CreateProcessCommand,
+      SpawnProcessCommand,
       EvalProcessCommand,
       ExecuteActionCommand,
       GenerateLuaProcessCommand,
-      OrchestateProcessWorkflowCommand,
       QueryAOProcessMessagesCommand,
+      SendMessageCommand,
     ];
   }
 }

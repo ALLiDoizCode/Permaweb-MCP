@@ -1,5 +1,6 @@
 import { JWKInterface } from "arweave/node/lib/wallet.js";
 
+import { isMemoryEnabled } from "../constants.js";
 import { type AIMemory, type MemoryType } from "../models/AIMemory.js";
 import {
   type ExecutionContext,
@@ -497,7 +498,9 @@ export class WorkflowAutomationServiceImpl
         memoryType: "workflow" as MemoryType,
       };
 
-      await this.memoryService.addEnhanced(signer, hubId, workflowMemory);
+      if (isMemoryEnabled()) {
+        await this.memoryService.addEnhanced(signer, hubId, workflowMemory);
+      }
       return workflowDef.id;
     } catch (error) {
       throw new Error(
@@ -521,11 +524,13 @@ export class WorkflowAutomationServiceImpl
         memoryType: "workflow" as MemoryType,
       };
 
-      await this.memoryService.addEnhanced(
-        {} as JWKInterface,
-        hubId,
-        templateMemory,
-      );
+      if (isMemoryEnabled()) {
+        await this.memoryService.addEnhanced(
+          {} as JWKInterface,
+          hubId,
+          templateMemory,
+        );
+      }
       return template.id;
     } catch (error) {
       throw new Error(
@@ -998,11 +1003,13 @@ export class WorkflowAutomationServiceImpl
         memoryType: "workflow" as MemoryType,
       };
 
-      await this.memoryService.addEnhanced(
-        {} as JWKInterface,
-        hubId,
-        integrationMemory,
-      );
+      if (isMemoryEnabled()) {
+        await this.memoryService.addEnhanced(
+          {} as JWKInterface,
+          hubId,
+          integrationMemory,
+        );
+      }
 
       return {
         integrationId,
@@ -1199,11 +1206,13 @@ export class WorkflowAutomationServiceImpl
         memoryType: "workflow" as MemoryType,
       };
 
-      await this.memoryService.addEnhanced(
-        {} as JWKInterface,
-        hubId,
-        workflowMemory,
-      );
+      if (isMemoryEnabled()) {
+        await this.memoryService.addEnhanced(
+          {} as JWKInterface,
+          hubId,
+          workflowMemory,
+        );
+      }
       return true;
     } catch (error) {
       return false;
@@ -1572,7 +1581,9 @@ export class WorkflowAutomationServiceImpl
       memoryType: "workflow" as MemoryType,
     };
 
-    await this.memoryService.addEnhanced(signer, hubId, executionMemory);
+    if (isMemoryEnabled()) {
+      await this.memoryService.addEnhanced(signer, hubId, executionMemory);
+    }
   }
 
   // Private helper methods

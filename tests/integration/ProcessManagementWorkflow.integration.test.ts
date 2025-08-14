@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ToolContext } from "../../src/tools/index.js";
-import { CreateProcessCommand } from "../../src/tools/process/commands/CreateProcessCommand.js";
 import { EvalProcessCommand } from "../../src/tools/process/commands/EvalProcessCommand.js";
 import { ExecuteActionCommand } from "../../src/tools/process/commands/ExecuteActionCommand.js";
 import { QueryAOProcessMessagesCommand } from "../../src/tools/process/commands/QueryAOProcessMessagesCommand.js";
+import { SpawnProcessCommand } from "../../src/tools/process/commands/SpawnProcessCommand.js";
 
 // Mock the relay functions
 vi.mock("../../src/relay.js", () => ({
@@ -39,7 +39,7 @@ vi.mock("@permaweb/aoconnect", async (importOriginal) => {
 });
 
 describe("Process Management Integration Workflow", () => {
-  let createProcessCommand: CreateProcessCommand;
+  let spawnProcessCommand: SpawnProcessCommand;
   let evalProcessCommand: EvalProcessCommand;
   let executeActionCommand: ExecuteActionCommand;
   let queryMessagesCommand: QueryAOProcessMessagesCommand;
@@ -102,7 +102,7 @@ describe("Process Management Integration Workflow", () => {
     } as any);
 
     // Initialize commands
-    createProcessCommand = new CreateProcessCommand(mockContext);
+    spawnProcessCommand = new SpawnProcessCommand(mockContext);
     evalProcessCommand = new EvalProcessCommand(mockContext);
     executeActionCommand = new ExecuteActionCommand(mockContext);
     queryMessagesCommand = new QueryAOProcessMessagesCommand(mockContext);
@@ -111,7 +111,7 @@ describe("Process Management Integration Workflow", () => {
   describe("Complete Process Lifecycle", () => {
     it("should support create → evaluate → communicate → query workflow", async () => {
       // Step 1: Create process
-      const createResult = await createProcessCommand.execute({});
+      const createResult = await spawnProcessCommand.execute({});
       expect(createResult).toContain("processId");
 
       const createResponse = JSON.parse(createResult);
@@ -152,7 +152,7 @@ describe("Process Management Integration Workflow", () => {
 
     it("should maintain process state consistency throughout lifecycle", async () => {
       // Create process
-      const createResult = await createProcessCommand.execute({});
+      const createResult = await spawnProcessCommand.execute({});
       const createResponse = JSON.parse(createResult);
       const processId = createResponse.processId;
 
@@ -178,7 +178,7 @@ describe("Process Management Integration Workflow", () => {
   describe("Tool Integration Compatibility", () => {
     it("should integrate CreateProcessCommand with ExecuteActionCommand", async () => {
       // Create process
-      const createResult = await createProcessCommand.execute({});
+      const createResult = await spawnProcessCommand.execute({});
       const createResponse = JSON.parse(createResult);
       const processId = createResponse.processId;
 
@@ -252,7 +252,7 @@ describe("Process Management Integration Workflow", () => {
         new Error("Process creation failed"),
       );
 
-      const createResult = await createProcessCommand.execute({});
+      const createResult = await spawnProcessCommand.execute({});
       const createResponse = JSON.parse(createResult);
 
       expect(createResponse.success).toBe(false);
@@ -308,9 +308,9 @@ describe("Process Management Integration Workflow", () => {
 
       // Create multiple processes concurrently
       const createPromises = [
-        createProcessCommand.execute({}),
-        createProcessCommand.execute({}),
-        createProcessCommand.execute({}),
+        spawnProcessCommand.execute({}),
+        spawnProcessCommand.execute({}),
+        spawnProcessCommand.execute({}),
       ];
 
       const createResults = await Promise.all(createPromises);
@@ -401,7 +401,7 @@ describe("Process Management Integration Workflow", () => {
         ]),
       };
 
-      const templateCreateCommand = new CreateProcessCommand(templateContext);
+      const templateCreateCommand = new SpawnProcessCommand(templateContext);
 
       const createResult = await templateCreateCommand.execute({});
       const createResponse = JSON.parse(createResult);
@@ -414,7 +414,7 @@ describe("Process Management Integration Workflow", () => {
   describe("Tool Context and Signer Management", () => {
     it("should maintain consistent tool context across all process tools", async () => {
       // Verify all tools use the same context
-      expect(createProcessCommand).toBeDefined();
+      expect(spawnProcessCommand).toBeDefined();
       expect(evalProcessCommand).toBeDefined();
       expect(executeActionCommand).toBeDefined();
       expect(queryMessagesCommand).toBeDefined();
@@ -427,7 +427,7 @@ describe("Process Management Integration Workflow", () => {
         publicKey: "test-key",
       };
 
-      const contextCreateCommand = new CreateProcessCommand(testContext);
+      const contextCreateCommand = new SpawnProcessCommand(testContext);
       const contextEvalCommand = new EvalProcessCommand(testContext);
 
       expect(contextCreateCommand).toBeDefined();
@@ -442,7 +442,7 @@ describe("Process Management Integration Workflow", () => {
       } as any);
 
       // Test process creation with signer
-      const createResult = await createProcessCommand.execute({});
+      const createResult = await spawnProcessCommand.execute({});
       const createResponse = JSON.parse(createResult);
 
       expect(createResponse.success).toBe(true);

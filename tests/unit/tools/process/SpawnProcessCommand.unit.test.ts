@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ToolContext } from "../../../../src/tools/core/index.js";
-import { CreateProcessCommand } from "../../../../src/tools/process/commands/CreateProcessCommand.js";
+import { SpawnProcessCommand } from "../../../../src/tools/process/commands/SpawnProcessCommand.js";
 
 // Mock the createProcess function
 vi.mock("../../../../src/process.js", () => ({
   createProcess: vi.fn(),
 }));
 
-describe("CreateProcessCommand", () => {
-  let command: CreateProcessCommand;
+describe("SpawnProcessCommand", () => {
+  let command: SpawnProcessCommand;
   let mockContext: ToolContext;
   let mockCreateProcess: any;
 
@@ -26,18 +26,18 @@ describe("CreateProcessCommand", () => {
     const { createProcess } = await import("../../../../src/process.js");
     mockCreateProcess = createProcess;
 
-    command = new CreateProcessCommand(mockContext);
+    command = new SpawnProcessCommand(mockContext);
   });
 
   describe("metadata", () => {
     it("should have correct metadata", () => {
       const metadata = (command as any).metadata;
-      expect(metadata.name).toBe("createProcess");
-      expect(metadata.title).toBe("Create AO Process");
+      expect(metadata.name).toBe("spawnProcess");
+      expect(metadata.title).toBe("Spawn AO Process");
       expect(metadata.readOnlyHint).toBe(false);
       expect(metadata.openWorldHint).toBe(false);
       expect(metadata.description).toContain(
-        "Create a new AO process and return its process ID",
+        "Spawn a new AO process and return its process ID",
       );
     });
   });
@@ -127,7 +127,7 @@ describe("CreateProcessCommand", () => {
       mockCreateProcess.mockResolvedValue(mockProcessId);
 
       const args = {};
-      const customCommand = new CreateProcessCommand(customContext);
+      const customCommand = new SpawnProcessCommand(customContext);
       await customCommand.execute(args);
 
       expect(mockCreateProcess).toHaveBeenCalledWith(customKeyPair);
@@ -169,11 +169,11 @@ describe("CreateProcessCommand", () => {
     it("should have correct tool definition structure", () => {
       const toolDef = command.toToolDefinition(mockContext);
 
-      expect(toolDef.name).toBe("createProcess");
-      expect(toolDef.description).toContain("Create a new AO process");
+      expect(toolDef.name).toBe("spawnProcess");
+      expect(toolDef.description).toContain("Spawn a new AO process");
       expect(toolDef.annotations?.openWorldHint).toBe(false);
       expect(toolDef.annotations?.readOnlyHint).toBe(false);
-      expect(toolDef.annotations?.title).toBe("Create AO Process");
+      expect(toolDef.annotations?.title).toBe("Spawn AO Process");
       expect(typeof toolDef.execute).toBe("function");
     });
 

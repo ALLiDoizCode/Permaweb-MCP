@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
+import {
+  AutoSafeToolContext,
+  ToolCommand,
+  ToolContext,
+  ToolMetadata,
+} from "../../core/index.js";
 import { resolveToken } from "../utils/TokenResolver.js";
 
 interface GetTokenBalancesArgs {
@@ -35,14 +40,15 @@ export class GetTokenBalancesCommand extends ToolCommand<
 
   async execute(args: GetTokenBalancesArgs): Promise<string> {
     try {
+      // Auto-initialize keypair and hub if needed
+      const safeContext = AutoSafeToolContext.from(this.context);
+      const { hubId } = await safeContext.initializeAll();
+
       // Dynamic import to avoid circular dependencies
       const { read } = await import("../../../process.js");
 
       // Resolve token processId if needed
-      const tokenResolution = await resolveToken(
-        args.processId,
-        this.context.hubId,
-      );
+      const tokenResolution = await resolveToken(args.processId, hubId);
       if (!tokenResolution.resolved) {
         return JSON.stringify({
           error: "Token resolution failed",

@@ -1,30 +1,25 @@
 // SSE transport allows normal logging without protocol interference
 
-import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet.js";
 import dotenv from "dotenv";
 import { FastMCP } from "fastmcp";
 
 import type { ProcessDefinition } from "./services/ProcessCommunicationService.js";
 
-import { HUB_REGISTRY_ID } from "./constants.js";
-import { getKeyFromMnemonic } from "./mnemonic.js";
-// MemoryType is now imported via the tools module
-import { ProfileCreateData } from "./models/Profile.js";
 import { defaultProcessService } from "./services/DefaultProcessService.js";
-import { hubRegistryService } from "./services/RegistryService.js";
 import { TokenProcessTemplateService } from "./services/TokenProcessTemplateService.js";
 import { ContactToolFactory } from "./tools/contact/ContactToolFactory.js";
 import { DocumentationToolFactory } from "./tools/documentation/DocumentationToolFactory.js";
+import { HubToolFactory } from "./tools/hub/HubToolFactory.js";
 import { ToolContext, toolRegistry } from "./tools/index.js";
 import { MemoryToolFactory } from "./tools/memory/MemoryToolFactory.js";
 import { ProcessToolFactory } from "./tools/process/ProcessToolFactory.js";
 import { TokenToolFactory } from "./tools/token/TokenToolFactory.js";
 import { UserToolFactory } from "./tools/user/UserToolFactory.js";
 
-let keyPair: JWKInterface;
-let publicKey: string;
-let hubId: string;
+let keyPair: JWKInterface | undefined;
+let publicKey: string | undefined;
+let hubId: string | undefined;
 let embeddedTemplates: Map<string, ProcessDefinition>;
 let initializationComplete = false;
 
@@ -36,6 +31,17 @@ export const getCurrentUserState = () => ({
   keyPair,
   publicKey,
 });
+
+// Export setter for server state (used by hub initialization tools)
+export const setUserState = (newState: {
+  hubId?: string;
+  keyPair?: JWKInterface;
+  publicKey?: string;
+}) => {
+  if (newState.keyPair) keyPair = newState.keyPair;
+  if (newState.publicKey) publicKey = newState.publicKey;
+  if (newState.hubId) hubId = newState.hubId;
+};
 
 // Export template availability checker
 export const isTemplateAvailable = (templateType: string): boolean => {
@@ -63,36 +69,7 @@ globalThis.console.log = originalLog;
 globalThis.console.error = originalError;
 
 async function init() {
-  const arweave = Arweave.init({});
-  if (process.env.SEED_PHRASE) {
-    keyPair = await getKeyFromMnemonic(process.env.SEED_PHRASE);
-  } else {
-    keyPair = await arweave.wallets.generate();
-  }
-  publicKey = await arweave.wallets.jwkToAddress(keyPair);
-  try {
-    const zone = await hubRegistryService.getZoneById(
-      HUB_REGISTRY_ID(),
-      publicKey,
-    );
-    hubId = (zone.spec as { processId: string }).processId;
-  } catch (e) {
-    if (
-      e ==
-      "TypeError: Cannot read properties of undefined (reading 'processId')"
-    ) {
-      const profile: ProfileCreateData = {
-        bot: true,
-        coverImage: "",
-        description: "",
-        displayName: "",
-        thumbnail: "",
-        userName: "",
-        website: "",
-      };
-      hubId = await hubRegistryService.create(keyPair, profile);
-    }
-  }
+  // Initialize without wallet generation - wallet operations moved to tools
 
   // Verify default process templates are loaded (silently for MCP compatibility)
   defaultProcessService.getDefaultProcesses();
@@ -120,7 +97,7 @@ function setupToolRegistry() {
   // Clear registry first
   toolRegistry.clear();
 
-  // Create tool context
+  // Create tool context - hub tools available even without initialization
   const context: ToolContext = {
     embeddedTemplates,
     hubId,
@@ -176,6 +153,16 @@ function setupToolRegistry() {
   });
 
   documentationFactory.registerTools(toolRegistry);
+
+  // Register Hub tools
+  const hubFactory = new HubToolFactory({
+    categoryDescription:
+      "Hub creation and management tools for Velocity protocol",
+    categoryName: "Hub",
+    context,
+  });
+
+  hubFactory.registerTools(toolRegistry);
 
   // Register User tools
   const userFactory = new UserToolFactory({

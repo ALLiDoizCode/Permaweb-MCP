@@ -387,9 +387,9 @@ end)`,
       lowerContent.includes("handlers.add") &&
       !lowerContent.includes("state") &&
       !lowerContent.includes("local") &&
-      (lowerContent.includes("calculate") || 
-       lowerContent.includes("return") ||
-       lowerContent.includes("tonumber"))
+      (lowerContent.includes("calculate") ||
+        lowerContent.includes("return") ||
+        lowerContent.includes("tonumber"))
     ) {
       return "none";
     }
