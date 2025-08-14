@@ -78,7 +78,7 @@ Enable AI agents using the Permamind MCP server to seamlessly create and deploy 
 ## Definition of Done
 
 - [ ] Intelligent workflow integration connecting queryPermawebDocs to createProcess/evalProcess workflows implemented
-- [ ] Automatic documentation query system based on user requirements implemented  
+- [ ] Automatic documentation query system based on user requirements implemented
 - [ ] Lua code generation templates informed by existing AO documentation patterns (handlers, message routing, state management)
 - [ ] End-to-end guided process creation workflow: requirement analysis → documentation query → code generation → process creation → evaluation → testing
 - [ ] Process architecture decision support system using documented AO patterns and examples

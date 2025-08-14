@@ -1,7 +1,11 @@
 import { BaseToolFactory, ToolCommand, ToolContext } from "../core/index.js";
+import { AnalyzeProcessArchitectureCommand } from "./commands/AnalyzeProcessArchitectureCommand.js";
+import { CreateGuidedProcessCommand } from "./commands/CreateGuidedProcessCommand.js";
 import { CreateProcessCommand } from "./commands/CreateProcessCommand.js";
 import { EvalProcessCommand } from "./commands/EvalProcessCommand.js";
 import { ExecuteActionCommand } from "./commands/ExecuteActionCommand.js";
+import { GenerateLuaProcessCommand } from "./commands/GenerateLuaProcessCommand.js";
+import { OrchestateProcessWorkflowCommand } from "./commands/OrchestateProcessWorkflowCommand.js";
 import { QueryAOProcessMessagesCommand } from "./commands/QueryAOProcessMessagesCommand.js";
 
 /**
@@ -96,9 +100,13 @@ export class ProcessToolFactory extends BaseToolFactory {
    */
   protected getToolClasses(): Array<new (context: ToolContext) => ToolCommand> {
     return [
+      AnalyzeProcessArchitectureCommand,
+      CreateGuidedProcessCommand,
       CreateProcessCommand,
       EvalProcessCommand,
       ExecuteActionCommand,
+      GenerateLuaProcessCommand,
+      OrchestateProcessWorkflowCommand,
       QueryAOProcessMessagesCommand,
     ];
   }
