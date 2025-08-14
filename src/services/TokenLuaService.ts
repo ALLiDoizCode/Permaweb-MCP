@@ -262,7 +262,7 @@ updateSupplyForAllocations()`
         parseInt(initialSupply) > 0
       ? `-- Auto-allocate initial supply to owner for 'none' strategy
 Balances[ao.id] = "${initialSupply}"
-print("Initial supply of ${initialSupply} allocated to owner: " .. ao.id)`
+-- Initial supply of ${initialSupply} allocated to owner: process ID`
       : "-- No initial allocations"
 }
 

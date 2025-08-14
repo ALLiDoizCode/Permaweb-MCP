@@ -514,7 +514,7 @@ const extractHandlersFromLua = (lua: string): any[] => {
 const generateUsageExamples = (
   processDefinition: TealProcessDefinition,
 ): string => {
-  return `\n-- Example usage for ${processDefinition.name}\nlocal msg = {\n  Id = "example-message-id",\n  From = "sender-address",\n  Tags = {\n    Action = "Info"\n  },\n  Data = "",\n  Timestamp = os.time()\n}\n\n-- Process the message\nlocal result = process(msg)\nprint(result.Output)\n`;
+  return `\n-- Example usage for ${processDefinition.name}\nlocal msg = {\n  Id = "example-message-id",\n  From = "sender-address",\n  Tags = {\n    Action = "Info"\n  },\n  Data = "",\n  Timestamp = os.time()\n}\n\n-- Process the message\nlocal result = process(msg)\n-- Output: result.Output\n`;
 };
 
 const generatePipelineId = (): string => {

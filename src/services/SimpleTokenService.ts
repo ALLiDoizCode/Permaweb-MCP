@@ -232,8 +232,8 @@ Handlers.add('Owner', Handlers.utils.hasMatchingTag('Action', 'Owner'), function
     })
 end)
 
-print("Simple Token " .. Name .. " (" .. Ticker .. ") initialized with " .. TotalSupply .. " tokens")
-print("Owner: " .. Owner)
+-- Simple Token initialized: Name (Ticker) with TotalSupply tokens
+-- Owner: process owner address
 `;
 }
 

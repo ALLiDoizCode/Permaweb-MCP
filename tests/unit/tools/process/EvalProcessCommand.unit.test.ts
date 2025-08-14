@@ -37,7 +37,7 @@ describe("EvalProcessCommand", () => {
       expect(metadata.readOnlyHint).toBe(false);
       expect(metadata.openWorldHint).toBe(false);
       expect(metadata.description).toContain(
-        "Evaluate Lua code within an existing AO process",
+        "Deploy and evaluate Lua code within an existing AO process",
       );
     });
   });
@@ -119,34 +119,34 @@ describe("EvalProcessCommand", () => {
       expect(parsedResult.message).toBe("Code evaluated successfully");
     });
 
-    it("should handle null result from evalProcess", async () => {
+    it("should handle null result from evalProcess as success", async () => {
       mockEvalProcess.mockResolvedValue(null);
 
       const args = {
-        code: "return 2 + 2",
+        code: "Handlers.add('test', function() end)",
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
       const result = await command.execute(args);
 
       const parsedResult = JSON.parse(result);
-      expect(parsedResult.success).toBe(false);
-      expect(parsedResult.message).toBe("Code evaluation failed or timed out");
-      expect(parsedResult.error).toBe("Evaluation returned null result");
+      expect(parsedResult.success).toBe(true);
+      expect(parsedResult.message).toBe("Code evaluated successfully (handler registration completed)");
+      expect(parsedResult.result).toBe("No return value - handlers registered successfully");
     });
 
-    it("should handle undefined result from evalProcess", async () => {
+    it("should handle undefined result from evalProcess as success", async () => {
       mockEvalProcess.mockResolvedValue(undefined);
 
       const args = {
-        code: "return 2 + 2",
+        code: "local var = 'initialized'",
         processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
       };
       const result = await command.execute(args);
 
       const parsedResult = JSON.parse(result);
-      expect(parsedResult.success).toBe(false);
-      expect(parsedResult.message).toBe("Code evaluation failed or timed out");
-      expect(parsedResult.error).toBe("Evaluation returned null result");
+      expect(parsedResult.success).toBe(true);
+      expect(parsedResult.message).toBe("Code evaluated successfully (handler registration completed)");
+      expect(parsedResult.result).toBe("No return value - handlers registered successfully");
     });
 
     it("should handle evaluation errors", async () => {
@@ -284,7 +284,7 @@ describe("EvalProcessCommand", () => {
 
       expect(toolDef.name).toBe("evalProcess");
       expect(toolDef.description).toContain(
-        "Evaluate Lua code within an existing AO process",
+        "Deploy and evaluate Lua code within an existing AO process",
       );
       expect(toolDef.annotations?.openWorldHint).toBe(false);
       expect(toolDef.annotations?.readOnlyHint).toBe(false);
@@ -313,7 +313,7 @@ describe("EvalProcessCommand", () => {
       // Should have correct basic structure
       expect(toolDef.name).toBe("evalProcess");
       expect(typeof toolDef.execute).toBe("function");
-      expect(toolDef.description).toContain("Evaluate Lua code");
+      expect(toolDef.description).toContain("Deploy and evaluate Lua code");
     });
   });
 

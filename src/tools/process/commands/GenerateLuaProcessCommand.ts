@@ -27,7 +27,7 @@ export class GenerateLuaProcessCommand extends ToolCommand<
 > {
   protected metadata: ToolMetadata = {
     description:
-      "Generate AO Lua process code based on natural language requirements with automatic documentation reference. Analyzes user requests, queries relevant Permaweb documentation, and generates production-ready Lua code with comprehensive explanations and best practices.",
+      "Generate AO Lua process code based on natural language requirements with automatic documentation reference. Analyzes user requests, queries relevant Permaweb documentation, and generates production-ready Lua code with comprehensive explanations and best practices. Uses queryPermawebDocs tool internally to understand AO patterns, handler structures, and messaging conventions.",
     name: "generateLuaProcess",
     openWorldHint: false,
     readOnlyHint: true,

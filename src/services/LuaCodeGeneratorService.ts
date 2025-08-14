@@ -724,8 +724,7 @@ The code follows AO best practices including proper message handling, error vali
    */
   private generateHandlerBody(requirements: RequirementAnalysis): string {
     if (requirements.complexity === "simple") {
-      return `    print("Received message: " .. (msg.Data or ""))
-    ao.send({
+      return `    ao.send({
       Target = msg.From,
       Action = "Response",
       Data = "Processed successfully"
