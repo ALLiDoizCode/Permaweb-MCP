@@ -8,6 +8,7 @@ import type { ProcessDefinition } from "./services/ProcessCommunicationService.j
 
 import { defaultProcessService } from "./services/DefaultProcessService.js";
 import { TokenProcessTemplateService } from "./services/TokenProcessTemplateService.js";
+import { BmadToolFactory } from "./tools/bmad/BmadToolFactory.js";
 import { ContactToolFactory } from "./tools/contact/ContactToolFactory.js";
 import { DocumentationToolFactory } from "./tools/documentation/DocumentationToolFactory.js";
 import { HubToolFactory } from "./tools/hub/HubToolFactory.js";
@@ -105,7 +106,15 @@ function setupToolRegistry() {
     publicKey,
   };
 
-  // Note: BMAD and Claude Code tools removed
+  // Register BMad tools
+  const bmadFactory = new BmadToolFactory({
+    categoryDescription:
+      "BMad methodology tools for development workflow automation",
+    categoryName: "BMad",
+    context,
+  });
+
+  bmadFactory.registerTools(toolRegistry);
 
   // Register Memory tools
   const memoryFactory = new MemoryToolFactory({
