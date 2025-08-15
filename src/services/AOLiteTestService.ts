@@ -34,10 +34,38 @@ export interface AOLiteTestService {
     environment: AOLiteEnvironment,
   ): Promise<AOLiteTestResults>;
 
+  generateAgentTestReport(
+    testResults: AOLiteTestResults,
+    format: "agent-detailed" | "agent-recommendations" | "agent-summary",
+  ): Promise<string>;
+
   generateTestReport(
     testResults: AOLiteTestResults,
     format?: "html" | "json" | "markdown",
   ): Promise<string>;
+
+  // Agent-friendly methods for enhanced integration
+  generateTestSuiteFromLua(
+    luaCode: string,
+    processInfo: { id: string; name: string; version: string },
+  ): Promise<AOLiteTestSuite>;
+
+  interpretTestResults(testResults: AOLiteTestResults): Promise<{
+    failures: Array<{
+      reason: string;
+      suggestions: string[];
+      testCaseId: string;
+    }>;
+    nextSteps: string[];
+    recommendations: string[];
+    summary: {
+      coveragePercentage: number;
+      duration: number;
+      failed: number;
+      passed: number;
+      total: number;
+    };
+  }>;
 
   simulateMessage(
     message: AOLiteTestMessage,
@@ -54,6 +82,16 @@ export interface AOLiteTestService {
     messages: AOLiteTestMessage[],
     environment: AOLiteEnvironment,
   ): Promise<AOLiteTestResults>;
+
+  validateTestCoverage(
+    testSuite: AOLiteTestSuite,
+    luaCode: string,
+  ): Promise<{
+    coveragePercentage: number;
+    coveredHandlers: string[];
+    suggestions: string[];
+    uncoveredHandlers: string[];
+  }>;
 }
 
 const service = (
@@ -313,6 +351,36 @@ const service = (
       }
     },
 
+    generateAgentTestReport: async (
+      testResults: AOLiteTestResults,
+      format: "agent-detailed" | "agent-recommendations" | "agent-summary",
+    ): Promise<string> => {
+      try {
+        const interpretation = await service(
+          aoMessageService,
+          processService,
+        ).interpretTestResults(testResults);
+
+        switch (format) {
+          case "agent-detailed":
+            return generateAgentDetailedReport(interpretation, testResults);
+
+          case "agent-recommendations":
+            return generateAgentRecommendationsReport(interpretation);
+
+          case "agent-summary":
+            return generateAgentSummaryReport(interpretation, testResults);
+
+          default:
+            throw new Error(`Unsupported agent report format: ${format}`);
+        }
+      } catch (error) {
+        throw new Error(
+          `Failed to generate agent test report: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+    },
+
     generateTestReport: async (
       testResults: AOLiteTestResults,
       format: "html" | "json" | "markdown" = "json",
@@ -334,6 +402,98 @@ const service = (
       } catch (error) {
         throw new Error(
           `Failed to generate test report: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+    },
+
+    // Agent-friendly method implementations
+    generateTestSuiteFromLua: async (
+      luaCode: string,
+      processInfo: { id: string; name: string; version: string },
+    ): Promise<AOLiteTestSuite> => {
+      try {
+        // Create a TealProcessDefinition from the provided info
+        const processDefinition: TealProcessDefinition = {
+          compiledLua: luaCode,
+          dependencies: [],
+          id: processInfo.id,
+          metadata: {
+            aoVersion: "1.0.0",
+            author: "agent-generated",
+            compileOptions: {},
+            description: `AOLite test suite for ${processInfo.name}`,
+            version: processInfo.version,
+          },
+          name: processInfo.name,
+          source: luaCode, // For testing purposes, use the same as compiled
+          typeDefinitions: [],
+          version: processInfo.version,
+        };
+
+        // Use existing createDefaultTestSuite method
+        return await service(
+          aoMessageService,
+          processService,
+        ).createDefaultTestSuite(processDefinition);
+      } catch (error) {
+        throw new Error(
+          `Failed to generate test suite from Lua: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+    },
+
+    interpretTestResults: async (
+      testResults: AOLiteTestResults,
+    ): Promise<{
+      failures: Array<{
+        reason: string;
+        suggestions: string[];
+        testCaseId: string;
+      }>;
+      nextSteps: string[];
+      recommendations: string[];
+      summary: {
+        coveragePercentage: number;
+        duration: number;
+        failed: number;
+        passed: number;
+        total: number;
+      };
+    }> => {
+      try {
+        // Extract summary information
+        const summary = {
+          coveragePercentage: testResults.coverage?.coveragePercentage || 0,
+          duration: testResults.duration,
+          failed: testResults.failedTests,
+          passed: testResults.passedTests,
+          total: testResults.totalTests,
+        };
+
+        // Analyze failures and generate suggestions
+        const failures = testResults.results
+          .filter((result) => result.status === "failed")
+          .map((result) => ({
+            reason: result.error || "Test case failed",
+            suggestions: generateFailureSuggestions(result),
+            testCaseId: result.testCaseId,
+          }));
+
+        // Generate general recommendations
+        const recommendations = generateRecommendations(testResults);
+
+        // Generate next steps based on results
+        const nextSteps = generateNextSteps(testResults, failures);
+
+        return {
+          failures,
+          nextSteps,
+          recommendations,
+          summary,
+        };
+      } catch (error) {
+        throw new Error(
+          `Failed to interpret test results: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
       }
     },
@@ -520,6 +680,59 @@ const service = (
           testSuiteId: "behavior-validation",
           totalTests: messages.length,
         };
+      }
+    },
+
+    validateTestCoverage: async (
+      testSuite: AOLiteTestSuite,
+      luaCode: string,
+    ): Promise<{
+      coveragePercentage: number;
+      coveredHandlers: string[];
+      suggestions: string[];
+      uncoveredHandlers: string[];
+    }> => {
+      try {
+        // Extract handlers from Lua code
+        const allHandlers = extractHandlers(luaCode);
+        const handlerNames = allHandlers.map((h) => h.name);
+
+        // Get covered handlers from test cases
+        const coveredHandlers = new Set<string>();
+        for (const testCase of testSuite.testCases) {
+          for (const message of testCase.messages) {
+            if (handlerNames.includes(message.action)) {
+              coveredHandlers.add(message.action);
+            }
+          }
+        }
+
+        const coveredHandlerArray = Array.from(coveredHandlers);
+        const uncoveredHandlers = handlerNames.filter(
+          (h) => !coveredHandlerArray.includes(h),
+        );
+
+        const coveragePercentage =
+          handlerNames.length > 0
+            ? (coveredHandlerArray.length / handlerNames.length) * 100
+            : 0;
+
+        // Generate suggestions for improving coverage
+        const suggestions = generateCoverageSuggestions(
+          uncoveredHandlers,
+          allHandlers,
+        );
+
+        return {
+          coveragePercentage,
+          coveredHandlers: coveredHandlerArray,
+          suggestions,
+          uncoveredHandlers,
+        };
+      } catch (error) {
+        throw new Error(
+          `Failed to validate test coverage: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
       }
     },
   };
@@ -893,6 +1106,261 @@ const executeInEnvironment = async (
 
 const getNestedProperty = (obj: any, path: string): any => {
   return path.split(".").reduce((current, key) => current?.[key], obj);
+};
+
+// Agent-friendly helper functions
+const generateFailureSuggestions = (result: any): string[] => {
+  const suggestions: string[] = [];
+
+  if (result.error) {
+    if (result.error.includes("Missing")) {
+      suggestions.push("Ensure all required input parameters are provided");
+      suggestions.push("Validate input data format and structure");
+    }
+    if (result.error.includes("timeout")) {
+      suggestions.push("Check for infinite loops in handler logic");
+      suggestions.push("Optimize handler performance for faster execution");
+    }
+    if (
+      result.error.includes("balance") ||
+      result.error.includes("insufficient")
+    ) {
+      suggestions.push("Initialize proper state values for testing");
+      suggestions.push("Verify balance calculations and state updates");
+    }
+    if (
+      result.error.includes("permission") ||
+      result.error.includes("unauthorized")
+    ) {
+      suggestions.push("Review access control logic in handlers");
+      suggestions.push("Ensure test messages include proper authentication");
+    }
+  }
+
+  // Analyze assertion failures
+  if (result.assertionResults) {
+    for (const assertion of result.assertionResults) {
+      if (assertion.status === "failed") {
+        if (assertion.expected !== assertion.actual) {
+          suggestions.push(
+            `Handler output mismatch: expected '${assertion.expected}', got '${assertion.actual}'`,
+          );
+          suggestions.push("Review handler implementation and return values");
+        }
+      }
+    }
+  }
+
+  if (suggestions.length === 0) {
+    suggestions.push("Review handler implementation for edge cases");
+    suggestions.push("Check input validation and error handling");
+  }
+
+  return suggestions;
+};
+
+const generateRecommendations = (testResults: any): string[] => {
+  const recommendations: string[] = [];
+
+  // Coverage recommendations
+  if (testResults.coverage) {
+    const coveragePercentage = testResults.coverage.coveragePercentage;
+    if (coveragePercentage < 70) {
+      recommendations.push(
+        "Increase test coverage by adding tests for uncovered handlers",
+      );
+    }
+    if (testResults.coverage.uncoveredHandlers?.length > 0) {
+      recommendations.push(
+        `Add tests for uncovered handlers: ${testResults.coverage.uncoveredHandlers.join(", ")}`,
+      );
+    }
+  }
+
+  // Performance recommendations
+  if (testResults.duration > 30000) {
+    recommendations.push("Consider optimizing test execution time");
+    recommendations.push("Review handler performance and complexity");
+  }
+
+  // Error rate recommendations
+  const errorRate = (testResults.erroredTests / testResults.totalTests) * 100;
+  if (errorRate > 10) {
+    recommendations.push(
+      "High error rate detected - review handler error handling",
+    );
+    recommendations.push(
+      "Consider adding input validation and better error messages",
+    );
+  }
+
+  // Failure rate recommendations
+  const failureRate = (testResults.failedTests / testResults.totalTests) * 100;
+  if (failureRate > 5) {
+    recommendations.push("Consider reviewing test scenarios for accuracy");
+    recommendations.push(
+      "Ensure handler implementations match expected behaviors",
+    );
+  }
+
+  return recommendations;
+};
+
+const generateNextSteps = (testResults: any, failures: any[]): string[] => {
+  const nextSteps: string[] = [];
+
+  if (testResults.status === "passed") {
+    nextSteps.push("✅ All tests passed - process ready for deployment");
+    nextSteps.push("Consider running additional integration tests");
+    nextSteps.push("Review performance metrics for optimization opportunities");
+  } else {
+    nextSteps.push("🔴 Address test failures before proceeding");
+
+    if (failures.length > 0) {
+      nextSteps.push(`Fix ${failures.length} failing test case(s)`);
+    }
+
+    if (testResults.erroredTests > 0) {
+      nextSteps.push(`Resolve ${testResults.erroredTests} test error(s)`);
+    }
+
+    nextSteps.push("Re-run tests after implementing fixes");
+    nextSteps.push("Ensure all handlers have proper error handling");
+  }
+
+  if (testResults.coverage && testResults.coverage.coveragePercentage < 80) {
+    nextSteps.push("Improve test coverage by adding missing test cases");
+  }
+
+  return nextSteps;
+};
+
+const generateAgentSummaryReport = (
+  interpretation: any,
+  testResults: any,
+): string => {
+  const { summary } = interpretation;
+
+  return `# AOLite Test Summary
+
+## Results Overview
+- **Status**: ${testResults.status.toUpperCase()}
+- **Tests**: ${summary.passed}/${summary.total} passed
+- **Duration**: ${summary.duration}ms
+- **Coverage**: ${summary.coveragePercentage.toFixed(1)}%
+
+## Quick Assessment
+${summary.failed === 0 ? "✅ All tests passed successfully" : `❌ ${summary.failed} test(s) failed`}
+
+${
+  interpretation.recommendations.length > 0
+    ? `
+## Key Recommendations
+${interpretation.recommendations
+  .slice(0, 3)
+  .map((rec: string) => `- ${rec}`)
+  .join("\n")}
+`
+    : ""
+}
+`;
+};
+
+const generateAgentDetailedReport = (
+  interpretation: any,
+  testResults: any,
+): string => {
+  const { failures, summary } = interpretation;
+
+  let report = `# Detailed AOLite Test Results
+
+## Summary
+- **Total Tests**: ${summary.total}
+- **Passed**: ${summary.passed}
+- **Failed**: ${summary.failed}
+- **Duration**: ${summary.duration}ms
+- **Coverage**: ${summary.coveragePercentage.toFixed(1)}%
+
+`;
+
+  if (failures.length > 0) {
+    report += `## Failed Tests
+
+${failures
+  .map(
+    (failure: any) => `
+### ${failure.testCaseId}
+**Reason**: ${failure.reason}
+
+**Suggestions**:
+${failure.suggestions.map((s: string) => `- ${s}`).join("\n")}
+`,
+  )
+  .join("")}
+`;
+  }
+
+  if (testResults.coverage) {
+    report += `
+## Coverage Analysis
+- **Covered Handlers**: ${testResults.coverage.coveredHandlers?.join(", ") || "None"}
+- **Uncovered Handlers**: ${testResults.coverage.uncoveredHandlers?.join(", ") || "None"}
+- **Coverage Percentage**: ${testResults.coverage.coveragePercentage?.toFixed(1) || 0}%
+`;
+  }
+
+  return report;
+};
+
+const generateAgentRecommendationsReport = (interpretation: any): string => {
+  const { nextSteps, recommendations } = interpretation;
+
+  return `# AOLite Testing Recommendations
+
+## Recommended Actions
+${recommendations.map((rec: string) => `- ${rec}`).join("\n")}
+
+## Next Steps
+${nextSteps.map((step: string) => `- ${step}`).join("\n")}
+
+## Priority Focus Areas
+- **High Priority**: Address any failing tests immediately
+- **Medium Priority**: Improve test coverage to >80%
+- **Low Priority**: Optimize test execution performance
+`;
+};
+
+const generateCoverageSuggestions = (
+  uncoveredHandlers: string[],
+  allHandlers: any[],
+): string[] => {
+  const suggestions: string[] = [];
+
+  if (uncoveredHandlers.length === 0) {
+    suggestions.push("✅ Excellent! All handlers are covered by tests");
+    return suggestions;
+  }
+
+  suggestions.push(
+    `Add test cases for ${uncoveredHandlers.length} uncovered handler(s)`,
+  );
+
+  for (const handlerName of uncoveredHandlers) {
+    const handler = allHandlers.find((h) => h.name === handlerName);
+    if (handler) {
+      suggestions.push(
+        `Create test for '${handlerName}' handler with appropriate test data`,
+      );
+    }
+  }
+
+  if (uncoveredHandlers.length > 5) {
+    suggestions.push(
+      "Consider prioritizing tests for critical business logic handlers first",
+    );
+  }
+
+  return suggestions;
 };
 
 export const createAOLiteTestService = (
