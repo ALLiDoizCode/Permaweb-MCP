@@ -1,9 +1,7 @@
 import Arweave from "arweave";
-import { JWKInterface } from "arweave/node/lib/wallet.js";
 import { z } from "zod";
 
 import { HUB_REGISTRY_ID } from "../../../constants.js";
-import { getKeyFromMnemonic } from "../../../mnemonic.js";
 import { ProfileCreateData } from "../../../models/Profile.js";
 import { hubRegistryService } from "../../../services/RegistryService.js";
 import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
@@ -33,7 +31,7 @@ export class InitializeHubCommand extends ToolCommand<
     super();
   }
 
-  async execute(params: InitializeHubParameters): Promise<string> {
+  async execute(): Promise<string> {
     try {
       // Validate that keypair exists in context
       if (!this.context.keyPair) {

@@ -130,8 +130,12 @@ describe("EvalProcessCommand", () => {
 
       const parsedResult = JSON.parse(result);
       expect(parsedResult.success).toBe(true);
-      expect(parsedResult.message).toBe("Code evaluated successfully (handler registration completed)");
-      expect(parsedResult.result).toBe("No return value - handlers registered successfully");
+      expect(parsedResult.message).toBe(
+        "Code evaluated successfully (handler registration completed)",
+      );
+      expect(parsedResult.result).toBe(
+        "No return value - handlers registered successfully",
+      );
     });
 
     it("should handle undefined result from evalProcess as success", async () => {
@@ -145,8 +149,12 @@ describe("EvalProcessCommand", () => {
 
       const parsedResult = JSON.parse(result);
       expect(parsedResult.success).toBe(true);
-      expect(parsedResult.message).toBe("Code evaluated successfully (handler registration completed)");
-      expect(parsedResult.result).toBe("No return value - handlers registered successfully");
+      expect(parsedResult.message).toBe(
+        "Code evaluated successfully (handler registration completed)",
+      );
+      expect(parsedResult.result).toBe(
+        "No return value - handlers registered successfully",
+      );
     });
 
     it("should handle evaluation errors", async () => {

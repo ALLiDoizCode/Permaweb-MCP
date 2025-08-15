@@ -50,7 +50,8 @@ export class EvalProcessCommand extends ToolCommand<EvalProcessArgs, string> {
       // Null result is normal for handler registration - indicates success
       if (result === null || result === undefined) {
         return JSON.stringify({
-          message: "Code evaluated successfully (handler registration completed)",
+          message:
+            "Code evaluated successfully (handler registration completed)",
           result: "No return value - handlers registered successfully",
           success: true,
         });

@@ -595,9 +595,336 @@ graph TB
 4. **Storage Backends**: Alternative persistence layers
 5. **AI Model Integration**: Custom reasoning engines
 6. **Workflow Engines**: Advanced process orchestration
+7. **BMad METHOD Integration**: Complete development methodology expansion
+
+## BMad METHOD Integration Architecture
+
+### Overview
+
+The BMad METHOD integration transforms Permamind from a memory layer tool into a comprehensive Permaweb development platform. This architecture preserves Permamind's core strengths while adding proven development methodology capabilities through seamless MCP tool integration.
+
+### Integration Strategy
+
+#### Expansion Pack Architecture
+
+```mermaid
+graph TB
+    subgraph "Permamind Core"
+        MCP[FastMCP Server]
+        MemSvc[Memory Service]
+        ProcSvc[Process Service]
+        DocSvc[Documentation Service]
+    end
+
+    subgraph "BMad Expansion Pack"
+        BT[BMad Tools]
+        BWF[BMad Workflows]
+        BA[BMad Agents]
+        BData[BMad Data]
+    end
+
+    subgraph "Enhanced Agent System"
+        AO_DEV[AO Developer]
+        PW_QA[Permaweb QA]
+        DEPLOY[Deployment Specialist]
+        ANALYST[Enhanced Analyst]
+        ARCH[Enhanced Architect]
+    end
+
+    subgraph "Workflow Orchestration"
+        WF_EXEC[Workflow Executor]
+        AG_ROUTER[Agent Router]
+        TASK_EXEC[Task Executor]
+    end
+
+    subgraph "File Management Layer"
+        FILE_IO[File I/O System]
+        DOC_GEN[Document Generator]
+        SHARD[Document Sharding]
+        CONTEXT[Context Manager]
+    end
+
+    MCP --> BT
+    BT --> BWF
+    BWF --> BA
+
+    BA --> AO_DEV
+    BA --> PW_QA
+    BA --> DEPLOY
+    BA --> ANALYST
+    BA --> ARCH
+
+    WF_EXEC --> AG_ROUTER
+    AG_ROUTER --> TASK_EXEC
+
+    TASK_EXEC --> FILE_IO
+    FILE_IO --> DOC_GEN
+    DOC_GEN --> SHARD
+    SHARD --> CONTEXT
+
+    AO_DEV --> ProcSvc
+    PW_QA --> ProcSvc
+    DEPLOY --> ProcSvc
+    ANALYST --> MemSvc
+    ARCH --> DocSvc
+```
+
+### New MCP Tools
+
+#### Core BMad Integration Tools
+
+**`executeBmadWorkflow`**
+
+- **Purpose**: Execute complete BMad development workflows
+- **Parameters**: `workflow`, `projectContext`, `startingAgent`
+- **Returns**: Workflow execution status and generated file paths
+- **Integration**: Orchestrates agent handoffs with file-based state management
+
+**`invokeAgent`**
+
+- **Purpose**: Individual BMad agent interaction
+- **Parameters**: `agent`, `inputFiles`, `task`, `context`
+- **Returns**: Agent output files and handoff summary
+- **Integration**: Uses existing memory and process services
+
+**`executeTask`**
+
+- **Purpose**: Specific BMad task execution
+- **Parameters**: `task`, `inputData`, `outputPath`
+- **Returns**: Task completion status and generated artifacts
+- **Integration**: File-based I/O with minimal context usage
+
+### Enhanced Agent Architecture
+
+#### Tool-Aware Agent System
+
+All BMad agents are enhanced with explicit awareness of Permamind MCP tools:
+
+```yaml
+Enhanced Agent Capabilities:
+├── Process Management
+│   ├── spawnProcess: Create AO processes for development/testing
+│   ├── evalProcess: Deploy Lua code to processes
+│   └── executeAction: Test and interact with processes
+├── Knowledge Access
+│   ├── queryPermawebDocs: Access architectural knowledge
+│   └── searchMemoriesAdvanced: Retrieve relevant context
+└── Pattern Storage
+    └── addMemory: Store successful patterns and insights
+```
+
+#### Specialized Permaweb Agents
+
+**AO Developer Agent (`ao-developer.md`)**
+
+- **Expertise**: AO Lua development, message handlers, process architecture
+- **Tool Integration**: Direct use of spawnProcess, evalProcess for development workflows
+- **Testing**: aolite integration for local concurrent process testing
+- **Pattern Storage**: Architectural insights via addMemory
+
+**Permaweb QA Agent (`permaweb-qa.md`)**
+
+- **Expertise**: AO process testing, message validation, state consistency
+- **Tool Integration**: executeAction for integration testing, evalProcess for test scenarios
+- **Testing Methodology**: Local aolite + live process validation
+- **Quality Assurance**: Comprehensive test coverage with community pattern validation
+
+**Deployment Specialist Agent (`deployment-specialist.md`)**
+
+- **Expertise**: Production deployment, monitoring, operational support
+- **Tool Integration**: Complete process lifecycle using all process management tools
+- **Pipeline**: aolite testing → staging → production deployment → monitoring
+- **Documentation**: Deployment patterns and operational runbooks via addMemory
+
+### Architectural Intelligence System
+
+#### Community-Driven Pattern Recognition
+
+```mermaid
+graph TB
+    subgraph "Knowledge Sources"
+        GITHUB[GitHub Analysis]
+        DISCORD[Discord Mining]
+        DOCS[Official Documentation]
+        COMMUNITY[Community Patterns]
+    end
+
+    subgraph "Intelligence Engine"
+        PATTERN[Pattern Recognition]
+        REASON[Reasoning Engine]
+        BRIDGE[Cross-Ecosystem Bridge]
+        WHY[WHY Explanations]
+    end
+
+    subgraph "Agent Integration"
+        CONTEXT[Contextual Guidance]
+        DECISIONS[Architectural Decisions]
+        LEARNING[Continuous Learning]
+    end
+
+    GITHUB --> PATTERN
+    DISCORD --> PATTERN
+    DOCS --> REASON
+    COMMUNITY --> REASON
+
+    PATTERN --> BRIDGE
+    REASON --> WHY
+    BRIDGE --> CONTEXT
+    WHY --> DECISIONS
+
+    CONTEXT --> LEARNING
+    DECISIONS --> LEARNING
+```
+
+**Key Capabilities:**
+
+- **Pattern Analysis**: Identify successful AO architectural patterns from community discussions
+- **Reasoning Synthesis**: Combine official docs with real-world implementation insights
+- **Cross-Ecosystem Bridging**: Translate familiar patterns to AO-native approaches
+- **WHY Explanations**: Provide architectural reasoning, not just implementation details
+
+### Context Window Efficiency
+
+#### File-Based State Management
+
+The BMad integration preserves Permamind's commitment to context window efficiency:
+
+```mermaid
+graph TB
+    subgraph "Agent Workflow"
+        AG1[Agent 1: Analyst]
+        AG2[Agent 2: PM]
+        AG3[Agent 3: Architect]
+        AG4[Agent 4: Developer]
+    end
+
+    subgraph "File System"
+        DOC1[project-brief.md]
+        DOC2[prd.md]
+        DOC3[architecture.md]
+        CODE[src/processes/]
+    end
+
+    subgraph "Context Management"
+        HANDOFF1[Summary: Brief complete]
+        HANDOFF2[Summary: PRD ready]
+        HANDOFF3[Summary: Architecture defined]
+        RESULT[File paths + summary]
+    end
+
+    AG1 --> DOC1
+    DOC1 --> HANDOFF1
+    HANDOFF1 --> AG2
+
+    AG2 --> DOC2
+    DOC2 --> HANDOFF2
+    HANDOFF2 --> AG3
+
+    AG3 --> DOC3
+    DOC3 --> HANDOFF3
+    HANDOFF3 --> AG4
+
+    AG4 --> CODE
+    CODE --> RESULT
+```
+
+**Efficiency Principles:**
+
+- **File References**: Agents work with file paths, not content in context
+- **Minimal Handoffs**: Agent transitions use summary context only
+- **Document Sharding**: Large documents broken into implementable chunks
+- **Tool Results**: Return file paths and summaries, not full content
+
+### Deployment Pipeline Architecture
+
+#### End-to-End Development Flow
+
+```mermaid
+graph TB
+    subgraph "Planning Phase"
+        REQ[Requirements]
+        BRIEF[Project Brief]
+        PRD[Product Requirements]
+        ARCH[Architecture Design]
+    end
+
+    subgraph "Development Phase"
+        SHARD[Document Sharding]
+        STORIES[Story Creation]
+        IMPL[Implementation]
+        TEST[Testing]
+    end
+
+    subgraph "Deployment Phase"
+        LOCAL[aolite Testing]
+        STAGING[Staging Deployment]
+        PROD[Production Deployment]
+        MONITOR[Monitoring]
+    end
+
+    subgraph "Tool Integration"
+        SPAWN[spawnProcess]
+        EVAL[evalProcess]
+        ACTION[executeAction]
+        MEMORY[addMemory]
+    end
+
+    REQ --> BRIEF
+    BRIEF --> PRD
+    PRD --> ARCH
+
+    ARCH --> SHARD
+    SHARD --> STORIES
+    STORIES --> IMPL
+    IMPL --> TEST
+
+    TEST --> LOCAL
+    LOCAL --> STAGING
+    STAGING --> PROD
+    PROD --> MONITOR
+
+    IMPL --> SPAWN
+    TEST --> EVAL
+    STAGING --> ACTION
+    MONITOR --> MEMORY
+```
+
+### Integration Points
+
+#### Preserves Existing Architecture
+
+The BMad integration builds on Permamind's existing strengths:
+
+- **Memory System**: Enhanced with architectural pattern storage
+- **Process Management**: Core dependency for AO development workflows
+- **Documentation**: Extended with community insights and reasoning
+- **MCP Framework**: Natural extension of existing tool patterns
+
+#### New Capabilities
+
+- **Complete Development Workflows**: Concept to deployment automation
+- **Architectural Intelligence**: Community-driven pattern recognition
+- **Cross-Ecosystem Knowledge**: Smooth developer transitions
+- **Production Operations**: Enterprise-ready deployment and monitoring
+
+### Risk Mitigation
+
+#### Backward Compatibility
+
+- **Existing Tools Preserved**: All current Permamind functionality maintained
+- **Incremental Activation**: BMad features only activate when requested
+- **Graceful Degradation**: System works without BMad components
+- **Context Efficiency**: File-based approach prevents context bloat
+
+#### Technical Validation
+
+- **Phase-Gate Implementation**: Each phase provides standalone value
+- **Community Feedback**: Continuous validation with Permaweb developers
+- **Performance Monitoring**: Context window usage and tool execution metrics
+- **Quality Gates**: Comprehensive testing at each integration phase
 
 ## Conclusion
 
-Permamind represents a sophisticated architecture that combines the reliability of blockchain permanence with the flexibility of modern AI systems. Its modular design, comprehensive service layer, and intelligent caching strategies provide a robust foundation for persistent AI memory while maintaining high performance and developer experience.
+The BMad METHOD integration represents a natural evolution of Permamind's architecture, transforming it from a powerful memory layer into a comprehensive Permaweb development platform. By preserving core architectural principles while adding proven development methodology, this integration creates the definitive tool for Permaweb application development.
 
-The architecture's emphasis on type safety, comprehensive testing, and graceful error handling ensures reliability in production environments, while its extensible design patterns support future growth and feature expansion.
+The architecture's emphasis on context window efficiency, community-driven intelligence, and seamless tool integration ensures that developers can leverage the full power of both Permamind's AO expertise and BMad's proven methodology without compromising performance or usability.
