@@ -5,6 +5,7 @@ import {
   processCommunicationService,
   ProcessDefinition,
 } from "../../../services/ProcessCommunicationService.js";
+import { ProcessDiscoveryService } from "../../../services/ProcessDiscoveryService.js";
 import { TokenProcessTemplateService } from "../../../services/TokenProcessTemplateService.js";
 import {
   AutoSafeToolContext,
@@ -65,30 +66,45 @@ export class ExecuteActionCommand extends ToolCommand<
     try {
       let processMarkdown: string | undefined = args.processMarkdown;
 
-      // If processMarkdown not provided but processType is, use embedded template
-      if (!processMarkdown && args.processType) {
-        // Check if it's a token process type
-        if (TokenProcessTemplateService.isSupported(args.processType)) {
-          processMarkdown =
-            TokenProcessTemplateService.getTokenTemplateAsMarkdown(
-              args.processId,
-            );
-        } else {
-          // Fallback to default process service for other types
-          const template = defaultProcessService.getDefaultProcess(
-            args.processType,
-            args.processId,
-          );
-          if (template) {
-            // Convert template to markdown format
-            processMarkdown = this.convertTemplateToMarkdown(template);
-          }
-        }
-      }
-
       // Auto-initialize keypair if needed
       const safeContext = AutoSafeToolContext.from(this.context);
       const keyPair = await safeContext.getKeyPair();
+
+      // If processMarkdown not provided, try to discover process capabilities
+      if (!processMarkdown) {
+        const discovery = await ProcessDiscoveryService.discoverProcessHandlers(
+          args.processId,
+          keyPair,
+        );
+
+        if (
+          discovery.success &&
+          discovery.handlers &&
+          discovery.handlers.length > 0
+        ) {
+          // Generate markdown from discovered handlers
+          processMarkdown = ProcessDiscoveryService.generateProcessMarkdown(
+            discovery.rawResponse,
+            args.processId,
+          );
+        } else if (args.processType) {
+          // Fallback to template-based approach
+          if (TokenProcessTemplateService.isSupported(args.processType)) {
+            processMarkdown =
+              TokenProcessTemplateService.getTokenTemplateAsMarkdown(
+                args.processId,
+              );
+          } else {
+            const template = defaultProcessService.getDefaultProcess(
+              args.processType,
+              args.processId,
+            );
+            if (template) {
+              processMarkdown = this.convertTemplateToMarkdown(template);
+            }
+          }
+        }
+      }
 
       // Use ProcessCommunicationService to execute the request
       const result = await processCommunicationService.executeSmartRequest(
