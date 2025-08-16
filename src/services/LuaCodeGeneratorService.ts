@@ -12,6 +12,10 @@ import {
   ProcessType,
   RequirementAnalysis,
 } from "../types/lua-workflow.js";
+import {
+  DocumentationProtocolService,
+  HandlerMetadata,
+} from "./DocumentationProtocolService.js";
 import { PermawebDocsResult } from "./PermawebDocsService.js";
 
 /**
@@ -22,6 +26,8 @@ import { PermawebDocsResult } from "./PermawebDocsService.js";
  * - Message routing logic based on documented examples
  * - State management code for stateful processes
  * - Best practices integration from documentation sources
+ * - AO Documentation Protocol (ADP) compliance for self-documenting processes
+ * - Comprehensive handler metadata for automatic tool integration
  */
 export class LuaCodeGeneratorService {
   private readonly templates = {
@@ -500,8 +506,8 @@ end`,
       codeBlocks.push(this.processTemplate(pattern.template, requirements));
     }
 
-    // Add process info handler
-    codeBlocks.push(this.generateProcessInfoHandler());
+    // Add ADP-compliant process info handler
+    codeBlocks.push(this.generateADPInfoHandler(patterns, requirements));
 
     return codeBlocks.join("\n\n");
   }
@@ -556,6 +562,9 @@ end`,
       "Send response messages with appropriate action tags",
       "Include error handling for invalid inputs",
       "Use ao.send() for message responses",
+      "Implement AO Documentation Protocol (ADP) for self-documenting processes",
+      "Include comprehensive handler metadata in Info responses",
+      "Use structured parameter validation with type checking",
     ];
 
     // Add complexity-specific practices
@@ -664,6 +673,34 @@ end`,
   }
 
   /**
+   * Generate ADP-compliant info handler with comprehensive metadata
+   */
+  private generateADPInfoHandler(
+    patterns: HandlerPattern[],
+    requirements: RequirementAnalysis,
+  ): string {
+    // Generate handler metadata from the selected patterns
+    const handlerMetadata = this.generateHandlerMetadata(
+      patterns,
+      requirements,
+    );
+
+    // Create standard info object
+    const standardInfo = {
+      Description: `Generated AO process: ${requirements.userRequest}`,
+      Name: "Generated AO Process",
+      Owner: "ao.id", // Will be replaced at runtime
+      ProcessId: "ao.id", // Will be replaced at runtime
+    };
+
+    // Use DocumentationProtocolService to generate the enhanced info handler
+    return DocumentationProtocolService.generateEnhancedInfoHandler(
+      standardInfo,
+      handlerMetadata,
+    );
+  }
+
+  /**
    * Generate deployment instructions for process structure
    */
   private generateDeploymentInstructions(processStructure: any): string[] {
@@ -712,11 +749,17 @@ The generated code includes the following components:
 
 ${patternDescriptions}
 
+🔧 **AO Documentation Protocol (ADP) Integration:**
+- Self-documenting Info handler with comprehensive metadata
+- Automatic handler discovery for tools like Permamind
+- Parameter validation rules and examples included
+- Zero-configuration process interaction enabled
+
 Complexity Level: ${requirements.complexity}
 Process Type: ${requirements.processType}
 Detected Patterns: ${requirements.detectedPatterns.join(", ")}
 
-The code follows AO best practices including proper message handling, error validation, and response patterns.`;
+The code follows AO best practices including proper message handling, error validation, response patterns, and ADP compliance for enhanced tool integration.`;
   }
 
   /**
@@ -742,6 +785,38 @@ The code follows AO best practices including proper message handling, error vali
   }
 
   /**
+   * Generate handler metadata for ADP compliance
+   */
+  private generateHandlerMetadata(
+    patterns: HandlerPattern[],
+    requirements: RequirementAnalysis,
+  ): HandlerMetadata[] {
+    const metadata: HandlerMetadata[] = [];
+
+    // Always include Info handler metadata
+    metadata.push({
+      action: "Info",
+      category: "core",
+      description: "Get comprehensive process information and handler metadata",
+      examples: ["Send Info message to get process details"],
+      pattern: ["Action"],
+    });
+
+    // Generate metadata based on selected patterns
+    for (const pattern of patterns) {
+      const handlerMetadata = this.generateMetadataForPattern(
+        pattern,
+        requirements,
+      );
+      if (handlerMetadata) {
+        metadata.push(handlerMetadata);
+      }
+    }
+
+    return metadata;
+  }
+
+  /**
    * Generate handler name from requirements
    */
   private generateHandlerName(requirements: RequirementAnalysis): string {
@@ -762,26 +837,260 @@ The code follows AO best practices including proper message handling, error vali
   }
 
   /**
-   * Generate process info handler
+   * Generate handler metadata for a specific pattern
+   */
+  private generateMetadataForPattern(
+    pattern: HandlerPattern,
+    requirements: RequirementAnalysis,
+  ): HandlerMetadata | null {
+    switch (pattern.name) {
+      case "auto-reply-handler":
+        return {
+          action: "Message",
+          category: "utility",
+          description: "Automatic reply to conversational messages",
+          examples: ["Send greeting or help messages"],
+          pattern: ["Action"],
+        };
+
+      case "balance-handler":
+        return {
+          action: "Balance",
+          category: "core",
+          description: "Get token balance for a specific address",
+          examples: ["Check your own balance", "Check another address balance"],
+          parameters: [
+            {
+              description: "Address to check balance for (defaults to sender)",
+              examples: ["vh-NTHVvlKZqRxc8LyyTNok65yQ55a_PJ1zWLb9G2JI"],
+              name: "Target",
+              required: false,
+              type: "address",
+            },
+          ],
+          pattern: ["Action"],
+        };
+
+      case "basic-handler": {
+        const actionName = this.generateActionName(requirements);
+        return {
+          action: actionName,
+          category: "custom",
+          description: `Handle ${actionName} requests`,
+          examples: [`Send ${actionName} message to process`],
+          pattern: ["Action"],
+        };
+      }
+
+      case "command-handler":
+        return {
+          action: "Command",
+          category: "utility",
+          description: "Execute bot commands",
+          examples: ["Execute help command"],
+          parameters: [
+            {
+              description: "Command to execute",
+              examples: ["help", "status", "info"],
+              name: "Command",
+              required: true,
+              type: "string",
+              validation: {
+                enum: ["help", "status", "info"],
+              },
+            },
+            {
+              description: "Command arguments",
+              examples: ["arg1", "param1=value1"],
+              name: "Args",
+              required: false,
+              type: "string",
+            },
+          ],
+          pattern: ["Action"],
+        };
+
+      case "join-game-handler":
+        return {
+          action: "Join-Game",
+          category: "core",
+          description: "Join the game",
+          examples: ["Join game with player name"],
+          parameters: [
+            {
+              description: "Display name for the player",
+              examples: ["Player1", "Alice"],
+              name: "PlayerName",
+              required: false,
+              type: "string",
+            },
+          ],
+          pattern: ["Action"],
+        };
+
+      case "join-room-handler":
+        return {
+          action: "Join",
+          category: "core",
+          description: "Join the chatroom",
+          examples: ["Join chatroom with username"],
+          parameters: [
+            {
+              description: "Display username (defaults to address)",
+              examples: ["alice", "bob"],
+              name: "Username",
+              required: false,
+              type: "string",
+            },
+          ],
+          pattern: ["Action"],
+        };
+
+      case "message-handler":
+        return {
+          action: "Message",
+          category: "core",
+          description: "Send a message to the chatroom",
+          examples: ["Send message to all chatroom members"],
+          pattern: ["Action"],
+        };
+
+      case "move-handler":
+        return {
+          action: "Move",
+          category: "core",
+          description: "Make a game move",
+          examples: ["Make move in the game"],
+          parameters: [
+            {
+              description: "Game move data",
+              examples: ["up", "down", "left", "right"],
+              name: "Move",
+              required: true,
+              type: "string",
+            },
+          ],
+          pattern: ["Action"],
+        };
+
+      case "ping-handler":
+        return {
+          action: "Ping",
+          category: "utility",
+          description: "Test if process is responding",
+          examples: ["Send Ping to test connectivity"],
+          pattern: ["Action"],
+        };
+
+      case "proposal-handler":
+        return {
+          action: "Create-Proposal",
+          category: "core",
+          description: "Create a new governance proposal",
+          examples: ["Create proposal for protocol upgrade"],
+          parameters: [
+            {
+              description: "Proposal title",
+              examples: ["Increase token supply"],
+              name: "Title",
+              required: true,
+              type: "string",
+            },
+            {
+              description: "Detailed proposal description",
+              examples: [
+                "This proposal aims to increase the token supply by 10%",
+              ],
+              name: "Description",
+              required: true,
+              type: "string",
+            },
+          ],
+          pattern: ["Action"],
+        };
+
+      case "transfer-handler":
+        return {
+          action: "Transfer",
+          category: "core",
+          description: "Transfer tokens to another address",
+          examples: ["Transfer 100 tokens to address"],
+          parameters: [
+            {
+              description: "Recipient address",
+              examples: ["vh-NTHVvlKZqRxc8LyyTNok65yQ55a_PJ1zWLb9G2JI"],
+              name: "Recipient",
+              required: true,
+              type: "address",
+            },
+            {
+              description: "Amount to transfer (in token units)",
+              examples: ["100", "1000000000000"],
+              name: "Quantity",
+              required: true,
+              type: "string",
+              validation: {
+                pattern: "^[0-9]+$",
+              },
+            },
+          ],
+          pattern: ["Action"],
+        };
+
+      case "vote-handler":
+        return {
+          action: "Vote",
+          category: "core",
+          description: "Vote on a governance proposal",
+          examples: ["Vote yes on proposal 1"],
+          parameters: [
+            {
+              description: "ID of proposal to vote on",
+              examples: ["1", "2"],
+              name: "ProposalId",
+              required: true,
+              type: "string",
+            },
+            {
+              description: "Vote choice",
+              examples: ["yes", "no"],
+              name: "Vote",
+              required: true,
+              type: "string",
+              validation: {
+                enum: ["yes", "no"],
+              },
+            },
+          ],
+          pattern: ["Action"],
+        };
+
+      default:
+        // For unknown patterns, create a generic handler metadata
+        return {
+          action: pattern.name.replace(/-handler$/, "").replace(/-/g, ""),
+          category: "custom",
+          description: pattern.description || "Custom handler",
+          examples: [pattern.description || "Custom action"],
+          pattern: ["Action"],
+        };
+    }
+  }
+
+  /**
+   * Generate process info handler (legacy method for backwards compatibility)
    */
   private generateProcessInfoHandler(): string {
-    return `Handlers.add(
-  "info",
-  Handlers.utils.hasMatchingTag("Action", "Info"),
-  function(msg)
-    local info = {
-      Process = ao.id,
-      Name = Name or "Generated AO Process",
-      Owner = Owner or ao.id
-    }
-    
-    ao.send({
-      Target = msg.From,
-      Action = "Info-Response",
-      Data = json.encode(info)
-    })
-  end
-)`;
+    // This method is now deprecated in favor of generateADPInfoHandler
+    // but kept for backwards compatibility
+    return this.generateADPInfoHandler([], {
+      complexity: "simple",
+      detectedPatterns: [],
+      extractedKeywords: [],
+      processType: "stateless",
+      suggestedDomains: [],
+      userRequest: "Legacy process",
+    });
   }
 
   /**
