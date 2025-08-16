@@ -279,7 +279,7 @@ function addHandlerRegistryProtocol(
     );
 
   // Replace the existing Info handler with the enhanced version
-  const infoHandlerPattern = /Handlers\.add\('Info'[^}]+}\)\s*end\)/;
+  const infoHandlerPattern = /Handlers\.add\('Info'[\s\S]*?end\)/;
 
   if (infoHandlerPattern.test(baseTemplate)) {
     return baseTemplate.replace(infoHandlerPattern, enhancedInfoHandler.trim());
