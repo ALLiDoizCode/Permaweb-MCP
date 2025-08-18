@@ -76,14 +76,15 @@ export const HandlerParameterSchema = z.object({
 
 export const HandlerMetadataSchema = z.object({
   action: z.string(),
-  category: z.string()
+  category: z
+    .string()
     .optional()
     .transform((val) => {
       // Transform any unknown category to "custom" for backward compatibility
-      if (!val || !["core", "utility", "custom"].includes(val)) {
+      if (!val || !["core", "custom", "utility"].includes(val)) {
         return "custom";
       }
-      return val as "core" | "utility" | "custom";
+      return val as "core" | "custom" | "utility";
     }),
   description: z.string().optional(),
   examples: z.array(z.string()).optional(),
@@ -182,12 +183,22 @@ end)`;
     }
 
     // Add parameter tags
-    handler.parameters?.forEach((param) => {
-      const value = parameters[param.name];
-      if (value !== undefined) {
-        tags.push({ name: param.name, value: String(value) });
-      }
-    });
+    if (handler.parameters) {
+      handler.parameters.forEach((param) => {
+        const value = parameters[param.name];
+        if (value !== undefined) {
+          tags.push({ name: param.name, value: String(value) });
+        }
+      });
+    } else {
+      // If handler doesn't define parameters, add all provided parameters as tags
+      // This handles cases where parameters were inferred from examples
+      Object.entries(parameters).forEach(([name, value]) => {
+        if (value !== undefined && value !== null && name !== '_extractionErrors') {
+          tags.push({ name, value: String(value) });
+        }
+      });
+    }
 
     return tags;
   }

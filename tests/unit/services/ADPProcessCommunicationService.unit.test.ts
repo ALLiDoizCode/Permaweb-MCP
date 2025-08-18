@@ -1,16 +1,11 @@
 import { JWKInterface } from "arweave/node/lib/wallet.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import * as processModule from "../../../src/process.js";
 import { ADPProcessCommunicationService } from "../../../src/services/ADPProcessCommunicationService.js";
-import { aoMessageService } from "../../../src/services/AOMessageService.js";
 import { DocumentationProtocolService } from "../../../src/services/DocumentationProtocolService.js";
 
 // Mock dependencies
-vi.mock("../../../src/services/AOMessageService.js", () => ({
-  aoMessageService: {
-    executeMessage: vi.fn(),
-  },
-}));
 
 vi.mock("../../../src/services/DocumentationProtocolService.js", () => ({
   DocumentationProtocolService: {
@@ -22,8 +17,20 @@ vi.mock("../../../src/services/DocumentationProtocolService.js", () => ({
 
 // Mock @permaweb/aoconnect to prevent Buffer/createDataItemSigner errors
 vi.mock("@permaweb/aoconnect", () => ({
+  connect: vi.fn(() => ({
+    dryrun: vi.fn(),
+    message: vi.fn().mockResolvedValue("mock-message-id"),
+    result: vi.fn(),
+    spawn: vi.fn(),
+  })),
   createDataItemSigner: vi.fn(() => vi.fn()),
   message: vi.fn().mockResolvedValue("mock-message-id"),
+}));
+
+// Mock process.ts functions
+vi.mock("../../../src/process.js", () => ({
+  read: vi.fn(),
+  send: vi.fn(),
 }));
 
 // Mock fetch for GraphQL queries
@@ -92,32 +99,10 @@ describe("ADPProcessCommunicationService", () => {
         protocolVersion: "1.0" as const,
       };
 
-      // Mock the GraphQL query response
-      vi.mocked(fetch)
-        .mockResolvedValueOnce({
-          json: () =>
-            Promise.resolve({
-              data: {
-                transactions: {
-                  edges: [
-                    {
-                      node: {
-                        data: { size: 100, type: "application/json" },
-                        id: "mock-transaction-id",
-                        tags: [{ name: "Action", value: "Info-Response" }],
-                      },
-                    },
-                  ],
-                },
-              },
-            }),
-          ok: true,
-        } as any)
-        // Mock the data fetch response
-        .mockResolvedValueOnce({
-          ok: true,
-          text: () => Promise.resolve(mockAdpData),
-        } as any);
+      // Mock the read call for ADP discovery
+      vi.mocked(processModule.read).mockResolvedValue({
+        Data: mockAdpData,
+      });
 
       vi.mocked(DocumentationProtocolService.parseInfoResponse).mockReturnValue(
         mockParsedResponse,
@@ -135,18 +120,14 @@ describe("ADPProcessCommunicationService", () => {
     });
 
     it("should return null for non-ADP process", async () => {
-      // Mock GraphQL query returning no results
-      vi.mocked(fetch).mockResolvedValueOnce({
-        json: () =>
-          Promise.resolve({
-            data: {
-              transactions: {
-                edges: [],
-              },
-            },
-          }),
-        ok: true,
-      } as any);
+      // Mock read call returning no Data or parseInfoResponse returning null
+      vi.mocked(processModule.read).mockResolvedValue({
+        Data: "non-adp-response",
+      });
+
+      vi.mocked(DocumentationProtocolService.parseInfoResponse).mockReturnValue(
+        null,
+      );
 
       const result = await ADPProcessCommunicationService.discoverADPSupport(
         "test-process",
@@ -157,7 +138,9 @@ describe("ADPProcessCommunicationService", () => {
     });
 
     it("should handle discovery errors gracefully", async () => {
-      vi.mocked(fetch).mockRejectedValue(new Error("Network error"));
+      vi.mocked(processModule.read).mockRejectedValue(
+        new Error("Network error"),
+      );
 
       const result = await ADPProcessCommunicationService.discoverADPSupport(
         "test-process",
@@ -226,9 +209,10 @@ describe("ADPProcessCommunicationService", () => {
       vi.mocked(
         DocumentationProtocolService.generateMessageTags,
       ).mockReturnValue(mockTags);
-      vi.mocked(aoMessageService.executeMessage).mockResolvedValue(
-        mockAOResponse,
-      );
+      // Mock process.read for read operation (Balance is read-only)
+      vi.mocked(processModule.read).mockResolvedValue({
+        Data: JSON.stringify({ balance: "1000" }),
+      });
 
       const result = await ADPProcessCommunicationService.executeRequest(
         "test-process",
@@ -323,9 +307,9 @@ describe("ADPProcessCommunicationService", () => {
       vi.mocked(
         DocumentationProtocolService.generateMessageTags,
       ).mockReturnValue([{ name: "Action", value: "Balance" }]);
-      vi.mocked(aoMessageService.executeMessage).mockResolvedValue({
-        data: { balance: "1000" },
-        success: true,
+      // Mock process.read for read operation
+      vi.mocked(processModule.read).mockResolvedValue({
+        Data: JSON.stringify({ balance: "1000" }),
       });
 
       const result = await ADPProcessCommunicationService.executeRequest(
@@ -339,18 +323,15 @@ describe("ADPProcessCommunicationService", () => {
     });
 
     it("should return error if process does not support ADP", async () => {
-      // Mock GraphQL query returning no results (non-ADP process)
-      vi.mocked(fetch).mockResolvedValueOnce({
-        json: () =>
-          Promise.resolve({
-            data: {
-              transactions: {
-                edges: [],
-              },
-            },
-          }),
-        ok: true,
-      } as any);
+      // Mock read call for ADP discovery to return non-ADP data
+      vi.mocked(processModule.read).mockResolvedValue({
+        Data: "non-adp-response",
+      });
+
+      // Mock parseInfoResponse to return null (indicating non-ADP process)
+      vi.mocked(DocumentationProtocolService.parseInfoResponse).mockReturnValue(
+        null,
+      );
 
       const result = await ADPProcessCommunicationService.executeRequest(
         "test-process",
@@ -405,9 +386,9 @@ describe("ADPProcessCommunicationService", () => {
         { name: "Target", value: "alice" },
         { name: "Quantity", value: "100" },
       ]);
-      vi.mocked(aoMessageService.executeMessage).mockResolvedValue({
-        data: { message: "Transfer successful" },
-        success: true,
+      // Mock process.send for write operation (Transfer is a write operation)
+      vi.mocked(processModule.send).mockResolvedValue({
+        Data: JSON.stringify({ message: "Transfer successful" }),
       });
 
       const result = await ADPProcessCommunicationService.executeRequest(
