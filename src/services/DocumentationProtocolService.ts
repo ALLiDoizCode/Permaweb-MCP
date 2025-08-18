@@ -39,7 +39,7 @@ export interface HandlerMetadata {
   description?: string;
   examples?: string[];
   parameters?: HandlerParameter[];
-  pattern: string[]; // Required tags (e.g., ["Action"] or ["Action", "Target"])
+  pattern?: string[]; // Optional tags (e.g., ["Action"] or ["Action", "Target"])
   version?: string;
 }
 
@@ -76,11 +76,19 @@ export const HandlerParameterSchema = z.object({
 
 export const HandlerMetadataSchema = z.object({
   action: z.string(),
-  category: z.enum(["core", "utility", "custom"]).optional(),
+  category: z.string()
+    .optional()
+    .transform((val) => {
+      // Transform any unknown category to "custom" for backward compatibility
+      if (!val || !["core", "utility", "custom"].includes(val)) {
+        return "custom";
+      }
+      return val as "core" | "utility" | "custom";
+    }),
   description: z.string().optional(),
   examples: z.array(z.string()).optional(),
   parameters: z.array(HandlerParameterSchema).optional(),
-  pattern: z.array(z.string()),
+  pattern: z.array(z.string()).optional(), // Made optional since many handlers don't include it
   version: z.string().optional(),
 });
 
@@ -159,14 +167,19 @@ end)`;
   ): Array<{ name: string; value: string }> {
     const tags: Array<{ name: string; value: string }> = [];
 
-    // Add required pattern tags
-    handler.pattern.forEach((tagName) => {
-      if (tagName === "Action") {
-        tags.push({ name: "Action", value: handler.action });
-      } else if (parameters[tagName] !== undefined) {
-        tags.push({ name: tagName, value: String(parameters[tagName]) });
-      }
-    });
+    // Add required pattern tags (if pattern is defined)
+    if (handler.pattern) {
+      handler.pattern.forEach((tagName) => {
+        if (tagName === "Action") {
+          tags.push({ name: "Action", value: handler.action });
+        } else if (parameters[tagName] !== undefined) {
+          tags.push({ name: tagName, value: String(parameters[tagName]) });
+        }
+      });
+    } else {
+      // Default to Action tag if no pattern is defined
+      tags.push({ name: "Action", value: handler.action });
+    }
 
     // Add parameter tags
     handler.parameters?.forEach((param) => {

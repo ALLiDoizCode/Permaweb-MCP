@@ -14,6 +14,7 @@ This document consolidates all epic initiatives for the Permamind project, provi
 6. [Human Crypto Keys Performance Optimization Epic - Brownfield Enhancement](#human-crypto-keys-performance-optimization-epic---brownfield-enhancement)
 7. [Lua Process Creation and Documentation Enhancement Epic](#lua-process-creation-and-documentation-enhancement-epic)
 8. [AO Process Communication ADP Migration Epic - Brownfield Enhancement](#ao-process-communication-adp-migration-epic---brownfield-enhancement)
+9. [ADP Parameter Translation Quality Issues Epic - Brownfield Enhancement](#adp-parameter-translation-quality-issues-epic---brownfield-enhancement)
 
 ---
 
@@ -691,6 +692,97 @@ Migrate Permamind's AO process communication system from fragile markdown parsin
 
 ---
 
+## Epic 9: ADP Parameter Translation Quality Issues Epic - Brownfield Enhancement
+
+### Epic Goal
+
+Fix critical quality issues in ADP (AO Documentation Protocol) parameter translation system to ensure reliable natural language to AO process communication, eliminating parameter parsing failures and providing robust error handling for process interactions.
+
+### Epic Description
+
+**Existing System Context:**
+
+- Current functionality: executeAction tool uses ADP system for natural language to AO process communication, but parameter translation layer frequently fails to map natural language requests to proper AO message tag structures
+- Technology stack: TypeScript + FastMCP + AO Connect + existing ADPProcessCommunicationService + DocumentationProtocolService
+- Integration points: ExecuteActionCommand, ADPProcessCommunicationService, parameter extraction logic, tag generation for AO messaging
+
+**Enhancement Details:**
+
+- What's being added/changed: Fix parameter translation failures, improve natural language processing for AO message tag generation, add comprehensive parameter validation and logging, implement fallback mechanisms for parsing failures
+- How it integrates: Enhances existing ADPProcessCommunicationService without breaking API contracts, improves parameter extraction reliability, adds debugging capabilities to identify translation failures
+- Success criteria: Natural language requests like "Add 5 and 3" correctly map to AO process tags (A=5, B=3), elimination of "Invalid input" errors from proper processes, consistent behavior across different operation types
+
+### Stories
+
+#### Story 9.1: Fix Parameter Extraction and Translation Logic
+
+**User Story:** As a user of the executeAction tool, I want my natural language requests to be correctly translated into AO process parameters so that mathematical and operational commands work reliably without parameter parsing errors.
+
+**Acceptance Criteria:**
+
+- Fix parameter extraction logic to correctly parse natural language patterns (e.g., "Add 5 and 3" → A=5, B=3)
+- Implement robust pattern matching for mathematical operations, assignments, and common process interactions
+- Add comprehensive unit tests for parameter extraction with various natural language formats
+- Ensure extracted parameters are properly validated before message generation
+- Support multiple parameter formats and flexible natural language variations
+- Fix inconsistent default value handling that causes unexpected results (e.g., subtraction returning "1234")
+
+#### Story 9.2: Implement Parameter Validation and Error Handling
+
+**User Story:** As a developer debugging AO process communication, I want comprehensive logging and validation of parameter translation so that I can identify and fix communication failures quickly.
+
+**Acceptance Criteria:**
+
+- Add detailed logging for each step of parameter translation: raw request → extracted parameters → generated tags
+- Implement parameter validation middleware that catches translation failures before sending messages
+- Provide clear, actionable error messages when parameter extraction fails
+- Add contract testing to ensure parameter formats match process handler expectations
+- Implement retry mechanisms for failed parameter extractions with alternative parsing strategies
+- Create debugging tools to validate parameter translation against known process schemas
+
+#### Story 9.3: Design Fallback Mechanisms and Alternative Input Methods
+
+**User Story:** As a user experiencing parameter translation failures, I want the system to have fallback mechanisms so that I can still interact with processes even when natural language parsing fails.
+
+**Acceptance Criteria:**
+
+- Implement fallback parameter parsing using message Data field when tag-based extraction fails
+- Support direct parameter specification format as backup (e.g., "A=5 B=3" when "5 and 3" fails)
+- Add alternative input methods for complex parameter structures
+- Implement graceful degradation when natural language processing encounters unknown patterns
+- Provide user guidance for alternative input formats when automatic translation fails
+- Create process-specific parameter format detection based on ADP metadata
+
+### Compatibility Requirements
+
+- [ ] Existing executeAction API remains unchanged for consumers
+- [ ] ADPProcessCommunicationService interface maintains backward compatibility
+- [ ] No regression in successful parameter translations
+- [ ] ADP and legacy process communication continue to work
+- [ ] DocumentationProtocolService integration preserved
+
+### Risk Mitigation
+
+- **Primary Risk:** Breaking existing working parameter translations during fix implementation
+- **Mitigation:** Comprehensive testing of existing successful cases, feature flags for new parameter extraction logic, extensive unit test coverage
+- **Rollback Plan:** Maintain original parameter extraction logic as fallback, ability to disable new translation improvements via configuration
+
+### Definition of Done
+
+- [ ] Story 9.1: Parameter extraction logic fixed with comprehensive test coverage for natural language patterns
+- [ ] Story 9.2: Parameter validation and error handling implemented with detailed logging and debugging capabilities
+- [ ] Story 9.3: Fallback mechanisms and alternative input methods implemented and tested
+- [ ] Natural language requests like "Add 5 and 3" correctly generate tags A=5, B=3 for calculator processes
+- [ ] Elimination of "Invalid input" errors when proper numeric values are provided in natural language
+- [ ] Consistent behavior across all mathematical and operational request types
+- [ ] Parameter translation failures provide clear error messages with suggested alternatives
+- [ ] No regression in existing successful parameter extractions or process communication
+- [ ] Comprehensive unit and integration test coverage for all parameter translation scenarios
+- [ ] QA validation confirms end-to-end calculator process communication works with natural language
+- [ ] Build passes: npm run build && npm run lint && npm run type-check && npm run test
+
+---
+
 ---
 
 ## Implementation Priorities
@@ -827,10 +919,11 @@ Migrate Permamind's AO process communication system from fragile markdown parsin
 2. **Epic 3 (Token NLS Migration)** - Enhanced user experience
 3. **Epic 5 (AO Process Management Tools)** - Core infrastructure expansion
 4. **Epic 8 (AO Process Communication ADP Migration)** - Standardized process communication infrastructure
-5. **Epic 7 (Lua Process Creation and Documentation Enhancement)** - AI agent development capabilities
-6. **Epic 6 (Human Crypto Keys Performance Optimization)** - Critical performance enhancement
-7. **Epic 2 (BMAD Integration)** - Advanced development capabilities
-8. **Epic 4 (Agent UX Enhancement)** - File-based agents and memory sharing (Stories 4.2, 4.3)
+5. **Epic 9 (ADP Parameter Translation Quality Issues)** - Critical bug fixes for process communication
+6. **Epic 7 (Lua Process Creation and Documentation Enhancement)** - AI agent development capabilities
+7. **Epic 6 (Human Crypto Keys Performance Optimization)** - Critical performance enhancement
+8. **Epic 2 (BMAD Integration)** - Advanced development capabilities
+9. **Epic 4 (Agent UX Enhancement)** - File-based agents and memory sharing (Stories 4.2, 4.3)
 
 ### Quality Gates
 

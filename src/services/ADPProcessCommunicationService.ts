@@ -1,7 +1,7 @@
 import { JWKInterface } from "arweave/node/lib/wallet.js";
 
 import { Tag } from "../models/Tag.js";
-import { read } from "../process.js";
+import { read, send } from "../process.js";
 import {
   DocumentationProtocolService,
   ExtendedInfoResponse,
@@ -30,6 +30,7 @@ export interface ADPCommunicationResult {
   data?: unknown;
   error?: string;
   handlerUsed?: string;
+  methodUsed?: "read" | "send";
   parametersUsed?: Record<string, unknown>;
   success: boolean;
 }
@@ -84,7 +85,10 @@ export class ADPProcessCommunicationService {
         }
       }
     } catch (error) {
-      console.warn(`ADP discovery failed for process ${processId}:`, error);
+      console.warn(
+        `ADP discovery failed for process ${processId} with signer:`,
+        error,
+      );
     }
 
     return null;
@@ -161,14 +165,25 @@ export class ADPProcessCommunicationService {
       // Add delay to avoid rate limiting issues with rapid successive calls
       await new Promise((resolve) => setTimeout(resolve, 200));
 
-      // Execute the message using read method from process.ts
-      const response = await read(processId, tags);
+      // Determine if this is a write operation or read operation
+      const isWriteOperation = this.isWriteHandler(matchedHandler.handler);
+
+      // Execute the message using appropriate method from process.ts
+      let response;
+      if (isWriteOperation) {
+        // Use send() for write operations (state-changing)
+        response = await send(signer, processId, tags, null);
+      } else {
+        // Use read() for read-only operations
+        response = await read(processId, tags);
+      }
 
       return {
         approach: "ADP",
         confidence: matchedHandler.confidence,
         data: response?.Data || response,
         handlerUsed: matchedHandler.handler.action,
+        methodUsed: isWriteOperation ? "send" : "read",
         parametersUsed: parameters,
         success: !!response,
       };
@@ -418,9 +433,31 @@ export class ADPProcessCommunicationService {
   }
 
   /**
-   * Determine if a handler performs write operations
+   * Determine if a handler performs write operations that require send() vs read()
+   * Read operations: Info, Balance, Get, View, Check, Query, List
+   * Write operations: Transfer, Send, Mint, Burn, Create, Update, Delete, Set, Add, Remove
    */
   private static isWriteHandler(handler: HandlerMetadata): boolean {
+    const actionLower = handler.action.toLowerCase();
+
+    // Read operations - use read() method
+    const readActions = [
+      "info",
+      "balance",
+      "get",
+      "view",
+      "check",
+      "query",
+      "list",
+      "show",
+      "ping",
+      "pong",
+      "status",
+      "version",
+      "details",
+    ];
+
+    // Write operations - use send() method
     const writeActions = [
       "transfer",
       "send",
@@ -432,9 +469,27 @@ export class ADPProcessCommunicationService {
       "set",
       "add",
       "remove",
+      "approve",
+      "vote",
+      "stake",
+      "unstake",
+      "deposit",
+      "withdraw",
+      "swap",
+      "execute",
     ];
-    return writeActions.some((action) =>
-      handler.action.toLowerCase().includes(action),
-    );
+
+    // First check if it's explicitly a read operation
+    if (readActions.some((action) => actionLower.includes(action))) {
+      return false;
+    }
+
+    // Then check if it's a write operation
+    if (writeActions.some((action) => actionLower.includes(action))) {
+      return true;
+    }
+
+    // Default to read for unknown actions to be safe
+    return false;
   }
 }

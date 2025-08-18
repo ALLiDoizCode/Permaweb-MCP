@@ -1093,8 +1093,9 @@ end)`);
     const luaHandlers = handlers.map((handler) => {
       let luaHandler = `    {\n        action = "${handler.action}",\n        pattern = {`;
 
-      // Add pattern
-      luaHandler += handler.pattern.map((p) => `"${p}"`).join(", ");
+      // Add pattern (default to ["Action"] if not defined)
+      const pattern = handler.pattern || ["Action"];
+      luaHandler += pattern.map((p) => `"${p}"`).join(", ");
       luaHandler += "},\n";
 
       // Add description
@@ -1102,10 +1103,9 @@ end)`);
         luaHandler += `        description = "${handler.description}",\n`;
       }
 
-      // Add category
-      if (handler.category) {
-        luaHandler += `        category = "${handler.category}",\n`;
-      }
+      // Add category (default to "custom" if not specified)
+      const category = handler.category || "custom";
+      luaHandler += `        category = "${category}",\n`;
 
       // Add parameters if present
       if (handler.parameters && handler.parameters.length > 0) {
