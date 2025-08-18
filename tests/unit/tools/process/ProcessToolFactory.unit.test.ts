@@ -57,7 +57,7 @@ describe("ProcessToolFactory", () => {
     it("should register all process management tools", () => {
       const toolClasses = (factory as any).getToolClasses();
 
-      expect(toolClasses).toHaveLength(6);
+      expect(toolClasses).toHaveLength(9);
       expect(toolClasses).toContain(SpawnProcessCommand);
       expect(toolClasses).toContain(EvalProcessCommand);
       expect(toolClasses).toContain(ExecuteActionCommand);
@@ -81,7 +81,7 @@ describe("ProcessToolFactory", () => {
       expect(toolClasses).toContain(EvalProcessCommand);
       expect(toolClasses).toContain(ExecuteActionCommand);
       expect(toolClasses).toContain(QueryAOProcessMessagesCommand);
-      expect(toolClasses.length).toBe(6); // Updated count
+      expect(toolClasses.length).toBe(9); // Updated count
     });
   });
 
@@ -126,7 +126,7 @@ describe("ProcessToolFactory", () => {
       });
 
       const toolClasses = (alternativeFactory as any).getToolClasses();
-      expect(toolClasses).toHaveLength(6);
+      expect(toolClasses).toHaveLength(9);
 
       toolClasses.forEach((ToolClass: any) => {
         const toolInstance = new ToolClass(alternativeContext);
@@ -213,7 +213,7 @@ describe("ProcessToolFactory", () => {
       const tools = factory.getTools();
 
       expect(Array.isArray(tools)).toBe(true);
-      expect(tools.length).toBe(6);
+      expect(tools.length).toBe(9);
 
       // Each tool should be an instance of ToolCommand
       tools.forEach((tool) => {
@@ -250,7 +250,7 @@ describe("ProcessToolFactory", () => {
       });
 
       const toolClasses = (incompleteFactory as any).getToolClasses();
-      expect(toolClasses).toHaveLength(6);
+      expect(toolClasses).toHaveLength(9);
     });
   });
 
@@ -273,7 +273,7 @@ describe("ProcessToolFactory", () => {
       });
 
       const toolClasses = (customFactory as any).getToolClasses();
-      expect(toolClasses).toHaveLength(6);
+      expect(toolClasses).toHaveLength(9);
     });
   });
 });

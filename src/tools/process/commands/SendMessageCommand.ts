@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { send } from "../../../process.js";
+import { ProcessCacheService } from "../../../services/ProcessCacheService.js";
 import {
   AutoSafeToolContext,
   CommonSchemas,
@@ -58,6 +59,31 @@ export class SendMessageCommand extends ToolCommand<SendMessageArgs, string> {
       // Auto-initialize keypair if needed
       const safeContext = AutoSafeToolContext.from(this.context);
       const keyPair = await safeContext.getKeyPair();
+
+      // Proactively discover process capabilities to cache available actions
+      const processInfo = await ProcessCacheService.getProcessInfo(
+        args.processId,
+        keyPair,
+      );
+
+      // Validate action if we have process info
+      if (processInfo && processInfo.success) {
+        const supportedActions = processInfo.handlers.map((h) =>
+          h.action.toLowerCase(),
+        );
+        const actionLower = args.action.toLowerCase();
+
+        if (
+          supportedActions.length > 0 &&
+          !supportedActions.includes(actionLower)
+        ) {
+          return JSON.stringify({
+            error: `Action '${args.action}' not supported by process`,
+            success: false,
+            supportedActions: processInfo.handlers.map((h) => h.action),
+          });
+        }
+      }
 
       // Build tags array
       const tags = [{ name: "Action", value: args.action }];

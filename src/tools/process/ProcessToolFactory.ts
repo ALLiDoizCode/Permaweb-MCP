@@ -1,6 +1,5 @@
 import { BaseToolFactory, ToolCommand, ToolContext } from "../core/index.js";
 import { AnalyzeProcessArchitectureCommand } from "./commands/AnalyzeProcessArchitectureCommand.js";
-import { DeployProcessCommand } from "./commands/DeployProcessCommand.js";
 import { EvalProcessCommand } from "./commands/EvalProcessCommand.js";
 import { ExecuteActionCommand } from "./commands/ExecuteActionCommand.js";
 import { GenerateLuaProcessCommand } from "./commands/GenerateLuaProcessCommand.js";
@@ -23,7 +22,6 @@ import { ValidateDeploymentCommand } from "./commands/ValidateDeploymentCommand.
  * - `SendMessageCommand` - Send direct messages to processes with specific actions - SIMPLE messaging
  * - `ExecuteActionCommand` - Send messages to processes using natural language - SMART messaging
  * - `QueryAOProcessMessagesCommand` - Query process message history and communication logs
- * - `DeployProcessCommand` - Deploy processes via pipeline with AOLite test validation
  * - `ValidateDeploymentCommand` - Validate deployed process functionality
  * - `RollbackDeploymentCommand` - Rollback failed deployments
  *
@@ -114,7 +112,6 @@ export class ProcessToolFactory extends BaseToolFactory {
       GenerateLuaProcessCommand,
       QueryAOProcessMessagesCommand,
       SendMessageCommand,
-      DeployProcessCommand,
       ValidateDeploymentCommand,
       RollbackDeploymentCommand,
     ];

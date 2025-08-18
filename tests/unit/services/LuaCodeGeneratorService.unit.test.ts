@@ -123,15 +123,20 @@ describe("LuaCodeGeneratorService", () => {
       expect(result.generatedCode).toContain("initialized = true");
     });
 
-    it("should include process info handler", async () => {
+    it("should include ADP-compliant info handler", async () => {
       const docs = createMockDocs();
       const requirements = createSimpleRequirements();
 
       const result = await service.generateLuaCode(docs, requirements);
 
-      expect(result.generatedCode).toContain('"info"');
+      // Check for ADP v1.0 compliance
       expect(result.generatedCode).toContain("Info");
-      expect(result.generatedCode).toContain("Process = ao.id");
+      expect(result.generatedCode).toContain('protocolVersion": "1.0"');
+      expect(result.generatedCode).toContain("ProcessId");
+      expect(result.generatedCode).toContain("handlers");
+      expect(result.generatedCode).toContain("capabilities");
+      expect(result.generatedCode).toContain("supportsHandlerRegistry");
+      expect(result.generatedCode).toContain("json.encode(infoResponse)");
     });
 
     it("should generate appropriate best practices", async () => {
@@ -250,6 +255,82 @@ describe("LuaCodeGeneratorService", () => {
       expect(result.generatedCode).toContain("balance");
       expect(result.generatedCode).toContain("proposal");
       expect(result.usedTemplates.length).toBeGreaterThan(2);
+    });
+
+    it("should include required imports at the top of generated code", async () => {
+      const docs = createMockDocs();
+      const requirements = createSimpleRequirements();
+
+      const result = await service.generateLuaCode(docs, requirements);
+
+      // Check that json import is at the very beginning
+      expect(result.generatedCode).toContain('local json = require("json")');
+
+      // Verify that the import comes before any handlers
+      const jsonImportIndex = result.generatedCode.indexOf(
+        'local json = require("json")',
+      );
+      const firstHandlerIndex = result.generatedCode.indexOf("Handlers.add");
+
+      expect(jsonImportIndex).toBeGreaterThan(-1);
+      expect(firstHandlerIndex).toBeGreaterThan(-1);
+      expect(jsonImportIndex).toBeLessThan(firstHandlerIndex);
+    });
+
+    it("should include json import for token contracts that use json.encode", async () => {
+      const docs = createMockDocs();
+      const requirements = createTokenRequirements();
+
+      const result = await service.generateLuaCode(docs, requirements);
+
+      // Should include json import since ADP handler uses json.encode
+      expect(result.generatedCode).toContain('local json = require("json")');
+
+      // Should also use json.encode in the code
+      expect(result.generatedCode).toContain("json.encode");
+
+      // Import should be at the top
+      const lines = result.generatedCode.split("\n");
+      const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+      expect(nonEmptyLines[0]).toContain('local json = require("json")');
+    });
+
+    it("should include json import for DAO contracts", async () => {
+      const docs = createMockDocs();
+      const requirements = createDAORequirements();
+
+      const result = await service.generateLuaCode(docs, requirements);
+
+      // Should include json import since ADP handler always uses json.encode
+      expect(result.generatedCode).toContain('local json = require("json")');
+      expect(result.generatedCode).toContain("json.encode");
+
+      // Verify positioning at the top
+      const jsonImportIndex = result.generatedCode.indexOf(
+        'local json = require("json")',
+      );
+      expect(jsonImportIndex).toBeLessThan(100); // Should be very early in the file
+    });
+
+    it("should not have duplicate imports when multiple patterns use json", async () => {
+      const docs = createMockDocs();
+      const requirements: RequirementAnalysis = {
+        complexity: "complex",
+        detectedPatterns: ["token-contract", "dao-governance", "handler"],
+        extractedKeywords: ["token", "dao", "json"],
+        processType: "stateful",
+        suggestedDomains: ["ao"],
+        userRequest: "Create a complex system with multiple json usage",
+      };
+
+      const result = await service.generateLuaCode(docs, requirements);
+
+      // Count occurrences of json import
+      const matches = result.generatedCode.match(
+        /local json = require\("json"\)/g,
+      );
+      expect(matches).not.toBeNull();
+      expect(matches?.length).toBe(1); // Should only appear once
     });
   });
 });

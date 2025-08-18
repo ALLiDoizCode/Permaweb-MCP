@@ -42,7 +42,7 @@ describe("ExecuteActionCommand", () => {
       const metadata = command.getMetadata();
       expect(metadata.name).toBe("executeAction");
       expect(metadata.title).toBe("Execute Action");
-      expect(metadata.description).toContain("Execute actions on AO processes");
+      expect(metadata.description).toContain("Send messages to AO processes");
       expect(metadata.openWorldHint).toBe(false);
       expect(metadata.readOnlyHint).toBe(false);
     });

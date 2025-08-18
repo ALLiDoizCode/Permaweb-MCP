@@ -8,6 +8,13 @@ vi.mock("../../../../src/process.js", () => ({
   send: vi.fn(),
 }));
 
+// Mock ProcessCacheService
+vi.mock("../../../../src/services/ProcessCacheService.js", () => ({
+  ProcessCacheService: {
+    getProcessInfo: vi.fn(),
+  },
+}));
+
 describe("SendMessageCommand", () => {
   let command: SendMessageCommand;
   let mockContext: ToolContext;
@@ -82,7 +89,107 @@ describe("SendMessageCommand", () => {
   });
 
   describe("execute", () => {
+    it("should validate action against process handlers when available", async () => {
+      const { ProcessCacheService } = await import(
+        "../../../../src/services/ProcessCacheService.js"
+      );
+      const mockGetProcessInfo = ProcessCacheService.getProcessInfo as any;
+
+      // Mock process info with specific handlers
+      mockGetProcessInfo.mockResolvedValue({
+        handlers: [
+          { action: "Ping" },
+          { action: "Balance" },
+          { action: "Info" },
+        ],
+        success: true,
+      });
+
+      const args = {
+        action: "Transfer", // Action not supported by the process
+        processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
+      };
+
+      const result = await command.execute(args);
+      const parsedResult = JSON.parse(result);
+
+      expect(parsedResult.success).toBe(false);
+      expect(parsedResult.error).toContain(
+        "Action 'Transfer' not supported by process",
+      );
+      expect(parsedResult.supportedActions).toEqual([
+        "Ping",
+        "Balance",
+        "Info",
+      ]);
+    });
+
+    it("should proceed when action is supported by process", async () => {
+      const { ProcessCacheService } = await import(
+        "../../../../src/services/ProcessCacheService.js"
+      );
+      const mockGetProcessInfo = ProcessCacheService.getProcessInfo as any;
+
+      // Mock process info with handlers that support the action
+      mockGetProcessInfo.mockResolvedValue({
+        handlers: [
+          { action: "Ping" },
+          { action: "Balance" },
+          { action: "Transfer" }, // Action is supported
+        ],
+        success: true,
+      });
+
+      const mockResult = { messageId: "msg123" };
+      mockSend.mockResolvedValue(mockResult);
+
+      const args = {
+        action: "Transfer",
+        processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
+      };
+
+      const result = await command.execute(args);
+      const parsedResult = JSON.parse(result);
+
+      expect(parsedResult.success).toBe(true);
+      expect(mockSend).toHaveBeenCalled();
+    });
+
+    it("should be case-insensitive for action validation", async () => {
+      const { ProcessCacheService } = await import(
+        "../../../../src/services/ProcessCacheService.js"
+      );
+      const mockGetProcessInfo = ProcessCacheService.getProcessInfo as any;
+
+      // Mock process info with uppercase handlers
+      mockGetProcessInfo.mockResolvedValue({
+        handlers: [{ action: "PING" }, { action: "BALANCE" }],
+        success: true,
+      });
+
+      const mockResult = { messageId: "msg123" };
+      mockSend.mockResolvedValue(mockResult);
+
+      const args = {
+        action: "ping", // lowercase should match uppercase handler
+        processId: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v",
+      };
+
+      const result = await command.execute(args);
+      const parsedResult = JSON.parse(result);
+
+      expect(parsedResult.success).toBe(true);
+      expect(mockSend).toHaveBeenCalled();
+    });
+
     it("should send message successfully with basic parameters", async () => {
+      const { ProcessCacheService } = await import(
+        "../../../../src/services/ProcessCacheService.js"
+      );
+      const mockGetProcessInfo = ProcessCacheService.getProcessInfo as any;
+
+      // Mock no validation (process info unavailable)
+      mockGetProcessInfo.mockResolvedValue(null);
       const mockResult = { message: "Pong" };
       mockSend.mockResolvedValue(mockResult);
 

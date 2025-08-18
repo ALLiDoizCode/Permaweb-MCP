@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { evalProcess } from "../../../relay.js";
+import { ProcessCacheService } from "../../../services/ProcessCacheService.js";
 import {
   AutoSafeToolContext,
   CommonSchemas,
@@ -46,6 +47,9 @@ export class EvalProcessCommand extends ToolCommand<EvalProcessArgs, string> {
       const keyPair = await safeContext.getKeyPair();
 
       const result = await evalProcess(keyPair, args.code, args.processId);
+
+      // Clear cached process info since handlers may have changed
+      ProcessCacheService.clearProcessCache(args.processId);
 
       // Null result is normal for handler registration - indicates success
       if (result === null || result === undefined) {

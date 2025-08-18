@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { defaultProcessService } from "../../../services/DefaultProcessService.js";
+import { ProcessCacheService } from "../../../services/ProcessCacheService.js";
 import {
   processCommunicationService,
   ProcessDefinition,
@@ -70,23 +71,17 @@ export class ExecuteActionCommand extends ToolCommand<
       const safeContext = AutoSafeToolContext.from(this.context);
       const keyPair = await safeContext.getKeyPair();
 
-      // If processMarkdown not provided, try to discover process capabilities
+      // If processMarkdown not provided, try to get from cache or discover process capabilities
       if (!processMarkdown) {
-        const discovery = await ProcessDiscoveryService.discoverProcessHandlers(
+        // First, try to get cached process info with automatic discovery
+        const cachedInfo = await ProcessCacheService.getProcessInfo(
           args.processId,
           keyPair,
         );
 
-        if (
-          discovery.success &&
-          discovery.handlers &&
-          discovery.handlers.length > 0
-        ) {
-          // Generate markdown from discovered handlers
-          processMarkdown = ProcessDiscoveryService.generateProcessMarkdown(
-            discovery.rawResponse,
-            args.processId,
-          );
+        if (cachedInfo && cachedInfo.success) {
+          // Use cached markdown
+          processMarkdown = cachedInfo.processMarkdown;
         } else if (args.processType) {
           // Fallback to template-based approach
           if (TokenProcessTemplateService.isSupported(args.processType)) {

@@ -493,6 +493,12 @@ end`,
   ): string {
     const codeBlocks: string[] = [];
 
+    // Add required imports at the top
+    const imports = this.generateRequiredImports(patterns, requirements);
+    if (imports.trim()) {
+      codeBlocks.push(imports);
+    }
+
     // Add initialization block for stateful processes
     if (
       requirements.processType === "stateful" ||
@@ -507,9 +513,60 @@ end`,
     }
 
     // Add ADP-compliant process info handler
-    codeBlocks.push(this.generateADPInfoHandler(patterns, requirements));
+    const adpInfoHandler = this.generateADPInfoHandler(patterns, requirements);
+    codeBlocks.push(adpInfoHandler);
 
-    return codeBlocks.join("\n\n");
+    // Ensure we only have ADP-compliant info handlers by filtering out any old format
+    let finalCode = codeBlocks.join("\n\n");
+
+    // Remove any old-format info handlers that contain "Process = ao.id" pattern
+    // This is a more aggressive approach to ensure only ADP format is used
+    if (finalCode.includes("Process = ao.id")) {
+      // Split into lines and filter out old info handler blocks
+      const lines = finalCode.split("\n");
+      const filteredLines: string[] = [];
+      let skipBlock = false;
+      let braceCount = 0;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        // Start skipping if we find old info handler pattern
+        if (
+          line.includes("Handlers.add") &&
+          line.includes('"info"') &&
+          !line.includes("ADP")
+        ) {
+          skipBlock = true;
+          braceCount = 0;
+          continue;
+        }
+
+        if (skipBlock) {
+          // Count braces to know when the handler block ends
+          braceCount += (line.match(/\{/g) || []).length;
+          braceCount -= (line.match(/\}/g) || []).length;
+
+          // End of handler block
+          if (line.trim() === ")" && braceCount <= 0) {
+            skipBlock = false;
+            continue;
+          }
+          continue;
+        }
+
+        filteredLines.push(line);
+      }
+
+      finalCode = filteredLines.join("\n");
+    }
+
+    // Ensure we have the ADP handler
+    if (!finalCode.includes("AO Documentation Protocol (ADP)")) {
+      finalCode = finalCode.trim() + "\n\n" + adpInfoHandler;
+    }
+
+    return finalCode;
   }
 
   /**
@@ -1171,6 +1228,37 @@ return "Token state initialized correctly"`,
     }
 
     return testCases;
+  }
+
+  /**
+   * Generate required imports based on patterns and templates used
+   */
+  private generateRequiredImports(
+    patterns: HandlerPattern[],
+    requirements: RequirementAnalysis,
+  ): string {
+    const imports: string[] = [];
+    const allTemplateCode = patterns.map((p) => p.template).join("\n");
+
+    // Check if json.encode is used anywhere in the generated code
+    // ADP info handler always uses json.encode, so we always need it
+    const needsJson =
+      allTemplateCode.includes("json.encode") || patterns.length >= 0; // Always true since ADP handler uses json
+    if (needsJson) {
+      imports.push('local json = require("json")');
+    }
+
+    // Add other potential imports based on patterns
+    if (requirements.detectedPatterns.includes("token-contract")) {
+      // Token contracts might need additional utilities
+    }
+
+    if (requirements.detectedPatterns.includes("dao-governance")) {
+      // DAO might need additional utilities
+    }
+
+    // Return imports as a single block
+    return imports.length > 0 ? imports.join("\n") + "\n" : "";
   }
 
   /**
