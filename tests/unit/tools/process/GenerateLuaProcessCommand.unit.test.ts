@@ -94,13 +94,13 @@ describe("GenerateLuaProcessCommand", () => {
     it("should have correct metadata", () => {
       const metadata = (command as any).metadata;
       expect(metadata.name).toBe("generateLuaProcess");
-      expect(metadata.title).toBe("Generate Lua Process with Documentation");
+      expect(metadata.title).toBe("Create/Generate AO Process Code");
       expect(metadata.readOnlyHint).toBe(true);
       expect(metadata.openWorldHint).toBe(false);
-      expect(metadata.description).toContain("Generate AO Lua process code");
       expect(metadata.description).toContain(
-        "automatic documentation reference",
+        "Create, build, generate, or make AO process",
       );
+      expect(metadata.description).toContain("Permaweb documentation");
     });
   });
 
@@ -337,11 +337,13 @@ describe("GenerateLuaProcessCommand", () => {
       const toolDef = command.toToolDefinition(mockContext);
 
       expect(toolDef.name).toBe("generateLuaProcess");
-      expect(toolDef.description).toContain("Generate AO Lua process code");
+      expect(toolDef.description).toContain(
+        "Create, build, generate, or make AO process",
+      );
       expect(toolDef.annotations?.openWorldHint).toBe(false);
       expect(toolDef.annotations?.readOnlyHint).toBe(true);
       expect(toolDef.annotations?.title).toBe(
-        "Generate Lua Process with Documentation",
+        "Create/Generate AO Process Code",
       );
       expect(typeof toolDef.execute).toBe("function");
     });

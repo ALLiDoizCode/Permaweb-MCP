@@ -10,7 +10,7 @@ This document provides a complete implementation of an AO Token using the AO Doc
 
 - **Name**: Example Protocol Token
 - **Ticker**: EPT
-- **Description**: A demonstration token implementing the AO Handler Registry Protocol
+- **Description**: A demonstration token implementing the AO Documentation Protocol
 - **Denomination**: 12 (supports fractional tokens)
 - **Total Supply**: 1,000,000 EPT
 - **Features**: Transferable, Burnable, Mintable
@@ -29,7 +29,7 @@ local bint = require('.bint')(256)
 Name = "Example Protocol Token"
 Ticker = "EPT"
 Logo = "https://example.com/ept-logo.png"
-Description = "A demonstration token implementing the AO Handler Registry Protocol"
+Description = "A demonstration token implementing the AO Documentation Protocol"
 Denomination = 12
 TotalSupply = "1000000000000000000"
 Owner = "vh-owner-address-here"
@@ -352,7 +352,7 @@ print("Handlers: Info, Balance, Balances, Transfer, Mint, Burn, TotalSupply")
 
 - **Purpose**: Get comprehensive token information and handler metadata
 - **Tags**: None
-- **Returns**: Extended info response with AHRP metadata
+- **Returns**: Extended info response with ADP metadata
 - **Example**: Send message with `Action: Info`
 
 #### Balance

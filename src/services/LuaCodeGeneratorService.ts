@@ -1,3 +1,6 @@
+import * as fs from "fs";
+import * as path from "path";
+
 import {
   HandlerDefinition,
   ProcessCodeResult,
@@ -118,6 +121,134 @@ end`,
 )`,
     },
 
+    calculator: {
+      addition: `Handlers.add(
+  "addition",
+  Handlers.utils.hasMatchingTag("Action", "Add"),
+  function(msg)
+    local a = tonumber(msg.Tags.A or msg.Tags.a or msg.Data)
+    local b = tonumber(msg.Tags.B or msg.Tags.b or "0")
+    
+    if not a or not b then
+      ao.send({
+        Target = msg.From,
+        Action = "Error",
+        Data = "Invalid input. Please provide numeric values for A and B."
+      })
+      return
+    end
+    
+    local result = a + b
+    ao.send({
+      Target = msg.From,
+      Action = "Sum",
+      Data = tostring(result),
+      Tags = {
+        A = tostring(a),
+        B = tostring(b),
+        Result = tostring(result)
+      }
+    })
+  end
+)`,
+      division: `Handlers.add(
+  "division",
+  Handlers.utils.hasMatchingTag("Action", "Divide"),
+  function(msg)
+    local a = tonumber(msg.Tags.A or msg.Tags.a or msg.Data)
+    local b = tonumber(msg.Tags.B or msg.Tags.b or "1")
+    
+    if not a or not b then
+      ao.send({
+        Target = msg.From,
+        Action = "Error",
+        Data = "Invalid input. Please provide numeric values for A and B."
+      })
+      return
+    end
+    
+    if b == 0 then
+      ao.send({
+        Target = msg.From,
+        Action = "Error",
+        Data = "Division by zero is not allowed."
+      })
+      return
+    end
+    
+    local result = a / b
+    ao.send({
+      Target = msg.From,
+      Action = "Quotient",
+      Data = tostring(result),
+      Tags = {
+        A = tostring(a),
+        B = tostring(b),
+        Result = tostring(result)
+      }
+    })
+  end
+)`,
+      multiplication: `Handlers.add(
+  "multiplication",
+  Handlers.utils.hasMatchingTag("Action", "Multiply"),
+  function(msg)
+    local a = tonumber(msg.Tags.A or msg.Tags.a or msg.Data)
+    local b = tonumber(msg.Tags.B or msg.Tags.b or "1")
+    
+    if not a or not b then
+      ao.send({
+        Target = msg.From,
+        Action = "Error",
+        Data = "Invalid input. Please provide numeric values for A and B."
+      })
+      return
+    end
+    
+    local result = a * b
+    ao.send({
+      Target = msg.From,
+      Action = "Product",
+      Data = tostring(result),
+      Tags = {
+        A = tostring(a),
+        B = tostring(b),
+        Result = tostring(result)
+      }
+    })
+  end
+)`,
+      subtraction: `Handlers.add(
+  "subtraction",
+  Handlers.utils.hasMatchingTag("Action", "Subtract"),
+  function(msg)
+    local a = tonumber(msg.Tags.A or msg.Tags.a or msg.Data)
+    local b = tonumber(msg.Tags.B or msg.Tags.b or "0")
+    
+    if not a or not b then
+      ao.send({
+        Target = msg.From,
+        Action = "Error",
+        Data = "Invalid input. Please provide numeric values for A and B."
+      })
+      return
+    end
+    
+    local result = a - b
+    ao.send({
+      Target = msg.From,
+      Action = "Difference",
+      Data = tostring(result),
+      Tags = {
+        A = tostring(a),
+        B = tostring(b),
+        Result = tostring(result)
+      }
+    })
+  end
+)`,
+    },
+
     chatroom: {
       join: `Handlers.add(
   "join-room",
@@ -186,6 +317,91 @@ end`,
 )`,
     },
 
+    counter: {
+      current: `Handlers.add(
+  "current",
+  Handlers.utils.hasMatchingTag("Action", "Current"),
+  function(msg)
+    local value = Counter or 0
+    
+    ao.send({
+      Target = msg.From,
+      Action = "Counter",
+      Data = tostring(value),
+      Tags = {
+        Operation = "Current",
+        Current = tostring(value)
+      }
+    })
+  end
+)`,
+      decrement: `Handlers.add(
+  "decrement",
+  Handlers.utils.hasMatchingTag("Action", "Decrement"),
+  function(msg)
+    if not Counter then
+      Counter = 0
+    end
+    
+    local step = tonumber(msg.Tags.Step or "1") or 1
+    Counter = Counter - step
+    
+    ao.send({
+      Target = msg.From,
+      Action = "Counter",
+      Data = tostring(Counter),
+      Tags = {
+        Operation = "Decrement",
+        Step = tostring(step),
+        Current = tostring(Counter)
+      }
+    })
+  end
+)`,
+      increment: `Handlers.add(
+  "increment",
+  Handlers.utils.hasMatchingTag("Action", "Increment"),
+  function(msg)
+    if not Counter then
+      Counter = 0
+    end
+    
+    local step = tonumber(msg.Tags.Step or "1") or 1
+    Counter = Counter + step
+    
+    ao.send({
+      Target = msg.From,
+      Action = "Counter",
+      Data = tostring(Counter),
+      Tags = {
+        Operation = "Increment",
+        Step = tostring(step),
+        Current = tostring(Counter)
+      }
+    })
+  end
+)`,
+      reset: `Handlers.add(
+  "reset",
+  Handlers.utils.hasMatchingTag("Action", "Reset"),
+  function(msg)
+    local oldValue = Counter or 0
+    Counter = 0
+    
+    ao.send({
+      Target = msg.From,
+      Action = "Counter",
+      Data = "0",
+      Tags = {
+        Operation = "Reset",
+        Previous = tostring(oldValue),
+        Current = "0"
+      }
+    })
+  end
+)`,
+    },
+
     dao: {
       proposal: `Handlers.add(
   "create-proposal",
@@ -243,6 +459,168 @@ end`,
       Action = "Vote-Recorded",
       ProposalId = tostring(proposalId),
       Vote = vote
+    })
+  end
+)`,
+    },
+
+    database: {
+      delete: `Handlers.add(
+  "delete",
+  Handlers.utils.hasMatchingTag("Action", "Delete"),
+  function(msg)
+    if not Database then
+      Database = {}
+    end
+    
+    local key = msg.Tags.Key
+    
+    if not key then
+      ao.send({
+        Target = msg.From,
+        Action = "Error",
+        Data = "Key is required for delete operation."
+      })
+      return
+    end
+    
+    local value = Database[key]
+    Database[key] = nil
+    
+    if value then
+      ao.send({
+        Target = msg.From,
+        Action = "Deleted",
+        Data = "Key deleted successfully",
+        Tags = {
+          Key = key,
+          Operation = "Delete",
+          DeletedValue = value
+        }
+      })
+    else
+      ao.send({
+        Target = msg.From,
+        Action = "NotFound",
+        Data = "Key not found",
+        Tags = {
+          Key = key,
+          Operation = "Delete"
+        }
+      })
+    end
+  end
+)`,
+      retrieve: `Handlers.add(
+  "retrieve",
+  Handlers.utils.hasMatchingTag("Action", "Retrieve"),
+  function(msg)
+    if not Database then
+      Database = {}
+    end
+    
+    local key = msg.Tags.Key
+    
+    if not key then
+      ao.send({
+        Target = msg.From,
+        Action = "Error",
+        Data = "Key is required for retrieve operation."
+      })
+      return
+    end
+    
+    local value = Database[key]
+    
+    if value then
+      ao.send({
+        Target = msg.From,
+        Action = "Retrieved",
+        Data = value,
+        Tags = {
+          Key = key,
+          Operation = "Retrieve"
+        }
+      })
+    else
+      ao.send({
+        Target = msg.From,
+        Action = "NotFound",
+        Data = "Key not found",
+        Tags = {
+          Key = key,
+          Operation = "Retrieve"
+        }
+      })
+    end
+  end
+)`,
+      store: `Handlers.add(
+  "store",
+  Handlers.utils.hasMatchingTag("Action", "Store"),
+  function(msg)
+    if not Database then
+      Database = {}
+    end
+    
+    local key = msg.Tags.Key
+    local value = msg.Data or msg.Tags.Value
+    
+    if not key then
+      ao.send({
+        Target = msg.From,
+        Action = "Error",
+        Data = "Key is required for store operation."
+      })
+      return
+    end
+    
+    Database[key] = value
+    
+    ao.send({
+      Target = msg.From,
+      Action = "Stored",
+      Data = "Value stored successfully",
+      Tags = {
+        Key = key,
+        Operation = "Store"
+      }
+    })
+  end
+)`,
+      update: `Handlers.add(
+  "update",
+  Handlers.utils.hasMatchingTag("Action", "Update"),
+  function(msg)
+    if not Database then
+      Database = {}
+    end
+    
+    local key = msg.Tags.Key
+    local newValue = msg.Data or msg.Tags.Value
+    
+    if not key then
+      ao.send({
+        Target = msg.From,
+        Action = "Error",
+        Data = "Key is required for update operation."
+      })
+      return
+    end
+    
+    local oldValue = Database[key]
+    Database[key] = newValue
+    
+    ao.send({
+      Target = msg.From,
+      Action = "Updated",
+      Data = "Value updated successfully",
+      Tags = {
+        Key = key,
+        Operation = "Update",
+        OldValue = oldValue or "null",
+        NewValue = newValue or "null"
+      }
     })
   end
 )`,
@@ -423,6 +801,98 @@ end`,
   };
 
   /**
+   * Apply ADP template to existing process code
+   * This method injects ADP compliance into manual deployments
+   */
+  async applyADPTemplateToCode(
+    existingCode: string,
+    processName: string,
+    processDescription: string,
+    detectedHandlers?: HandlerMetadata[],
+  ): Promise<string> {
+    // If code already has ADP compliance, return as-is
+    if (existingCode.includes('protocolVersion = "1.0"')) {
+      return existingCode;
+    }
+
+    const template = await this.loadADPTemplate();
+
+    // Detect handlers from existing code if not provided
+    const handlers =
+      detectedHandlers || this.detectHandlersFromCode(existingCode);
+
+    // Customize template
+    let customizedTemplate = template
+      .replace(
+        /PROCESS_NAME = "Custom AO Process"/,
+        `PROCESS_NAME = "${processName}"`,
+      )
+      .replace(
+        /PROCESS_DESCRIPTION = "ADP-compliant process template"/,
+        `PROCESS_DESCRIPTION = "${processDescription}"`,
+      );
+
+    // Update handler definitions if we detected any
+    if (handlers.length > 0) {
+      const handlerLuaArray = this.convertHandlerMetadataToLua(handlers);
+      customizedTemplate = customizedTemplate.replace(
+        /PROCESS_HANDLERS = \{[\s\S]*?\}/m,
+        `PROCESS_HANDLERS = ${handlerLuaArray}`,
+      );
+    }
+
+    // Combine with existing code, removing any old info handlers
+    const cleanedCode = this.removeExistingInfoHandlers(existingCode);
+
+    return `${customizedTemplate}\n\n-- EXISTING PROCESS CODE\n${cleanedCode}`;
+  }
+
+  /**
+   * Create customized ADP template for specific process types
+   */
+  async createCustomADPTemplate(
+    processTemplate: ProcessTemplate,
+    processName: string,
+    processDescription: string,
+    customHandlers?: HandlerMetadata[],
+  ): Promise<string> {
+    const template = await this.loadADPTemplate();
+    const handlers = customHandlers || [];
+
+    // Add type-specific handlers based on template type
+    switch (processTemplate) {
+      case "token":
+        handlers.push(
+          ...DocumentationProtocolService.getTokenHandlerMetadata(),
+        );
+        break;
+      case "custom":
+      default:
+        handlers.push(
+          ...DocumentationProtocolService.getBasicProcessHandlerMetadata(),
+        );
+        break;
+    }
+
+    // Customize template
+    const customizedTemplate = template
+      .replace(
+        /PROCESS_NAME = "Custom AO Process"/,
+        `PROCESS_NAME = "${processName}"`,
+      )
+      .replace(
+        /PROCESS_DESCRIPTION = "ADP-compliant process template"/,
+        `PROCESS_DESCRIPTION = "${processDescription}"`,
+      )
+      .replace(
+        /PROCESS_HANDLERS = \{[\s\S]*?\}/m,
+        `PROCESS_HANDLERS = ${this.convertHandlerMetadataToLua(handlers)}`,
+      );
+
+    return customizedTemplate;
+  }
+
+  /**
    * Generate Lua code based on documentation and requirements
    */
   async generateLuaCode(
@@ -432,9 +902,11 @@ end`,
     const handlerPatterns = this.selectHandlerPatterns(requirements);
     const generatedCode = this.assembleCode(handlerPatterns, requirements);
     const usedTemplates = handlerPatterns.map((pattern) => pattern.name);
-    const documentationSources = docs.map((doc) => doc.url);
+    const documentationSources = Array.isArray(docs)
+      ? docs.map((doc) => doc.url)
+      : [];
     const explanation = this.generateExplanation(handlerPatterns, requirements);
-    const bestPractices = this.extractBestPractices(docs, requirements);
+    const bestPractices = this.extractBestPractices(docs || [], requirements);
 
     return {
       bestPractices,
@@ -485,6 +957,25 @@ end`,
   }
 
   /**
+   * Load ADP template from file system
+   */
+  async loadADPTemplate(): Promise<string> {
+    try {
+      const templatePath = path.join(
+        process.cwd(),
+        "src",
+        "templates",
+        "adp-info-handler.lua",
+      );
+      return await fs.promises.readFile(templatePath, "utf-8");
+    } catch (error) {
+      console.warn("Failed to load ADP template from file:", error);
+      // Fallback to embedded template
+      return this.getEmbeddedADPTemplate();
+    }
+  }
+
+  /**
    * Assemble complete Lua code from selected patterns
    */
   private assembleCode(
@@ -512,9 +1003,23 @@ end`,
       codeBlocks.push(this.processTemplate(pattern.template, requirements));
     }
 
-    // Add ADP-compliant process info handler
+    // Add ADP-compliant process info handler (always included)
     const adpInfoHandler = this.generateADPInfoHandler(patterns, requirements);
     codeBlocks.push(adpInfoHandler);
+
+    // Add a basic Ping handler if not already included for ADP testing
+    const hasPingHandler = patterns.some((p) => p.name === "ping-handler");
+    if (!hasPingHandler) {
+      codeBlocks.push(`
+-- Basic Ping handler for ADP testing
+Handlers.add('Ping', Handlers.utils.hasMatchingTag('Action', 'Ping'), function(msg)
+    ao.send({
+        Target = msg.From,
+        Action = "Pong",
+        Data = "pong"
+    })
+end)`);
+    }
 
     // Ensure we only have ADP-compliant info handlers by filtering out any old format
     let finalCode = codeBlocks.join("\n\n");
@@ -567,6 +1072,110 @@ end`,
     }
 
     return finalCode;
+  }
+
+  /**
+   * Categorize handler based on action name
+   */
+  private categorizeHandler(action: string): "core" | "custom" | "utility" {
+    const coreActions = ["Info", "Balance", "Transfer", "Balances"];
+    const utilityActions = ["Ping", "Help", "Status"];
+
+    if (coreActions.includes(action)) return "core";
+    if (utilityActions.includes(action)) return "utility";
+    return "custom";
+  }
+
+  /**
+   * Convert HandlerMetadata array to Lua table format
+   */
+  private convertHandlerMetadataToLua(handlers: HandlerMetadata[]): string {
+    const luaHandlers = handlers.map((handler) => {
+      let luaHandler = `    {\n        action = "${handler.action}",\n        pattern = {`;
+
+      // Add pattern
+      luaHandler += handler.pattern.map((p) => `"${p}"`).join(", ");
+      luaHandler += "},\n";
+
+      // Add description
+      if (handler.description) {
+        luaHandler += `        description = "${handler.description}",\n`;
+      }
+
+      // Add category
+      if (handler.category) {
+        luaHandler += `        category = "${handler.category}",\n`;
+      }
+
+      // Add parameters if present
+      if (handler.parameters && handler.parameters.length > 0) {
+        luaHandler += `        parameters = {\n`;
+        handler.parameters.forEach((param) => {
+          luaHandler += `            {\n`;
+          luaHandler += `                name = "${param.name}",\n`;
+          luaHandler += `                type = "${param.type}",\n`;
+          luaHandler += `                required = ${param.required},\n`;
+          if (param.description) {
+            luaHandler += `                description = "${param.description}",\n`;
+          }
+          luaHandler += `            },\n`;
+        });
+        luaHandler += `        },\n`;
+      }
+
+      luaHandler += "    }";
+      return luaHandler;
+    });
+
+    return `{\n${luaHandlers.join(",\n")}\n}`;
+  }
+
+  /**
+   * Detect handlers from existing Lua code
+   */
+  private detectHandlersFromCode(code: string): HandlerMetadata[] {
+    const handlers: HandlerMetadata[] = [];
+
+    // Basic regex to find handler registrations
+    const handlerMatches = code.matchAll(
+      /Handlers\.add\(\s*['"](.*?)['"].*?hasMatchingTag\(\s*['"]Action['"],\s*['"](.*?)['"]\)/gs,
+    );
+
+    for (const match of handlerMatches) {
+      const [, handlerName, actionValue] = match;
+      if (handlerName && actionValue) {
+        handlers.push({
+          action: actionValue,
+          category: this.categorizeHandler(actionValue),
+          description: `${actionValue} handler`,
+          pattern: ["Action"],
+        });
+      }
+    }
+
+    // Always ensure Info and Ping handlers are present
+    const hasInfo = handlers.some((h) => h.action === "Info");
+    const hasPing = handlers.some((h) => h.action === "Ping");
+
+    if (!hasInfo) {
+      handlers.unshift({
+        action: "Info",
+        category: "core",
+        description: "Get process information and handler metadata",
+        pattern: ["Action"],
+      });
+    }
+
+    if (!hasPing) {
+      handlers.push({
+        action: "Ping",
+        category: "utility",
+        description: "Test if process is responding",
+        pattern: ["Action"],
+      });
+    }
+
+    return handlers;
   }
 
   /**
@@ -637,7 +1246,7 @@ end`,
     }
 
     // Add pattern-specific practices
-    if (requirements.detectedPatterns.includes("token-contract")) {
+    if ((requirements.detectedPatterns || []).includes("token-contract")) {
       practices.push(
         "Always validate transfer amounts are positive",
         "Check sufficient balance before transfers",
@@ -645,7 +1254,7 @@ end`,
       );
     }
 
-    if (requirements.detectedPatterns.includes("dao-governance")) {
+    if ((requirements.detectedPatterns || []).includes("dao-governance")) {
       practices.push(
         "Implement proposal voting periods",
         "Track member voting rights",
@@ -742,19 +1351,42 @@ end`,
       requirements,
     );
 
-    // Create standard info object
+    // Create standard info object with dynamic runtime values
     const standardInfo = {
       Description: `Generated AO process: ${requirements.userRequest}`,
       Name: "Generated AO Process",
-      Owner: "ao.id", // Will be replaced at runtime
-      ProcessId: "ao.id", // Will be replaced at runtime
     };
 
-    // Use DocumentationProtocolService to generate the enhanced info handler
-    return DocumentationProtocolService.generateEnhancedInfoHandler(
-      standardInfo,
-      handlerMetadata,
-    );
+    // Format handlers JSON for Lua embedding with proper indentation
+    const handlersJson = JSON.stringify(handlerMetadata, null, 8);
+    const formattedHandlers = handlersJson.replace(/\\n/g, "\\n        ");
+
+    return `
+-- AO Documentation Protocol (ADP) v1.0 - Enhanced Info Handler
+-- Auto-generated ADP-compliant handler for process self-documentation
+Handlers.add('Info', Handlers.utils.hasMatchingTag('Action', 'Info'), function(msg)
+    local infoResponse = {
+        Name = "${standardInfo.Name}",
+        Description = "${standardInfo.Description}",
+        Owner = Owner or ao.env.Process.Owner,
+        ProcessId = ao.id,
+        protocolVersion = "1.0",
+        lastUpdated = os.date("!%Y-%m-%dT%H:%M:%S.000Z"),
+        handlers = ${formattedHandlers},
+        capabilities = {
+            supportsHandlerRegistry = true,
+            supportsTagValidation = true,
+            supportsExamples = true
+        }
+    }
+    
+    ao.send({
+        Target = msg.From,
+        Data = json.encode(infoResponse)
+    })
+    
+    print("Sent ADP v1.0 compliant Info response to " .. msg.From)
+end)`;
   }
 
   /**
@@ -814,7 +1446,7 @@ ${patternDescriptions}
 
 Complexity Level: ${requirements.complexity}
 Process Type: ${requirements.processType}
-Detected Patterns: ${requirements.detectedPatterns.join(", ")}
+Detected Patterns: ${(requirements.detectedPatterns || []).join(", ")}
 
 The code follows AO best practices including proper message handling, error validation, response patterns, and ADP compliance for enhanced tool integration.`;
   }
@@ -859,6 +1491,18 @@ The code follows AO best practices including proper message handling, error vali
       pattern: ["Action"],
     });
 
+    // Always include Ping handler metadata for testing
+    const hasPingHandler = patterns.some((p) => p.name === "ping-handler");
+    if (!hasPingHandler) {
+      metadata.push({
+        action: "Ping",
+        category: "utility",
+        description: "Test if process is responding",
+        examples: ["Send Ping to test connectivity"],
+        pattern: ["Action"],
+      });
+    }
+
     // Generate metadata based on selected patterns
     for (const pattern of patterns) {
       const handlerMetadata = this.generateMetadataForPattern(
@@ -877,7 +1521,7 @@ The code follows AO best practices including proper message handling, error vali
    * Generate handler name from requirements
    */
   private generateHandlerName(requirements: RequirementAnalysis): string {
-    const keywords = requirements.extractedKeywords;
+    const keywords = requirements.extractedKeywords || [];
 
     // Try to find a meaningful handler name
     const actionKeywords = keywords.filter(
@@ -1248,12 +1892,14 @@ return "Token state initialized correctly"`,
       imports.push('local json = require("json")');
     }
 
+    const detectedPatterns = requirements.detectedPatterns || [];
+
     // Add other potential imports based on patterns
-    if (requirements.detectedPatterns.includes("token-contract")) {
+    if (detectedPatterns.includes("token-contract")) {
       // Token contracts might need additional utilities
     }
 
-    if (requirements.detectedPatterns.includes("dao-governance")) {
+    if (detectedPatterns.includes("dao-governance")) {
       // DAO might need additional utilities
     }
 
@@ -1324,14 +1970,14 @@ end`;
   ): string {
     let stateFields = "initialized = true";
 
-    if (requirements.detectedPatterns.includes("token-contract")) {
+    if ((requirements.detectedPatterns || []).includes("token-contract")) {
       stateFields = `initialized = true,
     ticker = "TOKEN",
     name = "Generated Token",
     balances = {}`;
     }
 
-    if (requirements.detectedPatterns.includes("dao-governance")) {
+    if ((requirements.detectedPatterns || []).includes("dao-governance")) {
       stateFields = `initialized = true,
     proposals = {},
     members = {},
@@ -1342,6 +1988,65 @@ end`;
       "{{stateFields}}",
       stateFields,
     );
+  }
+
+  /**
+   * Get embedded ADP template as fallback
+   */
+  private getEmbeddedADPTemplate(): string {
+    return `-- AO Documentation Protocol (ADP) v1.0 - Info Handler Template
+-- Auto-generated ADP-compliant handler for manual process deployment
+
+-- CUSTOMIZE THESE VALUES FOR YOUR PROCESS
+local PROCESS_NAME = "Custom AO Process"
+local PROCESS_DESCRIPTION = "ADP-compliant process template"
+
+-- DEFINE YOUR HANDLERS HERE
+local PROCESS_HANDLERS = {
+    {
+        action = "Info",
+        pattern = {"Action"},
+        description = "Get process information and handler metadata",
+        category = "core"
+    },
+    {
+        action = "Ping",
+        pattern = {"Action"}, 
+        description = "Test if process is responding",
+        category = "utility"
+    }
+}
+
+-- ADP-COMPLIANT INFO HANDLER
+Handlers.add('Info', Handlers.utils.hasMatchingTag('Action', 'Info'), function(msg)
+    local infoResponse = {
+        Name = PROCESS_NAME,
+        Description = PROCESS_DESCRIPTION,
+        Owner = Owner or ao.env.Process.Owner,
+        ProcessId = ao.id,
+        protocolVersion = "1.0",
+        lastUpdated = os.date("!%Y-%m-%dT%H:%M:%S.000Z"),
+        handlers = PROCESS_HANDLERS,
+        capabilities = {
+            supportsHandlerRegistry = true,
+            supportsTagValidation = true,
+            supportsExamples = true
+        }
+    }
+    
+    ao.send({
+        Target = msg.From,
+        Data = json.encode(infoResponse)
+    })
+end)
+
+-- BASIC PING HANDLER
+Handlers.add('Ping', Handlers.utils.hasMatchingTag('Action', 'Ping'), function(msg)
+    ao.send({
+        Target = msg.From,
+        Data = "pong"
+    })
+end)`;
   }
 
   /**
@@ -1373,16 +2078,135 @@ end`;
   }
 
   /**
+   * Remove existing Info handlers from code to avoid conflicts
+   */
+  private removeExistingInfoHandlers(code: string): string {
+    // Remove old-style info handlers that might conflict
+    return code
+      .replace(/Handlers\.add\(\s*['"']info['"'][\s\S]*?\)\s*\n/gi, "")
+      .replace(/Handlers\.add\(\s*['"']Info['"'][\s\S]*?\)\s*\n/gi, "");
+  }
+
+  /**
    * Select appropriate handler patterns based on requirements
    */
   private selectHandlerPatterns(
     requirements: RequirementAnalysis,
   ): HandlerPattern[] {
     const patterns: HandlerPattern[] = [];
-    const userRequest = requirements.userRequest.toLowerCase();
+    const userRequest = (requirements.userRequest || "").toLowerCase();
+    const detectedPatterns = requirements.detectedPatterns || [];
 
-    // Add basic handler for all requests
-    if (requirements.detectedPatterns.includes("handler")) {
+    // Add functional templates first (highest priority)
+    if (detectedPatterns.includes("calculator")) {
+      if (
+        userRequest.includes("add") ||
+        userRequest.includes("addition") ||
+        userRequest.includes("sum")
+      ) {
+        patterns.push({
+          description: "Calculator addition handler with numeric validation",
+          name: "addition-handler",
+          template: this.templates.calculator.addition,
+          usedPatterns: ["calculator", "handler"],
+        });
+      }
+      if (
+        userRequest.includes("subtract") ||
+        userRequest.includes("subtraction") ||
+        userRequest.includes("difference")
+      ) {
+        patterns.push({
+          description: "Calculator subtraction handler with numeric validation",
+          name: "subtraction-handler",
+          template: this.templates.calculator.subtraction,
+          usedPatterns: ["calculator", "handler"],
+        });
+      }
+      if (
+        userRequest.includes("multiply") ||
+        userRequest.includes("multiplication") ||
+        userRequest.includes("product")
+      ) {
+        patterns.push({
+          description:
+            "Calculator multiplication handler with numeric validation",
+          name: "multiplication-handler",
+          template: this.templates.calculator.multiplication,
+          usedPatterns: ["calculator", "handler"],
+        });
+      }
+      if (
+        userRequest.includes("divide") ||
+        userRequest.includes("division") ||
+        userRequest.includes("quotient")
+      ) {
+        patterns.push({
+          description:
+            "Calculator division handler with zero-division protection",
+          name: "division-handler",
+          template: this.templates.calculator.division,
+          usedPatterns: ["calculator", "handler"],
+        });
+      }
+    }
+
+    if (detectedPatterns.includes("counter")) {
+      patterns.push({
+        description: "Counter increment handler with step support",
+        name: "increment-handler",
+        template: this.templates.counter.increment,
+        usedPatterns: ["counter", "handler", "state-management"],
+      });
+      patterns.push({
+        description: "Counter decrement handler with step support",
+        name: "decrement-handler",
+        template: this.templates.counter.decrement,
+        usedPatterns: ["counter", "handler", "state-management"],
+      });
+      patterns.push({
+        description: "Counter reset handler",
+        name: "reset-handler",
+        template: this.templates.counter.reset,
+        usedPatterns: ["counter", "handler", "state-management"],
+      });
+      patterns.push({
+        description: "Counter current value handler",
+        name: "current-handler",
+        template: this.templates.counter.current,
+        usedPatterns: ["counter", "handler", "state-management"],
+      });
+    }
+
+    if (detectedPatterns.includes("database")) {
+      patterns.push({
+        description: "Database store handler with key validation",
+        name: "store-handler",
+        template: this.templates.database.store,
+        usedPatterns: ["database", "handler", "state-management"],
+      });
+      patterns.push({
+        description: "Database retrieve handler with key validation",
+        name: "retrieve-handler",
+        template: this.templates.database.retrieve,
+        usedPatterns: ["database", "handler", "state-management"],
+      });
+      patterns.push({
+        description: "Database update handler with key validation",
+        name: "update-handler",
+        template: this.templates.database.update,
+        usedPatterns: ["database", "handler", "state-management"],
+      });
+      patterns.push({
+        description: "Database delete handler with key validation",
+        name: "delete-handler",
+        template: this.templates.database.delete,
+        usedPatterns: ["database", "handler", "state-management"],
+      });
+    }
+
+    // Add basic handler only if no functional patterns were found
+    if (patterns.length === 0 && detectedPatterns.includes("handler")) {
       patterns.push({
         description: "Basic message handler with action matching",
         name: "basic-handler",
@@ -1392,7 +2216,7 @@ end`;
     }
 
     // Add token patterns
-    if (requirements.detectedPatterns.includes("token-contract")) {
+    if (detectedPatterns.includes("token-contract")) {
       patterns.push({
         description: "Token balance query handler",
         name: "balance-handler",
@@ -1409,7 +2233,7 @@ end`;
     }
 
     // Add DAO patterns
-    if (requirements.detectedPatterns.includes("dao-governance")) {
+    if (detectedPatterns.includes("dao-governance")) {
       patterns.push({
         description: "DAO proposal creation handler",
         name: "proposal-handler",

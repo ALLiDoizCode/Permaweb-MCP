@@ -33,11 +33,11 @@ describe("SpawnProcessCommand", () => {
     it("should have correct metadata", () => {
       const metadata = (command as any).metadata;
       expect(metadata.name).toBe("spawnProcess");
-      expect(metadata.title).toBe("Spawn AO Process");
+      expect(metadata.title).toBe("Spawn Empty AO Process");
       expect(metadata.readOnlyHint).toBe(false);
       expect(metadata.openWorldHint).toBe(false);
       expect(metadata.description).toContain(
-        "Spawn a new AO process and return its process ID",
+        "Spawn an empty AO process container",
       );
     });
   });
@@ -170,10 +170,12 @@ describe("SpawnProcessCommand", () => {
       const toolDef = command.toToolDefinition(mockContext);
 
       expect(toolDef.name).toBe("spawnProcess");
-      expect(toolDef.description).toContain("Spawn a new AO process");
+      expect(toolDef.description).toContain(
+        "Spawn an empty AO process container",
+      );
       expect(toolDef.annotations?.openWorldHint).toBe(false);
       expect(toolDef.annotations?.readOnlyHint).toBe(false);
-      expect(toolDef.annotations?.title).toBe("Spawn AO Process");
+      expect(toolDef.annotations?.title).toBe("Spawn Empty AO Process");
       expect(typeof toolDef.execute).toBe("function");
     });
 

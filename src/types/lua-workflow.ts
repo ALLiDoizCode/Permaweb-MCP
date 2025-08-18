@@ -7,7 +7,11 @@ import {
  * Represents AO-specific patterns that can be detected in user requirements
  */
 export type AOPattern =
+  | "calculator"
+  | "computation"
+  | "counter"
   | "dao-governance"
+  | "database"
   | "handler"
   | "message-routing"
   | "process-communication"

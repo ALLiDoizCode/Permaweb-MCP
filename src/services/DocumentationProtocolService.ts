@@ -15,7 +15,7 @@ export interface ExtendedInfoResponse {
   capabilities?: {
     supportsExamples: boolean;
     supportsHandlerRegistry: boolean;
-    supportsParameterValidation: boolean;
+    supportsParameterValidation?: boolean; // Optional for backward compatibility
   };
   Denomination?: string;
   Description?: string;
@@ -89,7 +89,7 @@ export const ExtendedInfoResponseSchema = z.object({
     .object({
       supportsExamples: z.boolean(),
       supportsHandlerRegistry: z.boolean(),
-      supportsParameterValidation: z.boolean(),
+      supportsParameterValidation: z.boolean().optional(),
     })
     .optional(),
   Denomination: z.string().optional(),

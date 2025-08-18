@@ -26,12 +26,6 @@ This folder contains the complete technical specifications and documentation for
 - **Audience**: General developers, decision makers, ecosystem participants
 - **Contents**: Problem statement, solution overview, key features, adoption guidance
 
-#### **[ahrp-to-adp-migration.md](./ahrp-to-adp-migration.md)**
-
-- **Purpose**: Migration guide for existing AHRP implementations
-- **Audience**: Current AHRP users, tool maintainers
-- **Contents**: Step-by-step migration, compatibility guarantees, timeline
-
 ## 🎯 **Quick Start Guide**
 
 ### **For Process Developers**
@@ -45,12 +39,6 @@ This folder contains the complete technical specifications and documentation for
 1. Start with the [ADP Specification](./adp-specification.md) for implementation guidelines
 2. Use the detection algorithm to identify ADP-compliant processes
 3. Implement automatic UI generation from handler metadata
-
-### **For Migrating from AHRP**
-
-1. Follow the [Migration Guide](./ahrp-to-adp-migration.md)
-2. Update terminology and documentation references
-3. No code changes required - fully backward compatible
 
 ## 🔧 **Protocol Features**
 
@@ -100,7 +88,6 @@ For first-time readers, we recommend this sequence:
 1. **[Documentation Protocol Overview](./documentation-protocol.md)** - Understand the problem and solution
 2. **[Token Blueprint](./token-blueprint-adp.md)** - See a complete working example
 3. **[ADP Specification](./adp-specification.md)** - Learn the technical details
-4. **[Migration Guide](./ahrp-to-adp-migration.md)** - If migrating from AHRP
 
 ## 📝 **Contributing**
 

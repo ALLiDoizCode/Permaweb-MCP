@@ -5,7 +5,6 @@ import { ExecuteActionCommand } from "./commands/ExecuteActionCommand.js";
 import { GenerateLuaProcessCommand } from "./commands/GenerateLuaProcessCommand.js";
 import { QueryAOProcessMessagesCommand } from "./commands/QueryAOProcessMessagesCommand.js";
 import { RollbackDeploymentCommand } from "./commands/RollbackDeploymentCommand.js";
-import { SendMessageCommand } from "./commands/SendMessageCommand.js";
 import { SpawnProcessCommand } from "./commands/SpawnProcessCommand.js";
 import { ValidateDeploymentCommand } from "./commands/ValidateDeploymentCommand.js";
 
@@ -19,7 +18,6 @@ import { ValidateDeploymentCommand } from "./commands/ValidateDeploymentCommand.
  * **Process Lifecycle Management:**
  * - `SpawnProcessCommand` - Spawn new AO processes with optional template support
  * - `EvalProcessCommand` - Deploy Lua code to processes (handlers, modules) - NOT for messaging
- * - `SendMessageCommand` - Send direct messages to processes with specific actions - SIMPLE messaging
  * - `ExecuteActionCommand` - Send messages to processes using natural language - SMART messaging
  * - `QueryAOProcessMessagesCommand` - Query process message history and communication logs
  * - `ValidateDeploymentCommand` - Validate deployed process functionality
@@ -91,9 +89,8 @@ export class ProcessToolFactory extends BaseToolFactory {
    * The tools are returned in a logical workflow order:
    * 1. SpawnProcessCommand - Process creation
    * 2. EvalProcessCommand - Code evaluation and setup
-   * 3. SendMessageCommand - Direct message sending
-   * 4. ExecuteActionCommand - Smart natural language communication
-   * 5. QueryAOProcessMessagesCommand - Message history and monitoring
+   * 3. ExecuteActionCommand - Smart natural language communication
+   * 4. QueryAOProcessMessagesCommand - Message history and monitoring
    *
    * Each tool is instantiated with the factory's ToolContext, ensuring
    * consistent access to user credentials, embedded templates, and
@@ -111,7 +108,6 @@ export class ProcessToolFactory extends BaseToolFactory {
       ExecuteActionCommand,
       GenerateLuaProcessCommand,
       QueryAOProcessMessagesCommand,
-      SendMessageCommand,
       ValidateDeploymentCommand,
       RollbackDeploymentCommand,
     ];

@@ -18,6 +18,44 @@ import { PermawebDomain } from "./PermawebDocsService.js";
  */
 export class RequirementAnalysisService {
   private readonly aoKeywords = {
+    calculator: [
+      "calculator",
+      "calculate",
+      "compute",
+      "add",
+      "subtract",
+      "multiply",
+      "divide",
+      "math",
+      "arithmetic",
+      "operation",
+      "sum",
+      "difference",
+      "product",
+      "quotient",
+    ],
+    computation: [
+      "computation",
+      "formula",
+      "evaluate",
+      "result",
+      "cache",
+      "algorithm",
+      "process",
+      "transform",
+    ],
+    counter: [
+      "counter",
+      "count",
+      "increment",
+      "decrement",
+      "increase",
+      "decrease",
+      "reset",
+      "current",
+      "value",
+      "track",
+    ],
     daoGovernance: [
       "dao",
       "governance",
@@ -26,6 +64,19 @@ export class RequirementAnalysisService {
       "member",
       "stake",
       "delegate",
+    ],
+    database: [
+      "database",
+      "store",
+      "retrieve",
+      "get",
+      "set",
+      "update",
+      "delete",
+      "record",
+      "key",
+      "value",
+      "crud",
     ],
     handler: [
       "handler",
@@ -83,6 +134,8 @@ export class RequirementAnalysisService {
       "advanced",
       "enterprise",
       "system",
+      "formula",
+      "algorithm",
     ],
     moderate: [
       "moderate",
@@ -91,8 +144,21 @@ export class RequirementAnalysisService {
       "transfer",
       "storage",
       "interaction",
+      "calculator",
+      "database",
+      "computation",
     ],
-    simple: ["simple", "basic", "hello", "ping", "echo", "test"],
+    simple: [
+      "simple",
+      "basic",
+      "hello",
+      "ping",
+      "echo",
+      "test",
+      "counter",
+      "add",
+      "subtract",
+    ],
   };
 
   private readonly domainKeywords: Record<PermawebDomain, string[]> = {
@@ -243,6 +309,27 @@ export class RequirementAnalysisService {
    */
   private detectAOPatterns(request: string): AOPattern[] {
     const patterns: AOPattern[] = [];
+
+    // Functional pattern detection (highest priority)
+    if (
+      this.aoKeywords.calculator.some((keyword) => request.includes(keyword))
+    ) {
+      patterns.push("calculator");
+    }
+
+    if (this.aoKeywords.counter.some((keyword) => request.includes(keyword))) {
+      patterns.push("counter");
+    }
+
+    if (this.aoKeywords.database.some((keyword) => request.includes(keyword))) {
+      patterns.push("database");
+    }
+
+    if (
+      this.aoKeywords.computation.some((keyword) => request.includes(keyword))
+    ) {
+      patterns.push("computation");
+    }
 
     // Handler pattern detection
     if (this.aoKeywords.handler.some((keyword) => request.includes(keyword))) {

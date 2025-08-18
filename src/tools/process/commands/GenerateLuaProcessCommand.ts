@@ -27,11 +27,11 @@ export class GenerateLuaProcessCommand extends ToolCommand<
 > {
   protected metadata: ToolMetadata = {
     description:
-      "Generate AO Lua process code based on natural language requirements with automatic documentation reference. Analyzes user requests, queries relevant Permaweb documentation, and generates production-ready Lua code with comprehensive explanations and best practices. Uses queryPermawebDocs tool internally to understand AO patterns, handler structures, and messaging conventions.",
+      "Generate Lua code for AO processes with documentation-informed best practices. This tool ONLY generates code - it does NOT deploy processes. Use this tool for: 'create AO process code', 'generate AO process code', 'build process handlers'. After code generation, use spawnProcess + evalProcess tools for deployment (NOT aos CLI). Returns structured JSON with generated Lua code, explanations, and ADP compliance validation. For deployment workflow: 1) generateLuaProcess → 2) spawnProcess → 3) evalProcess.",
     name: "generateLuaProcess",
     openWorldHint: false,
     readOnlyHint: true,
-    title: "Generate Lua Process with Documentation",
+    title: "Generate AO Process Code (Code Only - No Deployment)",
   };
 
   protected parametersSchema = z.object({
@@ -74,11 +74,17 @@ export class GenerateLuaProcessCommand extends ToolCommand<
       const workflowResult =
         await this.orchestrationService.orchestrateWorkflow(args.userRequest);
 
+      // Validate ADP compliance of generated code
+      const adpValidation = this.validateADPCompliance(
+        workflowResult.codeResult.generatedCode,
+      );
+
       // Build response based on includeExplanation flag
       const response = {
         success: true,
         timestamp: workflowResult.timestamp.toISOString(),
         workflow: {
+          adpCompliance: adpValidation,
           analysis: {
             complexity: workflowResult.requirements.analysis.complexity,
             confidence: workflowResult.requirements.confidence,
@@ -143,5 +149,85 @@ export class GenerateLuaProcessCommand extends ToolCommand<
         2,
       );
     }
+  }
+
+  /**
+   * Validate ADP compliance of generated Lua code
+   */
+  private validateADPCompliance(generatedCode: string): {
+    checks: {
+      hasCapabilities: boolean;
+      hasHandlerRegistry: boolean;
+      hasInfoHandler: boolean;
+      hasPingHandler: boolean;
+      hasProtocolVersion: boolean;
+    };
+    isCompliant: boolean;
+    warnings: string[];
+  } {
+    const checks = {
+      hasCapabilities: false,
+      hasHandlerRegistry: false,
+      hasInfoHandler: false,
+      hasPingHandler: false,
+      hasProtocolVersion: false,
+    };
+    const warnings: string[] = [];
+
+    // Check for Info handler
+    if (
+      generatedCode.includes("Handlers.add('Info'") ||
+      generatedCode.includes('Handlers.add("Info"')
+    ) {
+      checks.hasInfoHandler = true;
+    } else {
+      warnings.push("Missing Info handler for ADP compliance");
+    }
+
+    // Check for protocol version
+    if (generatedCode.includes('protocolVersion = "1.0"')) {
+      checks.hasProtocolVersion = true;
+    } else {
+      warnings.push("Missing protocolVersion field for ADP compliance");
+    }
+
+    // Check for handler registry
+    if (generatedCode.includes("handlers =") && generatedCode.includes("[")) {
+      checks.hasHandlerRegistry = true;
+    } else {
+      warnings.push("Missing handlers registry for ADP compliance");
+    }
+
+    // Check for capabilities
+    if (
+      generatedCode.includes("capabilities =") &&
+      generatedCode.includes("supportsHandlerRegistry")
+    ) {
+      checks.hasCapabilities = true;
+    } else {
+      warnings.push("Missing capabilities object for ADP compliance");
+    }
+
+    // Check for Ping handler (useful for testing)
+    if (
+      generatedCode.includes("Handlers.add('Ping'") ||
+      generatedCode.includes('Handlers.add("Ping"')
+    ) {
+      checks.hasPingHandler = true;
+    } else {
+      warnings.push("Missing Ping handler - recommended for ADP testing");
+    }
+
+    const isCompliant =
+      checks.hasInfoHandler &&
+      checks.hasProtocolVersion &&
+      checks.hasHandlerRegistry &&
+      checks.hasCapabilities;
+
+    return {
+      checks,
+      isCompliant,
+      warnings,
+    };
   }
 }

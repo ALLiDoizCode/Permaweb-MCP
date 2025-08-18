@@ -80,13 +80,13 @@ Describes a single handler and its capabilities:
 
 #### ExtendedInfoResponse
 
-The complete AHRP-compliant Info response:
+The complete ADP-compliant Info response:
 
 **Standard AO process fields (backward compatible):**
 
 - Name, Ticker, Logo, Description, Denomination, TotalSupply, Owner, ProcessId
 
-**AHRP-specific fields:**
+**ADP-specific fields:**
 
 - **protocolVersion**: "1.0" (protocol version identifier)
 - **lastUpdated**: ISO 8601 timestamp
@@ -97,7 +97,7 @@ The complete AHRP-compliant Info response:
 
 Supported protocol features:
 
-- **supportsHandlerRegistry**: AHRP support flag
+- **supportsHandlerRegistry**: ADP support flag
 - **supportsTagValidation**: Tag validation support
 - **supportsExamples**: Example provision capability
 
@@ -242,7 +242,7 @@ Future protocol versions could:
 ### Basic Process
 
 ```lua
--- Simple ping process with AHRP
+-- Simple ping process with ADP
 Handlers.add('Info', Handlers.utils.hasMatchingTag('Action', 'Info'), function(msg)
     ao.send({
         Target = msg.From,
@@ -268,7 +268,7 @@ end)
 ### Token Process
 
 ```lua
--- Token process with comprehensive AHRP metadata
+-- Token process with comprehensive ADP metadata
 local tokenHandlers = {
     {
         action = "Balance",
@@ -375,17 +375,17 @@ local daoHandlers = {
 
 ### Legacy Process Support
 
-AHRP is fully backward compatible:
+ADP is fully backward compatible:
 
 1. **Legacy Processes**: Continue to work with existing tools
-2. **Legacy Tools**: Can still interact with AHRP processes using standard patterns
-3. **Gradual Migration**: Processes can add AHRP support without breaking changes
-4. **Fallback Mechanisms**: Tools should fallback to embedded templates for legacy processes
+2. **Legacy Tools**: Can still interact with ADP processes using standard patterns
+3. **Gradual Migration**: Processes can add ADP support without breaking changes
+4. **Fallback Mechanisms**: Tools should fall back to embedded templates for legacy processes
 
 ### Migration Strategy
 
-1. **Phase 1**: Add AHRP support to new processes
-2. **Phase 2**: Update existing processes with AHRP metadata
+1. **Phase 1**: Add ADP support to new processes
+2. **Phase 2**: Update existing processes with ADP metadata
 3. **Phase 3**: Deprecate embedded templates in favor of discovery
 4. **Phase 4**: Remove legacy fallbacks (future version)
 

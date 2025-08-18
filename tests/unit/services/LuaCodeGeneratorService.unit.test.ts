@@ -131,7 +131,7 @@ describe("LuaCodeGeneratorService", () => {
 
       // Check for ADP v1.0 compliance
       expect(result.generatedCode).toContain("Info");
-      expect(result.generatedCode).toContain('protocolVersion": "1.0"');
+      expect(result.generatedCode).toContain('protocolVersion = "1.0"');
       expect(result.generatedCode).toContain("ProcessId");
       expect(result.generatedCode).toContain("handlers");
       expect(result.generatedCode).toContain("capabilities");

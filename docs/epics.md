@@ -13,6 +13,7 @@ This document consolidates all epic initiatives for the Permamind project, provi
 5. [AO Process Management Tools Epic](#ao-process-management-tools-epic)
 6. [Human Crypto Keys Performance Optimization Epic - Brownfield Enhancement](#human-crypto-keys-performance-optimization-epic---brownfield-enhancement)
 7. [Lua Process Creation and Documentation Enhancement Epic](#lua-process-creation-and-documentation-enhancement-epic)
+8. [AO Process Communication ADP Migration Epic - Brownfield Enhancement](#ao-process-communication-adp-migration-epic---brownfield-enhancement)
 
 ---
 
@@ -572,6 +573,124 @@ Enable AI agents using the Permamind MCP server to seamlessly create and deploy 
 
 ---
 
+## Epic 8: AO Process Communication ADP Migration Epic - Brownfield Enhancement
+
+### Epic Goal
+
+Migrate Permamind's AO process communication system from fragile markdown parsing to the standardized AO Documentation Protocol (ADP) for reliable, structured process discovery and interaction while simplifying ProcessCommunicationService architecture.
+
+### Epic Description
+
+**Existing System Context:**
+
+- Current functionality: AO process communication through executeAction tool using complex markdown parsing and ProcessCommunicationService with mixed responsibilities for discovery, parsing, validation, and communication
+- Technology stack: TypeScript + FastMCP + AO Connect + existing DocumentationProtocolService with full ADP v1.0 implementation
+- Integration points: ExecuteActionCommand, ProcessCommunicationService, DocumentationProtocolService, existing process communication infrastructure
+
+**Enhancement Details:**
+
+- What's being added/changed: Replace markdown-based process discovery with ADP Info queries, refactor ProcessCommunicationService to separate ADP and legacy communication paths, implement ADP-first architecture with graceful legacy fallback
+- How it integrates: Leverages existing DocumentationProtocolService ADP implementation, maintains backward compatibility with non-ADP processes, simplifies service architecture through clear separation of concerns
+- Success criteria: Reliable process communication using structured ADP data instead of fragile markdown parsing, simplified service architecture, improved error handling, maintained backward compatibility
+
+### Stories
+
+#### Story 8.1: Migrate ExecuteAction Tool to AO Documentation Protocol (ADP)
+
+**User Story:** As a user, I want the executeAction tool to use the AO Documentation Protocol (ADP) for process discovery and communication so that I get reliable, standardized process interaction instead of fragile markdown parsing.
+
+**Acceptance Criteria:**
+
+- executeAction tool queries processes using ADP Info requests to discover capabilities
+- Tool parses ADP-compliant responses using DocumentationProtocolService
+- Tool validates parameters using ADP handler metadata before sending messages
+- Tool generates message tags using ADP-structured handler definitions
+- Tool gracefully falls back to legacy markdown parsing for non-ADP processes
+- Tool caches ADP responses for improved performance
+
+#### Story 8.2: Refactor ProcessCommunicationService Legacy Architecture
+
+**User Story:** As a developer, I want the ProcessCommunicationService to be simplified and modernized so that process communication is more reliable and maintainable with clear separation between ADP and legacy approaches.
+
+**Acceptance Criteria:**
+
+- Simplify ProcessCommunicationService by removing complex markdown parsing logic
+- Create clear separation between ADP-based and legacy process communication paths
+- Reduce service complexity and improve error handling
+- Maintain backward compatibility for existing integrations
+- Improve performance by reducing unnecessary processing overhead
+- Add comprehensive test coverage for refactored service
+
+#### Story 8.3: Enhance GenerateLuaProcess Tool with Domain-Specific Functional Code Generation
+
+**User Story:** As a user requesting specific AO process functionality, I want the generateLuaProcess tool to create proper domain-specific functional code instead of generic templates so that I receive working implementations that match my exact requirements.
+
+**Acceptance Criteria:**
+
+- Generate domain-specific handler code that implements requested functionality (e.g., calculator with addition/subtraction generates actual math operations)
+- Replace generic "Handler" templates with functional, requirement-specific code
+- Improve requirement analysis to detect specific mathematical, business logic, or functional patterns
+- Add domain-specific code templates for common functional requirements (calculator, counter, simple database, etc.)
+- Ensure generated code includes proper parameter validation and error handling for domain-specific operations
+- Maintain ADP compliance and comprehensive handler metadata for all generated functional code
+
+#### Story 8.4: Fix ExecuteAction ADP Integration Issues - Brownfield Fix
+
+**User Story:** As a user, I want the executeAction tool to successfully communicate with deployed AO processes so that I can interact with my processes through natural language instead of receiving "Could not match request to any available handler" errors.
+
+**Acceptance Criteria:**
+
+- executeAction tool successfully discovers handlers from deployed AO processes
+- Natural language requests correctly map to available process handlers
+- Tool can communicate with both ADP-compliant and non-ADP processes
+- Clear error messages when processes don't have requested handlers
+- Process Info queries return proper ADP metadata for discovery
+
+#### Story 8.5: Ensure Generated Processes are ADP-Compliant - Brownfield Fix
+
+**User Story:** As a user creating AO processes via evalProcess, I want my deployed processes to be ADP-compliant so that the executeAction tool can discover and communicate with them successfully.
+
+**Acceptance Criteria:**
+
+- Processes deployed via evalProcess include proper ADP Info handler
+- Info handler returns valid ADP v1.0 compliant metadata structure
+- ADP metadata includes complete handler registry with actions, parameters, descriptions
+- Generated processes include protocolVersion: "1.0" for ADP detection
+- Handler metadata format matches DocumentationProtocolService parsing expectations
+
+### Compatibility Requirements
+
+- [ ] Existing executeAction API remains unchanged for consumers
+- [ ] ADP and legacy processes both supported seamlessly
+- [ ] ProcessCommunicationService interface maintains backward compatibility
+- [ ] No regression in process communication capabilities
+- [ ] Existing process tools continue to work without modification
+
+### Risk Mitigation
+
+- **Primary Risk:** Breaking existing process communication workflows during migration
+- **Mitigation:** Implement ADP-first architecture with robust legacy fallback, comprehensive testing, and phased rollout
+- **Rollback Plan:** Maintain original markdown parsing logic as fallback path, feature flags for ADP vs legacy selection
+
+### Definition of Done
+
+- [x] **Story 8.1**: executeAction tool uses ADP for process discovery with legacy fallback (DONE - but requires debugging)
+- [x] **Story 8.2**: ProcessCommunicationService refactored with clear ADP/legacy separation (DONE)
+- [ ] **Story 8.3**: generateLuaProcess creates domain-specific functional code instead of generic templates
+- [ ] **Story 8.4**: executeAction ADP integration issues resolved - tool successfully communicates with deployed processes
+- [ ] **Story 8.5**: Generated/deployed processes are ADP-compliant and discoverable by executeAction
+- [ ] Parameter validation using ADP metadata implemented and working
+- [ ] Message generation from ADP handler definitions implemented and working
+- [ ] ADP response caching implemented for performance
+- [ ] Legacy fallback maintains full backward compatibility
+- [ ] Comprehensive test coverage for both ADP and legacy paths
+- [ ] Performance improvements documented and measured
+- [ ] **Critical**: Full workflow works - generateLuaProcess → spawnProcess → evalProcess → executeAction
+- [ ] **QA Validation**: Calculator process example works end-to-end with natural language requests
+- [ ] Build passes: npm run build && npm run lint && npm run type-check && npm run test
+
+---
+
 ---
 
 ## Implementation Priorities
@@ -707,10 +826,11 @@ Enable AI agents using the Permamind MCP server to seamlessly create and deploy 
 1. **Epic 1 (MVP Refactoring)** - Foundation simplification
 2. **Epic 3 (Token NLS Migration)** - Enhanced user experience
 3. **Epic 5 (AO Process Management Tools)** - Core infrastructure expansion
-4. **Epic 7 (Lua Process Creation and Documentation Enhancement)** - AI agent development capabilities
-5. **Epic 6 (Human Crypto Keys Performance Optimization)** - Critical performance enhancement
-6. **Epic 2 (BMAD Integration)** - Advanced development capabilities
-7. **Epic 4 (Agent UX Enhancement)** - File-based agents and memory sharing (Stories 4.2, 4.3)
+4. **Epic 8 (AO Process Communication ADP Migration)** - Standardized process communication infrastructure
+5. **Epic 7 (Lua Process Creation and Documentation Enhancement)** - AI agent development capabilities
+6. **Epic 6 (Human Crypto Keys Performance Optimization)** - Critical performance enhancement
+7. **Epic 2 (BMAD Integration)** - Advanced development capabilities
+8. **Epic 4 (Agent UX Enhancement)** - File-based agents and memory sharing (Stories 4.2, 4.3)
 
 ### Quality Gates
 

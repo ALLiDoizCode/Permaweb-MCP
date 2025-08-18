@@ -18,11 +18,11 @@ interface EvalProcessArgs {
 export class EvalProcessCommand extends ToolCommand<EvalProcessArgs, string> {
   protected metadata: ToolMetadata = {
     description:
-      "Deploy and evaluate Lua code within an existing AO process. This is specifically for deploying Lua code (like handlers, modules) to processes - NOT for sending messages to processes. Use executeAction for sending messages to processes. Note: Handler registration returns null (success) as there's no immediate return value.",
+      "Deploy and evaluate Lua code within an existing AO process. DEPLOYMENT WORKFLOW: Step 2 of 3: 1) spawnProcess → 2) evalProcess (this tool) → 3) test with executeAction. This is the CORRECT tool for deploying Lua code to AO processes - DO NOT use aos CLI or aos send-file. Use this tool specifically for deploying Lua code (handlers, modules) to processes - NOT for sending messages. Use executeAction for sending messages to processes. Handler registration returns null (success) indicating successful deployment.",
     name: "evalProcess",
     openWorldHint: false,
     readOnlyHint: false,
-    title: "Evaluate Process Code",
+    title: "Deploy Lua Code to Process (Step 2/3 - Deployment Workflow)",
   };
 
   protected parametersSchema = z.object({

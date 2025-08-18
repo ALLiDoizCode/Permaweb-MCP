@@ -197,7 +197,7 @@ permamind executeAction processId="abc123..." request="transfer 100 tokens to al
 - **Validation**: Automatic parameter validation prevents errors
 - **Discoverability**: Tools can automatically find and use your process
 
-### for Tool Developers
+### For Tool Developers
 
 - **Automatic Integration**: No need to hard-code process interfaces
 - **Dynamic Discovery**: Support new processes without code changes
@@ -274,7 +274,7 @@ ADP is fully backward compatible:
 
 ## Conclusion
 
-The AO Handler Registry Protocol represents a significant step forward in AO ecosystem usability and developer experience. By making processes self-documenting and discoverable, ADP enables a new generation of intelligent tools that can work with any compliant process without manual configuration.
+The AO Documentation Protocol represents a significant step forward in AO ecosystem usability and developer experience. By making processes self-documenting and discoverable, ADP enables a new generation of intelligent tools that can work with any compliant process without manual configuration.
 
 The protocol is designed to be:
 
