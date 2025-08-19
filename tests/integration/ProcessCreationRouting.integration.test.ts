@@ -11,6 +11,20 @@ vi.mock("../../src/relay.js", () => ({
 
 vi.mock("../../src/process.js", () => ({
   createProcess: vi.fn().mockResolvedValue("test-process-id"),
+  read: vi.fn().mockResolvedValue({
+    Data: JSON.stringify({
+      handlers: [
+        {
+          action: "Info",
+          description: "Get process information",
+        },
+      ],
+      lastUpdated: new Date().toISOString(),
+      protocolVersion: "1.0",
+    }),
+    Messages: [],
+  }),
+  send: vi.fn().mockResolvedValue("message-id-123"),
 }));
 
 vi.mock("../../src/services/LuaWorkflowOrchestrationService.js", () => ({

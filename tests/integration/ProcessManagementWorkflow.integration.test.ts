@@ -15,9 +15,23 @@ vi.mock("../../src/relay.js", () => ({
   fetchEvents: vi.fn().mockResolvedValue([]),
 }));
 
-// Mock the process creation function
+// Mock the process functions
 vi.mock("../../src/process.js", () => ({
   createProcess: vi.fn().mockResolvedValue("test-process-id-123"),
+  read: vi.fn().mockResolvedValue({
+    Data: JSON.stringify({
+      handlers: [
+        {
+          action: "Info",
+          description: "Get process information",
+        },
+      ],
+      lastUpdated: new Date().toISOString(),
+      protocolVersion: "1.0",
+    }),
+    Messages: [],
+  }),
+  send: vi.fn().mockResolvedValue("message-id-123"),
 }));
 
 // Mock AO Connect
@@ -176,7 +190,7 @@ describe("Process Management Integration Workflow", () => {
   });
 
   describe("Tool Integration Compatibility", () => {
-    it("should integrate CreateProcessCommand with ExecuteActionCommand", async () => {
+    it("should integrate SpawnProcessCommand with ExecuteActionCommand", async () => {
       // Create process
       const createResult = await spawnProcessCommand.execute({});
       const createResponse = JSON.parse(createResult);
@@ -372,7 +386,7 @@ describe("Process Management Integration Workflow", () => {
       };
 
       // Create commands with BMAD context
-      const bmadCreateCommand = new CreateProcessCommand(bmadWorkflowContext);
+      const bmadCreateCommand = new SpawnProcessCommand(bmadWorkflowContext);
       const bmadEvalCommand = new EvalProcessCommand(bmadWorkflowContext);
 
       // Test process creation in BMAD context
