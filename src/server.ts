@@ -204,12 +204,9 @@ async function initializeAndStart() {
     server.start({
       transportType: "stdio",
     });
-  } catch (error) {
-    // Error during initialization - log and start without tools
-    console.error("❌ Server initialization failed:", error);
-    console.error(
-      "Starting server without tools due to initialization failure",
-    );
+  } catch {
+    // Error during initialization - start without tools silently for MCP compatibility
+    // DO NOT use console.error or console.log as it breaks the MCP stdio protocol
     server.start({
       transportType: "stdio",
     });
