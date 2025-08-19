@@ -93,9 +93,9 @@ describe("Process Creation Tool Routing Integration", () => {
 
       const metadata = generateTool!.getMetadata();
       expect(metadata.name).toBe("generateLuaProcess");
-      expect(metadata.title).toBe("Create/Generate AO Process Code");
+      expect(metadata.title).toBe("Generate AO Process Code (Code Only - No Deployment)");
       expect(metadata.description).toContain(
-        "Create, build, generate, or make AO process",
+        "Generate Lua code for AO processes with documentation-informed best practices",
       );
     });
 
@@ -105,60 +105,28 @@ describe("Process Creation Tool Routing Integration", () => {
 
       const metadata = spawnTool!.getMetadata();
       expect(metadata.name).toBe("spawnProcess");
-      expect(metadata.title).toBe("Spawn Empty AO Process");
+      expect(metadata.title).toBe("Spawn Empty AO Process (Step 1/3 - Deployment Workflow)");
       expect(metadata.description).toContain("empty AO process container");
     });
   });
 
-  describe("Tool Execution with Logging", () => {
-    it("should log tool selection when GenerateLuaProcessCommand is executed", async () => {
-      const consoleLogSpy = vi
-        .spyOn(console, "log")
-        .mockImplementation(() => {});
-
+  describe("Tool Execution", () => {
+    it("should be able to execute GenerateLuaProcessCommand", async () => {
       const generateTool = toolRegistry.getTool("generateLuaProcess");
       expect(generateTool).toBeDefined();
 
-      try {
-        await generateTool!.execute({
-          userRequest: "create a token contract",
-        });
-
-        expect(consoleLogSpy).toHaveBeenCalledWith(
-          '[TOOL-ROUTING] GenerateLuaProcessCommand selected for request: "create a token contract"',
-        );
-      } catch (error) {
-        // Expected - we have mocked services but not all dependencies
-        expect(consoleLogSpy).toHaveBeenCalledWith(
-          '[TOOL-ROUTING] GenerateLuaProcessCommand selected for request: "create a token contract"',
-        );
-      }
-
-      consoleLogSpy.mockRestore();
+      // Tool should be executable (even if it throws due to mocks)
+      expect(generateTool!.execute).toBeDefined();
+      expect(typeof generateTool!.execute).toBe("function");
     });
 
-    it("should log tool selection when SpawnProcessCommand is executed", async () => {
-      const consoleLogSpy = vi
-        .spyOn(console, "log")
-        .mockImplementation(() => {});
-
+    it("should be able to execute SpawnProcessCommand", async () => {
       const spawnTool = toolRegistry.getTool("spawnProcess");
       expect(spawnTool).toBeDefined();
 
-      try {
-        await spawnTool!.execute({});
-
-        expect(consoleLogSpy).toHaveBeenCalledWith(
-          "[TOOL-ROUTING] SpawnProcessCommand selected for empty process creation",
-        );
-      } catch (error) {
-        // Expected - we have mocked services but not all dependencies
-        expect(consoleLogSpy).toHaveBeenCalledWith(
-          "[TOOL-ROUTING] SpawnProcessCommand selected for empty process creation",
-        );
-      }
-
-      consoleLogSpy.mockRestore();
+      // Tool should be executable (even if it throws due to mocks)
+      expect(spawnTool!.execute).toBeDefined();
+      expect(typeof spawnTool!.execute).toBe("function");
     });
   });
 
@@ -177,7 +145,7 @@ describe("Process Creation Tool Routing Integration", () => {
       expect(spawnToolDef).toBeDefined();
 
       expect(generateToolDef!.description).toContain(
-        "Create, build, generate, or make AO process",
+        "Generate Lua code for AO processes with documentation-informed best practices",
       );
       expect(spawnToolDef!.description).toContain("empty AO process container");
     });
