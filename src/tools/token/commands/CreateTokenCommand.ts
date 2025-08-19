@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
+import {
+  AutoSafeToolContext,
+  ToolCommand,
+  ToolContext,
+  ToolMetadata,
+} from "../../core/index.js";
 
 interface CreateTokenArgs {
   adminAddress?: string;
@@ -59,6 +64,10 @@ export class CreateTokenCommand extends ToolCommand<CreateTokenArgs, string> {
 
   async execute(args: CreateTokenArgs): Promise<string> {
     try {
+      // Auto-initialize keypair and hub if needed
+      const safeContext = AutoSafeToolContext.from(this.context);
+      const { keyPair, publicKey } = await safeContext.initializeAll();
+
       // Dynamic import to avoid circular dependencies
       const { generateTokenLua } = await import(
         "../../../services/TokenLuaService.js"
@@ -69,7 +78,7 @@ export class CreateTokenCommand extends ToolCommand<CreateTokenArgs, string> {
 
       // Build token configuration
       const tokenConfig = {
-        adminAddress: args.adminAddress || this.context.publicKey,
+        adminAddress: args.adminAddress || publicKey,
         burnable: args.burnable || false,
         denomination: args.denomination || 12,
         description: args.description,
@@ -85,10 +94,7 @@ export class CreateTokenCommand extends ToolCommand<CreateTokenArgs, string> {
       const tokenLuaCode = generateTokenLua(tokenConfig);
 
       // Create the token process using evalProcess (via tokenService)
-      const processId = await tokenService.create(
-        this.context.keyPair,
-        tokenLuaCode,
-      );
+      const processId = await tokenService.create(keyPair, tokenLuaCode);
 
       // If initial supply specified, mint to creator
       if (args.initialSupply) {
@@ -100,11 +106,11 @@ export class CreateTokenCommand extends ToolCommand<CreateTokenArgs, string> {
 
         const mintTags = [
           { name: "Action", value: "Mint" },
-          { name: "Recipient", value: this.context.publicKey },
+          { name: "Recipient", value: publicKey },
           { name: "Quantity", value: args.initialSupply },
         ];
 
-        await send(this.context.keyPair, processId, mintTags, null);
+        await send(keyPair, processId, mintTags, null);
       }
 
       return JSON.stringify({

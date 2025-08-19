@@ -1,12 +1,8 @@
 import { z } from "zod";
 
-import { defaultProcessService } from "../../../services/DefaultProcessService.js";
+import { ADPProcessCommunicationService } from "../../../services/ADPProcessCommunicationService.js";
 import {
-  processCommunicationService,
-  ProcessDefinition,
-} from "../../../services/ProcessCommunicationService.js";
-import { TokenProcessTemplateService } from "../../../services/TokenProcessTemplateService.js";
-import {
+  AutoSafeToolContext,
   CommonSchemas,
   ToolCommand,
   ToolContext,
@@ -25,14 +21,11 @@ export class ExecuteActionCommand extends ToolCommand<
   string
 > {
   protected metadata: ToolMetadata = {
-    description: `Execute actions on AO processes using natural language. This is the core tool for AO process communication - 
-      provide process documentation in markdown format and make natural language requests. The service automatically parses 
-      process handlers, understands your request, formats AO messages, and executes them. Essential for interactive AO process 
-      communication in the decentralized computing environment.`,
+    description: `Send messages to AO processes using natural language via AO Documentation Protocol (ADP). DEPLOYMENT WORKFLOW: Step 3 of 3: 1) spawnProcess → 2) evalProcess → 3) executeAction (this tool for testing). This tool automatically discovers ADP-compliant process handlers, understands your natural language requests, and executes them. Only works with processes that implement ADP - no legacy fallback.`,
     name: "executeAction",
     openWorldHint: false,
     readOnlyHint: false,
-    title: "Execute Action",
+    title: "Send Messages to ADP Process (Step 3/3 - Testing)",
   };
 
   protected parametersSchema = z.object({
@@ -43,13 +36,13 @@ export class ExecuteActionCommand extends ToolCommand<
       .string()
       .optional()
       .describe(
-        "Markdown documentation describing the process handlers and parameters",
+        "Deprecated: Not used in ADP-only mode. Process capabilities are auto-discovered.",
       ),
     processType: z
       .string()
       .optional()
       .describe(
-        "Optional process type hint (e.g., 'token') to use embedded templates",
+        "Deprecated: Not used in ADP-only mode. Process type is auto-detected.",
       ),
     request: z
       .string()
@@ -60,81 +53,40 @@ export class ExecuteActionCommand extends ToolCommand<
     super();
   }
 
+  /**
+   * Clear ADP cache for a specific process or all processes
+   */
+  static clearADPCache(processId?: string): void {
+    ADPProcessCommunicationService.clearCache(processId);
+  }
+
+  /**
+   * Get ADP cache statistics
+   */
+  static getADPCacheStats(): { entries: string[]; size: number } {
+    return ADPProcessCommunicationService.getCacheStats();
+  }
+
   async execute(args: ExecuteActionArgs): Promise<string> {
     try {
-      let processMarkdown: string | undefined = args.processMarkdown;
+      // Auto-initialize keypair if needed
+      const safeContext = AutoSafeToolContext.from(this.context);
+      const keyPair = await safeContext.getKeyPair();
 
-      // If processMarkdown not provided but processType is, use embedded template
-      if (!processMarkdown && args.processType) {
-        // Check if it's a token process type
-        if (TokenProcessTemplateService.isSupported(args.processType)) {
-          processMarkdown =
-            TokenProcessTemplateService.getTokenTemplateAsMarkdown(
-              args.processId,
-            );
-        } else {
-          // Fallback to default process service for other types
-          const template = defaultProcessService.getDefaultProcess(
-            args.processType,
-            args.processId,
-          );
-          if (template) {
-            // Convert template to markdown format
-            processMarkdown = this.convertTemplateToMarkdown(template);
-          }
-        }
-      }
-
-      // Use ProcessCommunicationService to execute the request
-      const result = await processCommunicationService.executeSmartRequest(
+      // ADP-only execution - no legacy fallback
+      const adpResult = await ADPProcessCommunicationService.executeRequest(
         args.processId,
         args.request,
-        this.context.keyPair,
-        processMarkdown,
-        this.context.embeddedTemplates,
+        keyPair,
       );
 
-      return JSON.stringify(result);
+      return JSON.stringify(adpResult);
     } catch (error) {
       return JSON.stringify({
+        approach: "ADP",
         error: error instanceof Error ? error.message : "Unknown error",
         success: false,
       });
     }
-  }
-
-  private convertTemplateToMarkdown(template: ProcessDefinition): string {
-    // Use the same markdown generation logic as TokenProcessTemplateService
-    // to maintain consistency across template conversions
-    let markdown = `# ${template.name}
-
-`;
-
-    for (const handler of template.handlers) {
-      markdown += `## ${handler.action}
-
-`;
-      markdown += `${handler.description}
-
-`;
-
-      if (handler.parameters && handler.parameters.length > 0) {
-        for (const param of handler.parameters) {
-          const required = param.required ? "required" : "optional";
-          markdown += `- ${param.name}: ${param.description} (${required})\n`;
-        }
-        markdown += "\n";
-      }
-
-      if (handler.examples && handler.examples.length > 0) {
-        markdown += "Examples:\n";
-        for (const example of handler.examples) {
-          markdown += `- ${example}\n`;
-        }
-        markdown += "\n";
-      }
-    }
-
-    return markdown;
   }
 }

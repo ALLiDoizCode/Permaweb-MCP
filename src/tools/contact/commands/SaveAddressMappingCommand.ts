@@ -3,6 +3,7 @@ import { z } from "zod";
 import { event } from "../../../relay.js";
 import { MEMORY_KINDS } from "../../../services/aiMemoryService.js";
 import {
+  AutoSafeToolContext,
   CommonSchemas,
   ToolCommand,
   ToolContext,
@@ -37,6 +38,10 @@ export class SaveAddressMappingCommand extends ToolCommand<
 
   async execute(args: SaveAddressMappingArgs): Promise<string> {
     try {
+      // Auto-initialize keypair and hub if needed
+      const safeContext = AutoSafeToolContext.from(this.context);
+      const { hubId, keyPair, publicKey } = await safeContext.initializeAll();
+
       // Use dedicated contact mapping kind for better filtering
       const tags = [
         { name: "Kind", value: MEMORY_KINDS.CONTACT_MAPPING },
@@ -44,17 +49,13 @@ export class SaveAddressMappingCommand extends ToolCommand<
           name: "Content",
           value: `Contact mapping: name: ${args.name}, address: ${args.address}`,
         },
-        { name: "p", value: this.context.publicKey },
+        { name: "p", value: publicKey },
         { name: "contact_name", value: args.name },
         { name: "contact_address", value: args.address },
         { name: "domain", value: "address-book" },
       ];
 
-      const result = await event(
-        this.context.keyPair,
-        this.context.hubId,
-        tags,
-      );
+      const result = await event(keyPair, hubId, tags);
 
       return JSON.stringify({
         mapping: {

@@ -260,6 +260,11 @@ DEBUG=true                    # Enable debug mode
 MCP_LOG_LEVEL=info           # MCP logging level
 TEST_TIMEOUT=60000           # Test timeout in ms
 
+# Memory Management Configuration
+MEMORY=true                  # Enable automatic memory storage (default: false)
+                             # Set to true to enable automatic memory storage
+                             # When false (default), memories are only stored when explicitly requested
+
 # Context Management Configuration
 ENABLE_AUTO_CONTEXT=true     # Enable automatic context loading on startup (default: true)
 CONTEXT_REFRESH_HOURS=24     # Hours between automatic context refreshes (default: 24)

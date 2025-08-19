@@ -2,7 +2,11 @@
  * Configurable Token Lua Templates
  * Based on AOS_tools minting strategies with full configurability
  * Supports: Basic, Cascade, Double Mint, and Custom minting strategies
+ *
+ * Now includes AO Handler Registry Protocol (AHRP) support for self-documenting processes
  */
+
+import { DocumentationProtocolService } from "./DocumentationProtocolService.js";
 
 export interface BasicMintConfig {
   buyToken: string; // Token used to mint (e.g., wAR address)
@@ -62,8 +66,9 @@ export interface TokenConfig {
 export function generateTokenLua(config: TokenConfig): string {
   const baseTemplate = getBaseTokenTemplate(config);
   const mintingModule = getMintingModule(config);
+  const enhancedTemplate = addHandlerRegistryProtocol(baseTemplate, config);
 
-  return combineTemplates(baseTemplate, mintingModule);
+  return combineTemplates(enhancedTemplate, mintingModule);
 }
 
 /**
@@ -191,6 +196,108 @@ export function validateTokenConfig(config: TokenConfig): {
 }
 
 /**
+ * Add Handler Registry Protocol support to token template
+ */
+function addHandlerRegistryProtocol(
+  baseTemplate: string,
+  config: TokenConfig,
+): string {
+  const standardInfo = {
+    Burnable: config.burnable !== false,
+    Denomination: config.denomination?.toString() || "12",
+    Description: config.description || "",
+    Logo: config.logo || "",
+    MintingStrategy: config.mintingStrategy,
+    Name: config.name,
+    Owner: config.adminAddress || "",
+    ProcessId: "ao.id", // This will be replaced at runtime
+    Ticker: config.ticker,
+    Transferable: config.transferable !== false,
+  };
+
+  const handlerMetadata =
+    DocumentationProtocolService.getTokenHandlerMetadata();
+
+  // Add minting handlers if applicable
+  if (config.mintingStrategy !== "none") {
+    handlerMetadata.push({
+      action: "Mint",
+      category: "core",
+      description:
+        "Mint new tokens (requires payment based on minting strategy)",
+      examples: ["Mint 100 tokens"],
+      parameters: [
+        {
+          description: "Amount to mint (in token units)",
+          examples: ["100", "1000000000000"],
+          name: "Quantity",
+          required: true,
+          type: "string",
+          validation: {
+            pattern: "^[0-9]+$",
+          },
+        },
+        {
+          description: "Recipient address (defaults to sender)",
+          examples: ["vh-NTHVvlKZqRxc8LyyTNok65yQ55a_PJ1zWLb9G2JI"],
+          name: "Target",
+          required: false,
+          type: "address",
+        },
+      ],
+      pattern: ["Action"],
+    });
+  }
+
+  // Add burn handler if enabled
+  if (config.burnable !== false) {
+    handlerMetadata.push({
+      action: "Burn",
+      category: "utility",
+      description: "Burn tokens from sender's balance",
+      examples: ["Burn 100 tokens"],
+      parameters: [
+        {
+          description: "Amount to burn (in token units)",
+          examples: ["100", "1000000000000"],
+          name: "Quantity",
+          required: true,
+          type: "string",
+          validation: {
+            pattern: "^[0-9]+$",
+          },
+        },
+      ],
+      pattern: ["Action"],
+    });
+  }
+
+  const enhancedInfoHandler =
+    DocumentationProtocolService.generateEnhancedInfoHandler(
+      standardInfo,
+      handlerMetadata,
+    );
+
+  // Replace the existing Info handler with the enhanced version
+  const infoHandlerPattern = /Handlers\.add\('Info'[\s\S]*?end\)/;
+
+  if (infoHandlerPattern.test(baseTemplate)) {
+    return baseTemplate.replace(infoHandlerPattern, enhancedInfoHandler.trim());
+  } else {
+    // If no existing Info handler found, add it before the first handler
+    const firstHandlerPattern = /(-- Core Token Handlers\s*\n)/;
+    if (firstHandlerPattern.test(baseTemplate)) {
+      return baseTemplate.replace(
+        firstHandlerPattern,
+        `$1\n${enhancedInfoHandler}\n`,
+      );
+    }
+  }
+
+  return baseTemplate;
+}
+
+/**
  * Combine templates into final Lua script
  */
 function combineTemplates(baseTemplate: string, mintingModule: string): string {
@@ -262,7 +369,7 @@ updateSupplyForAllocations()`
         parseInt(initialSupply) > 0
       ? `-- Auto-allocate initial supply to owner for 'none' strategy
 Balances[ao.id] = "${initialSupply}"
-print("Initial supply of ${initialSupply} allocated to owner: " .. ao.id)`
+-- Initial supply of ${initialSupply} allocated to owner: process ID`
       : "-- No initial allocations"
 }
 

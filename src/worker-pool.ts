@@ -482,8 +482,7 @@ export class WorkerPool {
         this.busyWorkers.size === 0
       ) {
         // System is idle - could implement pre-generation here
-        // For now, just log that we detected idle state
-        console.log("System idle - ready for background pre-generation");
+        // Detected idle state - ready for background pre-generation
       }
 
       this.preGenerationTimer = setTimeout(checkIdle, 10000);

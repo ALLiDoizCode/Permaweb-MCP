@@ -3,6 +3,7 @@ import { z } from "zod";
 import { event } from "../../../relay.js";
 import { MEMORY_KINDS } from "../../../services/aiMemoryService.js";
 import {
+  AutoSafeToolContext,
   CommonSchemas,
   ToolCommand,
   ToolContext,
@@ -49,6 +50,10 @@ export class SaveTokenMappingCommand extends ToolCommand<
 
   async execute(args: SaveTokenMappingArgs): Promise<string> {
     try {
+      // Auto-initialize keypair and hub if needed
+      const safeContext = AutoSafeToolContext.from(this.context);
+      const { hubId, keyPair, publicKey } = await safeContext.initializeAll();
+
       // Transform ticker to uppercase
       const ticker = args.ticker.toUpperCase();
 
@@ -59,18 +64,14 @@ export class SaveTokenMappingCommand extends ToolCommand<
           name: "Content",
           value: `Token mapping: ${args.name} (${ticker}) -> ${args.processId}`,
         },
-        { name: "p", value: this.context.publicKey },
+        { name: "p", value: publicKey },
         { name: "token_name", value: args.name },
         { name: "token_ticker", value: ticker },
         { name: "token_processId", value: args.processId },
         { name: "domain", value: "token-registry" },
       ];
 
-      const result = await event(
-        this.context.keyPair,
-        this.context.hubId,
-        tags,
-      );
+      const result = await event(keyPair, hubId, tags);
 
       return JSON.stringify({
         mapping: {
