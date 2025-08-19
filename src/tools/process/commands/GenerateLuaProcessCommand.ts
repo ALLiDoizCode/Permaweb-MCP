@@ -289,6 +289,44 @@ export class GenerateLuaProcessCommand extends ToolCommand<
   }
 
   /**
+   * Extract validation blocks from handlers text, handling nested braces properly
+   */
+  private extractValidationBlocks(text: string): RegExpMatchArray[] {
+    const matches: RegExpMatchArray[] = [];
+    const regex = /validation\s*=\s*\{/g;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      const startIndex = match.index;
+      const openBraceIndex = startIndex + match[0].length - 1;
+
+      // Find the matching closing brace
+      let braceCount = 1;
+      let currentIndex = openBraceIndex + 1;
+
+      while (currentIndex < text.length && braceCount > 0) {
+        if (text[currentIndex] === "{") {
+          braceCount++;
+        } else if (text[currentIndex] === "}") {
+          braceCount--;
+        }
+        currentIndex++;
+      }
+
+      if (braceCount === 0) {
+        const fullMatch = text.substring(startIndex, currentIndex);
+        // Create a RegExpMatchArray-like object
+        const matchArray = [fullMatch] as RegExpMatchArray;
+        matchArray.index = startIndex;
+        matchArray.input = text;
+        matches.push(matchArray);
+      }
+    }
+
+    return matches;
+  }
+
+  /**
    * Validate ADP compliance of generated Lua code with enhanced parameter checking
    */
   private validateADPCompliance(generatedCode: string): {
@@ -851,17 +889,15 @@ export class GenerateLuaProcessCommand extends ToolCommand<
     let validRules = 0;
 
     const handlersJsonMatch = generatedCode.match(
-      /handlers\s*=\s*\{[\s\S]*?\n\s*\}(?=\s*[,\n]|$)/,
+      /handlers\s*=\s*\{[\s\S]*?\}(?=\s*[,\n]|$)/,
     );
 
     if (handlersJsonMatch) {
       const handlersText = handlersJsonMatch[0];
 
       // Find parameters with validation rules
-      // Use a more robust regex that handles quoted strings properly
-      const validationMatches = [
-        ...handlersText.matchAll(/validation\s*=\s*\{[\s\S]*?\}/g),
-      ];
+      // Use a more robust approach that handles nested braces properly
+      const validationMatches = this.extractValidationBlocks(handlersText);
 
       for (const validationMatch of validationMatches) {
         totalValidationRules++;

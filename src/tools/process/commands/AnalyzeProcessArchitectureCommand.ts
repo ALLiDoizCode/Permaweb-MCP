@@ -431,6 +431,7 @@ Please try again with a refined request.`;
     if (validationReport) {
       result += `## ✅ Architecture Validation\n\n`;
       result += `${validationReport.summary}\n\n`;
+      result += `**Validation Score**: ${Math.round(validationReport.score.overall * 100)}%\n\n`;
 
       if (validationReport.score.overall >= 0.8) {
         result += `🎉 **Excellent**: This architecture aligns well with AO ecosystem patterns!\n\n`;
@@ -530,28 +531,31 @@ Please try again with a refined request.`;
         );
       const codeResult =
         await this.luaWorkflowOrchestrationService.generateLuaCode(
-          documentedRequirements.relevantDocs,
+          documentedRequirements?.relevantDocs || [],
           requirements,
         );
 
       // Extract first 500 characters of generated code as preview
-      const codePreview =
-        codeResult.generatedCode.substring(0, 500) +
-        (codeResult.generatedCode.length > 500 ? "\n-- ... (truncated)" : "");
+      const codePreview = codeResult?.generatedCode
+        ? codeResult.generatedCode.substring(0, 500) +
+          (codeResult.generatedCode.length > 500 ? "\n-- ... (truncated)" : "")
+        : "-- Code preview unavailable";
 
       // Extract handler signatures from the generated code
-      const handlerSignatures = codeResult.handlerPatterns.map(
-        (pattern) =>
-          `Handlers.add('${pattern.name}', function(msg) -- ${pattern.description}`,
-      );
+      const handlerSignatures =
+        codeResult?.handlerPatterns?.map(
+          (pattern) =>
+            `Handlers.add('${pattern.name}', function(msg) -- ${pattern.description}`,
+        ) || [];
 
       // Simple ADP compliance check
       const adpCompliance = {
-        hasHandlerRegistry: codeResult.generatedCode.includes("handlers ="),
-        hasInfoHandler: codeResult.generatedCode.includes(
-          "Handlers.add('Info'",
-        ),
-        isCompliant: codeResult.generatedCode.includes("protocolVersion"),
+        hasHandlerRegistry:
+          codeResult?.generatedCode?.includes("handlers =") || false,
+        hasInfoHandler:
+          codeResult?.generatedCode?.includes("Handlers.add('Info'") || false,
+        isCompliant:
+          codeResult?.generatedCode?.includes("protocolVersion") || false,
       };
 
       return { adpCompliance, codePreview, handlerSignatures };

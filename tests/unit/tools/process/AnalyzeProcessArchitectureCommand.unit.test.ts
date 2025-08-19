@@ -436,6 +436,18 @@ describe("AnalyzeProcessArchitectureCommand", () => {
         ],
       ).mockResolvedValue(mockRecommendation);
 
+      vi.mocked(
+        command["handlerPatternService"]["recommendHandlerStructure"],
+      ).mockResolvedValue({
+        messageFlow: { inbound: [], internal: [], outbound: [] },
+        patterns: [],
+        structure: {
+          primary: [],
+          secondary: [],
+          utility: [],
+        },
+      });
+
       const args = {
         detailedExplanation: false,
         includeValidation: false,
@@ -499,6 +511,18 @@ describe("AnalyzeProcessArchitectureCommand", () => {
           "generateArchitectureRecommendation"
         ],
       ).mockResolvedValue(mockRecommendation);
+
+      vi.mocked(
+        command["handlerPatternService"]["recommendHandlerStructure"],
+      ).mockResolvedValue({
+        messageFlow: { inbound: [], internal: [], outbound: [] },
+        patterns: [],
+        structure: {
+          primary: [],
+          secondary: [],
+          utility: [],
+        },
+      });
 
       const args = {
         detailedExplanation: false,
@@ -645,6 +669,18 @@ end)`,
           "generateArchitectureRecommendation"
         ],
       ).mockResolvedValue(mockRecommendation);
+
+      vi.mocked(
+        command["handlerPatternService"]["recommendHandlerStructure"],
+      ).mockResolvedValue({
+        messageFlow: { inbound: [], internal: [], outbound: [] },
+        patterns: [],
+        structure: {
+          primary: [],
+          secondary: [],
+          utility: [],
+        },
+      });
 
       const args = {
         detailedExplanation: true,
