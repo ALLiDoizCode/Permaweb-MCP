@@ -27,6 +27,6 @@ export default defineConfig({
         singleFork: true, // Prevents test interference
       },
     },
-    testTimeout: 45000, // Increased for MCP client integration tests
+    testTimeout: 30000, // Reduced timeout for faster CI feedback
   },
 });
