@@ -450,14 +450,14 @@ export class GenerateLuaProcessCommand extends ToolCommand<
 
     // Extract the complete handlers section by counting braces to ensure we get the full array
     const handlersStart = generatedCode.indexOf("handlers = {");
-    let handlersJsonMatch: RegExpMatchArray | null = null;
-    
+    let handlersJsonMatch: null | RegExpMatchArray = null;
+
     if (handlersStart !== -1) {
       let braceCount = 0;
       let i = handlersStart + "handlers = ".length;
       let foundStart = false;
       let endPosition = -1;
-      
+
       while (i < generatedCode.length) {
         const char = generatedCode[i];
         if (char === "{") {
@@ -472,9 +472,12 @@ export class GenerateLuaProcessCommand extends ToolCommand<
         }
         i++;
       }
-      
+
       if (endPosition !== -1) {
-        const handlersText = generatedCode.substring(handlersStart, endPosition);
+        const handlersText = generatedCode.substring(
+          handlersStart,
+          endPosition,
+        );
         handlersJsonMatch = [handlersText];
       }
     }
@@ -485,44 +488,49 @@ export class GenerateLuaProcessCommand extends ToolCommand<
       // Parse individual handlers using a simpler approach that splits on handler boundaries
       // First, remove the outer handlers = { ... } wrapper
       const innerHandlersContent = handlersText
-        .replace(/^handlers\s*=\s*\{\s*/, '')
-        .replace(/\s*\}\s*$/, '');
-      
+        .replace(/^handlers\s*=\s*\{\s*/, "")
+        .replace(/\s*\}\s*$/, "");
+
       // Now split handlers by looking for complete { ... } blocks that contain "action ="
-      const handlerObjects: Array<{action: string, text: string}> = [];
-      
+      const handlerObjects: Array<{ action: string; text: string }> = [];
+
       // Split the content and find each handler block
       let currentPos = 0;
       while (currentPos < innerHandlersContent.length) {
         // Find the next opening brace that starts a handler
-        let openBracePos = innerHandlersContent.indexOf('{', currentPos);
+        const openBracePos = innerHandlersContent.indexOf("{", currentPos);
         if (openBracePos === -1) break;
-        
+
         // Count braces to find the matching closing brace
         let braceCount = 1;
         let closeBracePos = openBracePos + 1;
-        
+
         while (closeBracePos < innerHandlersContent.length && braceCount > 0) {
-          if (innerHandlersContent[closeBracePos] === '{') {
+          if (innerHandlersContent[closeBracePos] === "{") {
             braceCount++;
-          } else if (innerHandlersContent[closeBracePos] === '}') {
+          } else if (innerHandlersContent[closeBracePos] === "}") {
             braceCount--;
           }
           closeBracePos++;
         }
-        
+
         if (braceCount === 0) {
-          const handlerText = innerHandlersContent.substring(openBracePos, closeBracePos);
-          
+          const handlerText = innerHandlersContent.substring(
+            openBracePos,
+            closeBracePos,
+          );
+
           // Check if this block contains an action (i.e., it's a handler object)
-          const actionMatch = handlerText.match(/action\s*=\s*["']([^"']+)["']/);
+          const actionMatch = handlerText.match(
+            /action\s*=\s*["']([^"']+)["']/,
+          );
           if (actionMatch) {
             handlerObjects.push({
               action: actionMatch[1],
-              text: handlerText
+              text: handlerText,
             });
           }
-          
+
           currentPos = closeBracePos;
         } else {
           // If we can't find matching braces, move past this position
@@ -533,7 +541,7 @@ export class GenerateLuaProcessCommand extends ToolCommand<
       // Now extract parameters from each complete handler object
       for (const handler of handlerObjects) {
         const paramNames = new Set<string>();
-        
+
         // Look for parameters block within this specific handler
         const parameterBlockMatch = handler.text.match(
           /parameters\s*=\s*\{([\s\S]*?)\}/,
@@ -652,14 +660,14 @@ export class GenerateLuaProcessCommand extends ToolCommand<
     // Check for parameter definitions in the Lua metadata (handlers table)
     // Extract the complete handlers section by counting braces to ensure we get the full array
     const handlersStart = generatedCode.indexOf("handlers = {");
-    let handlersJsonMatch: RegExpMatchArray | null = null;
-    
+    let handlersJsonMatch: null | RegExpMatchArray = null;
+
     if (handlersStart !== -1) {
       let braceCount = 0;
       let i = handlersStart + "handlers = ".length;
       let foundStart = false;
       let endPosition = -1;
-      
+
       while (i < generatedCode.length) {
         const char = generatedCode[i];
         if (char === "{") {
@@ -674,9 +682,12 @@ export class GenerateLuaProcessCommand extends ToolCommand<
         }
         i++;
       }
-      
+
       if (endPosition !== -1) {
-        const handlersText = generatedCode.substring(handlersStart, endPosition);
+        const handlersText = generatedCode.substring(
+          handlersStart,
+          endPosition,
+        );
         handlersJsonMatch = [handlersText];
       }
     }
