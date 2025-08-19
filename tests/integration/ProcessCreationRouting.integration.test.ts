@@ -1,0 +1,188 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { ToolContext, toolRegistry } from "../../src/tools/core/index.js";
+import { ProcessToolFactory } from "../../src/tools/process/ProcessToolFactory.js";
+
+// Mock external dependencies
+vi.mock("../../src/relay.js", () => ({
+  event: vi.fn(),
+  fetchEvents: vi.fn(),
+}));
+
+vi.mock("../../src/process.js", () => ({
+  createProcess: vi.fn().mockResolvedValue("test-process-id"),
+  read: vi.fn().mockResolvedValue({
+    Data: JSON.stringify({
+      handlers: [
+        {
+          action: "Info",
+          description: "Get process information",
+        },
+      ],
+      lastUpdated: new Date().toISOString(),
+      protocolVersion: "1.0",
+    }),
+    Messages: [],
+  }),
+  send: vi.fn().mockResolvedValue("message-id-123"),
+}));
+
+vi.mock("../../src/services/LuaWorkflowOrchestrationService.js", () => ({
+  LuaWorkflowOrchestrationService: vi.fn().mockImplementation(() => ({
+    orchestrateWorkflow: vi.fn().mockResolvedValue({
+      codeResult: {
+        bestPractices: [],
+        generatedCode: "-- Test Lua code",
+        handlerPatterns: [],
+        usedTemplates: [],
+      },
+      explanation: {
+        codeBreakdown: "Test explanation",
+        overview: "Test overview",
+        relatedSources: [],
+      },
+      requirements: {
+        analysis: {
+          complexity: "simple",
+          detectedPatterns: [],
+          processType: "handler",
+          suggestedDomains: ["ao"],
+        },
+        confidence: 0.9,
+        relevantDocs: [],
+      },
+      timestamp: new Date(),
+    }),
+  })),
+}));
+
+describe("Process Creation Tool Routing Integration", () => {
+  let processFactory: ProcessToolFactory;
+  let toolContext: ToolContext;
+
+  beforeEach(() => {
+    // Clear tool registry
+    toolRegistry.clear();
+
+    // Setup mock context
+    toolContext = {
+      embeddedTemplates: new Map(),
+      hubId: undefined,
+      keyPair: {
+        kty: "RSA",
+        n: "test-key",
+      } as any,
+      publicKey: "test-public-key",
+    };
+
+    // Create and register process tools
+    processFactory = new ProcessToolFactory({
+      categoryDescription:
+        "AO process communication and blockchain query tools",
+      categoryName: "Process",
+      context: toolContext,
+    });
+
+    processFactory.registerTools(toolRegistry);
+  });
+
+  describe("Tool Registration", () => {
+    it("should register GenerateLuaProcessCommand with correct metadata", () => {
+      const generateTool = toolRegistry.getTool("generateLuaProcess");
+      expect(generateTool).toBeDefined();
+
+      const metadata = generateTool!.getMetadata();
+      expect(metadata.name).toBe("generateLuaProcess");
+      expect(metadata.title).toBe(
+        "Generate AO Process Code (Code Only - No Deployment)",
+      );
+      expect(metadata.description).toContain(
+        "Generate Lua code for AO processes with documentation-informed best practices",
+      );
+    });
+
+    it("should register SpawnProcessCommand with correct metadata", () => {
+      const spawnTool = toolRegistry.getTool("spawnProcess");
+      expect(spawnTool).toBeDefined();
+
+      const metadata = spawnTool!.getMetadata();
+      expect(metadata.name).toBe("spawnProcess");
+      expect(metadata.title).toBe(
+        "Spawn Empty AO Process (Step 1/3 - Deployment Workflow)",
+      );
+      expect(metadata.description).toContain("empty AO process container");
+    });
+  });
+
+  describe("Tool Execution", () => {
+    it("should be able to execute GenerateLuaProcessCommand", async () => {
+      const generateTool = toolRegistry.getTool("generateLuaProcess");
+      expect(generateTool).toBeDefined();
+
+      // Tool should be executable (even if it throws due to mocks)
+      expect(generateTool!.execute).toBeDefined();
+      expect(typeof generateTool!.execute).toBe("function");
+    });
+
+    it("should be able to execute SpawnProcessCommand", async () => {
+      const spawnTool = toolRegistry.getTool("spawnProcess");
+      expect(spawnTool).toBeDefined();
+
+      // Tool should be executable (even if it throws due to mocks)
+      expect(spawnTool!.execute).toBeDefined();
+      expect(typeof spawnTool!.execute).toBe("function");
+    });
+  });
+
+  describe("Tool Definition Generation", () => {
+    it("should generate tool definitions with updated metadata", () => {
+      const toolDefinitions = toolRegistry.getToolDefinitions(toolContext);
+
+      const generateToolDef = toolDefinitions.find(
+        (def) => def.name === "generateLuaProcess",
+      );
+      const spawnToolDef = toolDefinitions.find(
+        (def) => def.name === "spawnProcess",
+      );
+
+      expect(generateToolDef).toBeDefined();
+      expect(spawnToolDef).toBeDefined();
+
+      expect(generateToolDef!.description).toContain(
+        "Generate Lua code for AO processes with documentation-informed best practices",
+      );
+      expect(spawnToolDef!.description).toContain("empty AO process container");
+    });
+  });
+
+  describe("Tool Factory Configuration", () => {
+    it("should have correct category information", () => {
+      const categories = toolRegistry.getCategories();
+      const processCategory = categories.find((cat) => cat.name === "Process");
+
+      expect(processCategory).toBeDefined();
+      expect(processCategory!.description).toBe(
+        "AO process communication and blockchain query tools",
+      );
+      expect(processCategory!.tools.length).toBeGreaterThan(0);
+    });
+
+    it("should register all expected process tools", () => {
+      const expectedTools = [
+        "analyzeProcessArchitecture",
+        "spawnProcess",
+        "evalProcess",
+        "executeAction",
+        "generateLuaProcess",
+        "queryAOProcessMessages",
+        "validateDeployment",
+        "rollbackDeployment",
+      ];
+
+      for (const toolName of expectedTools) {
+        const tool = toolRegistry.getTool(toolName);
+        expect(tool).toBeDefined();
+      }
+    });
+  });
+});

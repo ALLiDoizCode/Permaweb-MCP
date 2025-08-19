@@ -1,5 +1,6 @@
 import { JWKInterface } from "arweave/node/lib/wallet.js";
 
+import { isMemoryEnabled } from "../constants.js";
 import { type AIMemory, type MemoryType } from "../models/AIMemory.js";
 import {
   type AgentAction,
@@ -630,7 +631,9 @@ export class TeamAgentServiceImpl implements TeamAgentService {
     };
 
     try {
-      await this.memoryService.addEnhanced(signer, hubId, agentMemory);
+      if (isMemoryEnabled()) {
+        await this.memoryService.addEnhanced(signer, hubId, agentMemory);
+      }
       return teamAgent;
     } catch (error) {
       throw new Error(
@@ -991,11 +994,13 @@ export class TeamAgentServiceImpl implements TeamAgentService {
         memoryType: "workflow" as MemoryType,
       };
 
-      await this.memoryService.addEnhanced(
-        {} as JWKInterface,
-        hubId,
-        presetMemory,
-      );
+      if (isMemoryEnabled()) {
+        await this.memoryService.addEnhanced(
+          {} as JWKInterface,
+          hubId,
+          presetMemory,
+        );
+      }
       return presetId;
     } catch (error) {
       throw new Error(
@@ -1096,11 +1101,13 @@ export class TeamAgentServiceImpl implements TeamAgentService {
 
       // Note: In a real implementation, we would update the existing memory
       // For now, we create a new memory entry
-      await this.memoryService.addEnhanced(
-        {} as JWKInterface, // This would need proper signer
-        hubId,
-        agentMemory,
-      );
+      if (isMemoryEnabled()) {
+        await this.memoryService.addEnhanced(
+          {} as JWKInterface, // This would need proper signer
+          hubId,
+          agentMemory,
+        );
+      }
 
       return true;
     } catch (error) {

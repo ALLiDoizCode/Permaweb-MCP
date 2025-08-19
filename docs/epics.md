@@ -12,6 +12,9 @@ This document consolidates all epic initiatives for the Permamind project, provi
 4. [Agent UX Enhancement Epic - Revolutionary Interface](#agent-ux-enhancement-epic---revolutionary-interface)
 5. [AO Process Management Tools Epic](#ao-process-management-tools-epic)
 6. [Human Crypto Keys Performance Optimization Epic - Brownfield Enhancement](#human-crypto-keys-performance-optimization-epic---brownfield-enhancement)
+7. [Lua Process Creation and Documentation Enhancement Epic](#lua-process-creation-and-documentation-enhancement-epic)
+8. [AO Process Communication ADP Migration Epic - Brownfield Enhancement](#ao-process-communication-adp-migration-epic---brownfield-enhancement)
+9. [ADP Parameter Translation Quality Issues Epic - Brownfield Enhancement](#adp-parameter-translation-quality-issues-epic---brownfield-enhancement)
 
 ---
 
@@ -478,6 +481,353 @@ Optimize the `getKeyPairFromSeed` function performance in the Permamind project 
 
 ---
 
+## Epic 7: Lua Process Creation and Documentation Enhancement Epic
+
+### Epic Goal
+
+Enable AI agents using the Permamind MCP server to seamlessly create and deploy functional Lua processes for AO by implementing intelligent workflow integration between existing comprehensive AO/Lua documentation and process creation tools, providing guided Lua code generation and deployment workflows.
+
+### Epic Description
+
+**Existing System Context:**
+
+- Current functionality: queryPermawebDocs provides comprehensive AO/Lua knowledge (90 documents, 36,805 words) including handler patterns, process architecture, and Lua tutorials; createProcess and evalProcess tools handle process spawning and code evaluation; but AI agents lack integrated workflows connecting documentation knowledge to practical Lua code generation and deployment
+- Technology stack: FastMCP + TypeScript + AO Connect + existing ProcessToolFactory + comprehensive AO documentation system
+- Integration points: queryPermawebDocs tool with extensive AO knowledge base, createProcess/evalProcess tools, ProcessToolFactory infrastructure
+
+**Enhancement Details:**
+
+- What's being added/changed: Intelligent workflow integration that connects queryPermawebDocs knowledge to createProcess/evalProcess workflows, enabling AI agents to automatically query relevant documentation, generate appropriate Lua code based on user requirements, create processes, and deploy functional handlers using existing tools
+- How it integrates: Creates workflow orchestration between existing tools without duplicating knowledge, adds Lua code generation capabilities informed by documentation patterns, enhances createProcess with template-guided workflows
+- Success criteria: AI agents can understand user requirements, query relevant AO documentation automatically, generate proper Lua processes with handlers and message routing, and deploy functional AO applications through seamless tool integration
+
+### Stories
+
+#### Story 7.1: Create Intelligent Documentation-to-Code Workflow Integration
+
+**User Story:** As an AI agent using Permamind, I want to automatically connect user requirements to relevant AO documentation and then generate appropriate Lua code, so that I can create functional processes without manual documentation lookup.
+
+**Acceptance Criteria:**
+
+- Create workflow orchestration that automatically queries queryPermawebDocs based on user requirements (e.g., "token contract" → queries token-related AO docs)
+- Implement requirement analysis that maps user descriptions to relevant documentation domains and patterns
+- Develop Lua code generation templates informed by documentation examples (handlers, message routing, state management)
+- Enable automatic documentation reference lookup during code generation for best practices
+- Integrate code explanation that references specific documentation sources used
+- Ensure generated code follows patterns found in comprehensive AO documentation (90 documents, 36,805 words)
+
+#### Story 7.2: Implement Guided Lua Process Creation and Deployment Workflow
+
+**User Story:** As a user working with an AI agent, I want to describe what kind of AO process I need in natural language and have the system automatically generate, deploy, and test the appropriate Lua implementation using existing tools.
+
+**Acceptance Criteria:**
+
+- Integrate createProcess tool with documentation-informed Lua generation from Story 7.1
+- Implement end-to-end workflow: requirement analysis → documentation query → code generation → process creation → code evaluation → testing
+- Generate proper Lua process structure with handlers following AO documentation patterns (Handlers.add with name, match, handle functions)
+- Provide process templates for common use cases informed by existing AO tutorials (tokens, chatrooms, bots, games)
+- Include automatic validation using evalProcess to test generated handlers before final deployment
+- Enable iterative refinement: test → analyze results → query additional documentation → refine code → re-test
+- Support deployment verification through message testing and state inspection
+
+#### Story 7.3: Create Process Architecture Decision Support System
+
+**User Story:** As an AI agent creating AO processes, I want to automatically recommend optimal process architectures by analyzing user requirements against AO documentation patterns, so that I can suggest appropriate handler designs, state management, and message routing strategies.
+
+**Acceptance Criteria:**
+
+- Implement architectural pattern analysis using existing AO documentation (process examples from 90 documents)
+- Create decision logic that maps user requirements to documented architecture patterns (stateless vs stateful, single vs multi-process)
+- Provide handler pattern recommendations based on documented message types and workflow examples
+- Include state management guidance derived from AO tutorials and process examples
+- Suggest error handling patterns found in existing AO documentation and best practices
+- Enable architecture validation by querying documentation for similar implemented patterns
+- Support architecture explanation with references to specific documentation sources and examples
+
+#### Story 7.4: Implement Seamless Tool Integration for Complete Process Development
+
+**User Story:** As a user, I want the AI agent to seamlessly orchestrate all available tools (documentation queries, process creation, code evaluation) so that describing my process needs results in a functional, tested, and deployed AO process.
+
+**Acceptance Criteria:**
+
+- Create workflow orchestration that seamlessly connects queryPermawebDocs → createProcess → evalProcess → testing
+- Enable automatic tool selection based on workflow stage (documentation lookup → code generation → process spawning → code deployment)
+- Implement state management across tools to maintain context throughout the process creation workflow
+- Support both guided creation (step-by-step with user feedback) and autonomous creation (fully automated from requirements)
+- Provide comprehensive process creation reporting that includes documentation sources used, code generated, processes created, and test results
+- Enable workflow resumption and iterative improvement (modify requirements → re-query docs → regenerate code → re-deploy)
+- Support workflow templates for common process types that leverage documented AO patterns
+
+### Definition of Done
+
+- [ ] Intelligent workflow integration connecting queryPermawebDocs to createProcess/evalProcess workflows implemented
+- [ ] Automatic documentation query system based on user requirements implemented
+- [ ] Lua code generation templates informed by existing AO documentation patterns (handlers, message routing, state management)
+- [ ] End-to-end guided process creation workflow: requirement analysis → documentation query → code generation → process creation → evaluation → testing
+- [ ] Process architecture decision support system using documented AO patterns and examples
+- [ ] Seamless tool orchestration enabling complete process development through natural language requests
+- [ ] AI agents can automatically generate, deploy, and test functional AO processes from user descriptions
+- [ ] Generated processes follow documented AO best practices (Handlers.add patterns, proper message handling, state management)
+- [ ] Workflow supports iterative development with automatic documentation reference and code refinement
+- [ ] Integration maintains full compatibility with existing queryPermawebDocs, createProcess, and evalProcess functionality
+- [ ] Build passes: npm run build && npm run lint && npm run type-check && npm run test
+
+---
+
+## Epic 8: AO Process Communication ADP Migration Epic - Brownfield Enhancement
+
+### Epic Goal
+
+Migrate Permamind's AO process communication system from fragile markdown parsing to the standardized AO Documentation Protocol (ADP) for reliable, structured process discovery and interaction while simplifying ProcessCommunicationService architecture.
+
+### Epic Description
+
+**Existing System Context:**
+
+- Current functionality: AO process communication through executeAction tool using complex markdown parsing and ProcessCommunicationService with mixed responsibilities for discovery, parsing, validation, and communication
+- Technology stack: TypeScript + FastMCP + AO Connect + existing DocumentationProtocolService with full ADP v1.0 implementation
+- Integration points: ExecuteActionCommand, ProcessCommunicationService, DocumentationProtocolService, existing process communication infrastructure
+
+**Enhancement Details:**
+
+- What's being added/changed: Replace markdown-based process discovery with ADP Info queries, refactor ProcessCommunicationService to separate ADP and legacy communication paths, implement ADP-first architecture with graceful legacy fallback
+- How it integrates: Leverages existing DocumentationProtocolService ADP implementation, maintains backward compatibility with non-ADP processes, simplifies service architecture through clear separation of concerns
+- Success criteria: Reliable process communication using structured ADP data instead of fragile markdown parsing, simplified service architecture, improved error handling, maintained backward compatibility
+
+### Stories
+
+#### Story 8.1: Migrate ExecuteAction Tool to AO Documentation Protocol (ADP)
+
+**User Story:** As a user, I want the executeAction tool to use the AO Documentation Protocol (ADP) for process discovery and communication so that I get reliable, standardized process interaction instead of fragile markdown parsing.
+
+**Acceptance Criteria:**
+
+- executeAction tool queries processes using ADP Info requests to discover capabilities
+- Tool parses ADP-compliant responses using DocumentationProtocolService
+- Tool validates parameters using ADP handler metadata before sending messages
+- Tool generates message tags using ADP-structured handler definitions
+- Tool gracefully falls back to legacy markdown parsing for non-ADP processes
+- Tool caches ADP responses for improved performance
+
+#### Story 8.2: Refactor ProcessCommunicationService Legacy Architecture
+
+**User Story:** As a developer, I want the ProcessCommunicationService to be simplified and modernized so that process communication is more reliable and maintainable with clear separation between ADP and legacy approaches.
+
+**Acceptance Criteria:**
+
+- Simplify ProcessCommunicationService by removing complex markdown parsing logic
+- Create clear separation between ADP-based and legacy process communication paths
+- Reduce service complexity and improve error handling
+- Maintain backward compatibility for existing integrations
+- Improve performance by reducing unnecessary processing overhead
+- Add comprehensive test coverage for refactored service
+
+#### Story 8.3: Enhance GenerateLuaProcess Tool with Domain-Specific Functional Code Generation
+
+**User Story:** As a user requesting specific AO process functionality, I want the generateLuaProcess tool to create proper domain-specific functional code instead of generic templates so that I receive working implementations that match my exact requirements.
+
+**Acceptance Criteria:**
+
+- Generate domain-specific handler code that implements requested functionality (e.g., calculator with addition/subtraction generates actual math operations)
+- Replace generic "Handler" templates with functional, requirement-specific code
+- Improve requirement analysis to detect specific mathematical, business logic, or functional patterns
+- Add domain-specific code templates for common functional requirements (calculator, counter, simple database, etc.)
+- Ensure generated code includes proper parameter validation and error handling for domain-specific operations
+- Maintain ADP compliance and comprehensive handler metadata for all generated functional code
+
+#### Story 8.4: Fix ExecuteAction ADP Integration Issues - Brownfield Fix
+
+**User Story:** As a user, I want the executeAction tool to successfully communicate with deployed AO processes so that I can interact with my processes through natural language instead of receiving "Could not match request to any available handler" errors.
+
+**Acceptance Criteria:**
+
+- executeAction tool successfully discovers handlers from deployed AO processes
+- Natural language requests correctly map to available process handlers
+- Tool can communicate with both ADP-compliant and non-ADP processes
+- Clear error messages when processes don't have requested handlers
+- Process Info queries return proper ADP metadata for discovery
+
+#### Story 8.5: Ensure Generated Processes are ADP-Compliant - Brownfield Fix
+
+**User Story:** As a user creating AO processes via evalProcess, I want my deployed processes to be ADP-compliant so that the executeAction tool can discover and communicate with them successfully.
+
+**Acceptance Criteria:**
+
+- Processes deployed via evalProcess include proper ADP Info handler
+- Info handler returns valid ADP v1.0 compliant metadata structure
+- ADP metadata includes complete handler registry with actions, parameters, descriptions
+- Generated processes include protocolVersion: "1.0" for ADP detection
+- Handler metadata format matches DocumentationProtocolService parsing expectations
+
+### Compatibility Requirements
+
+- [ ] Existing executeAction API remains unchanged for consumers
+- [ ] ADP and legacy processes both supported seamlessly
+- [ ] ProcessCommunicationService interface maintains backward compatibility
+- [ ] No regression in process communication capabilities
+- [ ] Existing process tools continue to work without modification
+
+### Risk Mitigation
+
+- **Primary Risk:** Breaking existing process communication workflows during migration
+- **Mitigation:** Implement ADP-first architecture with robust legacy fallback, comprehensive testing, and phased rollout
+- **Rollback Plan:** Maintain original markdown parsing logic as fallback path, feature flags for ADP vs legacy selection
+
+### Definition of Done
+
+- [x] **Story 8.1**: executeAction tool uses ADP for process discovery with legacy fallback (DONE - but requires debugging)
+- [x] **Story 8.2**: ProcessCommunicationService refactored with clear ADP/legacy separation (DONE)
+- [ ] **Story 8.3**: generateLuaProcess creates domain-specific functional code instead of generic templates
+- [ ] **Story 8.4**: executeAction ADP integration issues resolved - tool successfully communicates with deployed processes
+- [ ] **Story 8.5**: Generated/deployed processes are ADP-compliant and discoverable by executeAction
+- [ ] Parameter validation using ADP metadata implemented and working
+- [ ] Message generation from ADP handler definitions implemented and working
+- [ ] ADP response caching implemented for performance
+- [ ] Legacy fallback maintains full backward compatibility
+- [ ] Comprehensive test coverage for both ADP and legacy paths
+- [ ] Performance improvements documented and measured
+- [ ] **Critical**: Full workflow works - generateLuaProcess → spawnProcess → evalProcess → executeAction
+- [ ] **QA Validation**: Calculator process example works end-to-end with natural language requests
+- [ ] Build passes: npm run build && npm run lint && npm run type-check && npm run test
+
+---
+
+## Epic 9: ADP Parameter Translation Quality Issues Epic - Brownfield Enhancement
+
+### Epic Goal
+
+Fix critical quality issues in ADP (AO Documentation Protocol) parameter translation system to ensure reliable natural language to AO process communication, eliminating parameter parsing failures and providing robust error handling for process interactions.
+
+### Epic Description
+
+**Existing System Context:**
+
+- Current functionality: executeAction tool uses ADP system for natural language to AO process communication, but parameter translation layer frequently fails to map natural language requests to proper AO message tag structures
+- Technology stack: TypeScript + FastMCP + AO Connect + existing ADPProcessCommunicationService + DocumentationProtocolService
+- Integration points: ExecuteActionCommand, ADPProcessCommunicationService, parameter extraction logic, tag generation for AO messaging
+
+**Enhancement Details:**
+
+- What's being added/changed: Fix parameter translation failures, improve natural language processing for AO message tag generation, add comprehensive parameter validation and logging, implement fallback mechanisms for parsing failures
+- How it integrates: Enhances existing ADPProcessCommunicationService without breaking API contracts, improves parameter extraction reliability, adds debugging capabilities to identify translation failures
+- Success criteria: Natural language requests like "Add 5 and 3" correctly map to AO process tags (A=5, B=3), elimination of "Invalid input" errors from proper processes, consistent behavior across different operation types
+
+### Stories
+
+#### Story 9.1: Fix Parameter Extraction and Translation Logic
+
+**User Story:** As a user of the executeAction tool, I want my natural language requests to be correctly translated into AO process parameters so that mathematical and operational commands work reliably without parameter parsing errors.
+
+**Acceptance Criteria:**
+
+- Fix parameter extraction logic to correctly parse natural language patterns (e.g., "Add 5 and 3" → A=5, B=3)
+- Implement robust pattern matching for mathematical operations, assignments, and common process interactions
+- Add comprehensive unit tests for parameter extraction with various natural language formats
+- Ensure extracted parameters are properly validated before message generation
+- Support multiple parameter formats and flexible natural language variations
+- Fix inconsistent default value handling that causes unexpected results (e.g., subtraction returning "1234")
+
+#### Story 9.2: Implement Parameter Validation and Error Handling
+
+**User Story:** As a developer debugging AO process communication, I want comprehensive logging and validation of parameter translation so that I can identify and fix communication failures quickly.
+
+**Acceptance Criteria:**
+
+- Add detailed logging for each step of parameter translation: raw request → extracted parameters → generated tags
+- Implement parameter validation middleware that catches translation failures before sending messages
+- Provide clear, actionable error messages when parameter extraction fails
+- Add contract testing to ensure parameter formats match process handler expectations
+- Implement retry mechanisms for failed parameter extractions with alternative parsing strategies
+- Create debugging tools to validate parameter translation against known process schemas
+
+#### Story 9.3: Design Fallback Mechanisms and Alternative Input Methods
+
+**User Story:** As a user experiencing parameter translation failures, I want the system to have fallback mechanisms so that I can still interact with processes even when natural language parsing fails.
+
+**Acceptance Criteria:**
+
+- Implement fallback parameter parsing using message Data field when tag-based extraction fails
+- Support direct parameter specification format as backup (e.g., "A=5 B=3" when "5 and 3" fails)
+- Add alternative input methods for complex parameter structures
+- Implement graceful degradation when natural language processing encounters unknown patterns
+- Provide user guidance for alternative input formats when automatic translation fails
+- Create process-specific parameter format detection based on ADP metadata
+
+#### Story 9.4: Fix Tool Integration - analyzeProcessArchitecture Should Use generateLuaProcess
+
+**User Story:** As a developer using Permamind tools, I want analyzeProcessArchitecture to integrate with generateLuaProcess so that architectural recommendations are consistent with actual code generation capabilities.
+
+**Acceptance Criteria:**
+
+- analyzeProcessArchitecture imports and uses LuaWorkflowOrchestrationService for consistent analysis
+- Architectural analysis leverages the same requirement analysis as code generation
+- Recommendations include actual code samples from generateLuaProcess
+- Both tools use consistent complexity assessment and pattern detection
+- Service consolidation removes duplicate analysis logic between architecture services
+- Enhanced output includes preview of generated code structure and actual handler signatures
+
+#### Story 9.5: Fix Missing ADP Parameter Definitions in Generated Code
+
+**User Story:** As a developer using AO processes, I want generated Lua code to include complete ADP parameter definitions so that processes are truly self-documenting and ADP-compliant.
+
+**Acceptance Criteria:**
+
+- Extract parameter usage from generated Lua handler code (msg.Tags.A, msg.Tags.B patterns)
+- Identify parameter types (string, number, boolean, address) from code usage
+- Determine required vs optional parameters based on validation patterns
+- Include parameters array in all handler definitions in ADP metadata
+- Follow ADP v1.0 parameter specification format with validation rules
+- Update Info handler generation to populate parameter metadata dynamically
+
+#### Story 9.6: Enhanced ADP Compliance Validation with Parameter Checking
+
+**User Story:** As a developer generating AO processes, I want comprehensive ADP compliance validation that includes parameter definitions so that I can ensure my processes are fully ADP-compliant and self-documenting.
+
+**Acceptance Criteria:**
+
+- Check that all handlers with parameters have parameters array defined in ADP metadata
+- Validate parameter objects have required fields: name, type, required, description
+- Ensure parameter types are valid ADP types: string, number, boolean, address, json
+- Cross-reference parameters used in Lua code vs declared in ADP metadata
+- Warn when code uses parameters not declared in metadata or vice versa
+- Provide detailed validation reports with specific suggestions for fixing failures
+
+### Compatibility Requirements
+
+- [ ] Existing executeAction API remains unchanged for consumers
+- [ ] ADPProcessCommunicationService interface maintains backward compatibility
+- [ ] No regression in successful parameter translations
+- [ ] ADP and legacy process communication continue to work
+- [ ] DocumentationProtocolService integration preserved
+
+### Risk Mitigation
+
+- **Primary Risk:** Breaking existing working parameter translations during fix implementation
+- **Mitigation:** Comprehensive testing of existing successful cases, feature flags for new parameter extraction logic, extensive unit test coverage
+- **Rollback Plan:** Maintain original parameter extraction logic as fallback, ability to disable new translation improvements via configuration
+
+### Definition of Done
+
+- [ ] Story 9.1: Parameter extraction logic fixed with comprehensive test coverage for natural language patterns
+- [ ] Story 9.2: Parameter validation and error handling implemented with detailed logging and debugging capabilities
+- [ ] Story 9.3: Fallback mechanisms and alternative input methods implemented and tested
+- [ ] Story 9.4: analyzeProcessArchitecture integrates with generateLuaProcess for consistent architectural recommendations
+- [ ] Story 9.5: Generated Lua code includes complete ADP parameter definitions in handler metadata
+- [ ] Story 9.6: Enhanced ADP compliance validation includes parameter definition checking and cross-referencing
+- [ ] Natural language requests like "Add 5 and 3" correctly generate tags A=5, B=3 for calculator processes
+- [ ] Elimination of "Invalid input" errors when proper numeric values are provided in natural language
+- [ ] Consistent behavior across all mathematical and operational request types
+- [ ] Parameter translation failures provide clear error messages with suggested alternatives
+- [ ] analyzeProcessArchitecture and generateLuaProcess use shared services and provide consistent guidance
+- [ ] Generated processes have complete ADP parameter definitions that match actual code usage
+- [ ] ADP validation catches parameter definition issues and provides actionable feedback
+- [ ] No regression in existing successful parameter extractions or process communication
+- [ ] Comprehensive unit and integration test coverage for all parameter translation scenarios
+- [ ] QA validation confirms end-to-end calculator process communication works with natural language
+- [ ] Build passes: npm run build && npm run lint && npm run type-check && npm run test
+
+---
+
 ---
 
 ## Implementation Priorities
@@ -517,7 +867,14 @@ Optimize the `getKeyPairFromSeed` function performance in the Permamind project 
 3. Integrate with existing ProcessToolFactory and infrastructure
 4. Enable complete AO development lifecycle management
 
-### Phase 6: Performance Optimization (Human Crypto Keys Enhancement)
+### Phase 6: Lua Process Creation Enhancement (Documentation-Driven Development)
+
+1. Enhance documentation tools with comprehensive AO/Lua development knowledge
+2. Create intelligent Lua process creation workflow with template integration
+3. Implement process architecture guidance system
+4. Integrate documentation-driven process creation for AI agents
+
+### Phase 7: Performance Optimization (Human Crypto Keys Enhancement)
 
 1. Implement memory and disk caching system for key generation
 2. Create worker thread architecture for non-blocking key generation
@@ -606,9 +963,12 @@ Optimize the `getKeyPairFromSeed` function performance in the Permamind project 
 1. **Epic 1 (MVP Refactoring)** - Foundation simplification
 2. **Epic 3 (Token NLS Migration)** - Enhanced user experience
 3. **Epic 5 (AO Process Management Tools)** - Core infrastructure expansion
-4. **Epic 6 (Human Crypto Keys Performance Optimization)** - Critical performance enhancement
-5. **Epic 2 (BMAD Integration)** - Advanced development capabilities
-6. **Epic 4 (Agent UX Enhancement)** - File-based agents and memory sharing (Stories 4.2, 4.3)
+4. **Epic 8 (AO Process Communication ADP Migration)** - Standardized process communication infrastructure
+5. **Epic 9 (ADP Parameter Translation Quality Issues)** - Critical bug fixes for process communication
+6. **Epic 7 (Lua Process Creation and Documentation Enhancement)** - AI agent development capabilities
+7. **Epic 6 (Human Crypto Keys Performance Optimization)** - Critical performance enhancement
+8. **Epic 2 (BMAD Integration)** - Advanced development capabilities
+9. **Epic 4 (Agent UX Enhancement)** - File-based agents and memory sharing (Stories 4.2, 4.3)
 
 ### Quality Gates
 

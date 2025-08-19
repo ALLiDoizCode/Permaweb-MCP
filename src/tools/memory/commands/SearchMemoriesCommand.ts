@@ -37,7 +37,7 @@ export class SearchMemoriesCommand extends ToolCommand<
   ): Promise<string> {
     try {
       const memories = await hubService.search(
-        context.hubId,
+        context.hubId!,
         args.search,
         MEMORY_KIND,
       );

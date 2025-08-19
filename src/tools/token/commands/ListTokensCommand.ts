@@ -2,7 +2,12 @@ import { z } from "zod";
 
 import { fetchEvents } from "../../../relay.js";
 import { MEMORY_KINDS } from "../../../services/aiMemoryService.js";
-import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
+import {
+  AutoSafeToolContext,
+  ToolCommand,
+  ToolContext,
+  ToolMetadata,
+} from "../../core/index.js";
 
 export class ListTokensCommand extends ToolCommand<
   Record<string, never>,
@@ -25,13 +30,17 @@ export class ListTokensCommand extends ToolCommand<
 
   async execute(): Promise<string> {
     try {
+      // Auto-initialize keypair and hub if needed
+      const safeContext = AutoSafeToolContext.from(this.context);
+      const { hubId } = await safeContext.initializeAll();
+
       // Use dedicated kind for efficient filtering
       const filter = {
         kinds: [MEMORY_KINDS.TOKEN_MAPPING],
         //limit: 100
       };
       const _filters = JSON.stringify([filter]);
-      const events = await fetchEvents(this.context.hubId, _filters);
+      const events = await fetchEvents(hubId, _filters);
       return JSON.stringify(events);
     } catch (error) {
       return JSON.stringify({

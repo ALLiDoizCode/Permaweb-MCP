@@ -42,7 +42,7 @@ describe("ExecuteActionCommand", () => {
       const metadata = command.getMetadata();
       expect(metadata.name).toBe("executeAction");
       expect(metadata.title).toBe("Execute Action");
-      expect(metadata.description).toContain("Execute actions on AO processes");
+      expect(metadata.description).toContain("Send messages to AO processes");
       expect(metadata.openWorldHint).toBe(false);
       expect(metadata.readOnlyHint).toBe(false);
     });
@@ -104,7 +104,14 @@ describe("ExecuteActionCommand", () => {
         undefined,
       );
 
-      expect(result).toBe(JSON.stringify(mockResponse));
+      expect(JSON.parse(result)).toEqual(
+        expect.objectContaining({
+          approach: "legacy", // New field from refactored architecture
+          data: mockResponse.data,
+          handlerUsed: mockResponse.handlerUsed,
+          success: mockResponse.success,
+        }),
+      );
     });
 
     it("should execute request with token processType", async () => {
@@ -134,7 +141,14 @@ describe("ExecuteActionCommand", () => {
         undefined,
       );
 
-      expect(result).toBe(JSON.stringify(mockResponse));
+      expect(JSON.parse(result)).toEqual(
+        expect.objectContaining({
+          approach: "legacy", // New field from refactored architecture
+          data: mockResponse.data,
+          handlerUsed: mockResponse.handlerUsed,
+          success: mockResponse.success,
+        }),
+      );
     });
 
     it("should handle token transfer requests", async () => {
@@ -164,7 +178,14 @@ describe("ExecuteActionCommand", () => {
         undefined,
       );
 
-      expect(result).toBe(JSON.stringify(mockResponse));
+      expect(JSON.parse(result)).toEqual(
+        expect.objectContaining({
+          approach: "legacy", // New field from refactored architecture
+          data: mockResponse.data,
+          handlerUsed: mockResponse.handlerUsed,
+          success: mockResponse.success,
+        }),
+      );
     });
 
     it("should handle token info requests", async () => {
@@ -198,7 +219,14 @@ describe("ExecuteActionCommand", () => {
         undefined,
       );
 
-      expect(result).toBe(JSON.stringify(mockResponse));
+      expect(JSON.parse(result)).toEqual(
+        expect.objectContaining({
+          approach: "legacy", // New field from refactored architecture
+          data: mockResponse.data,
+          handlerUsed: mockResponse.handlerUsed,
+          success: mockResponse.success,
+        }),
+      );
     });
 
     it("should handle errors gracefully", async () => {

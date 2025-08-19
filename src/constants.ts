@@ -69,6 +69,10 @@ export function formatNumber(num: number) {
   return num.toLocaleString();
 }
 
+export function isMemoryEnabled(): boolean {
+  return process.env.MEMORY === "true";
+}
+
 //Y3EMIurCZKqO8Dm_86dsbdHNdwM86Yswk7v4hsGp45I Hello test
 
 // Cache Configuration

@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
+import {
+  AutoSafeToolContext,
+  ToolCommand,
+  ToolContext,
+  ToolMetadata,
+} from "../../core/index.js";
 import { resolveAddress, resolveToken } from "../utils/TokenResolver.js";
 
 interface MintTokenArgs {
@@ -36,14 +41,15 @@ export class MintTokenCommand extends ToolCommand<MintTokenArgs, string> {
 
   async execute(args: MintTokenArgs): Promise<string> {
     try {
+      // Auto-initialize keypair and hub if needed
+      const safeContext = AutoSafeToolContext.from(this.context);
+      const { hubId, keyPair } = await safeContext.initializeAll();
+
       // Dynamic import to avoid circular dependencies
       const { send } = await import("../../../process.js");
 
       // Resolve token processId if needed
-      const tokenResolution = await resolveToken(
-        args.processId,
-        this.context.hubId,
-      );
+      const tokenResolution = await resolveToken(args.processId, hubId);
       if (!tokenResolution.resolved) {
         return JSON.stringify({
           error: "Token resolution failed",
@@ -68,10 +74,7 @@ export class MintTokenCommand extends ToolCommand<MintTokenArgs, string> {
       const processId = tokenResolution.value!;
 
       // Resolve recipient address
-      const addressResolution = await resolveAddress(
-        args.recipient,
-        this.context.hubId,
-      );
+      const addressResolution = await resolveAddress(args.recipient, hubId);
       if (!addressResolution.resolved) {
         return JSON.stringify({
           error: "Recipient address resolution failed",
@@ -102,7 +105,7 @@ export class MintTokenCommand extends ToolCommand<MintTokenArgs, string> {
         { name: "Quantity", value: args.quantity },
       ];
 
-      const result = await send(this.context.keyPair, processId, tags, null);
+      const result = await send(keyPair, processId, tags, null);
 
       return JSON.stringify({
         message: `Mint request sent: ${args.quantity} tokens to ${recipient}`,

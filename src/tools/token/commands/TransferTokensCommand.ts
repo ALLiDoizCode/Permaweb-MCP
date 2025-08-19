@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import {
+  AutoSafeToolContext,
   CommonSchemas,
   ToolCommand,
   ToolContext,
@@ -53,14 +54,15 @@ export class TransferTokensCommand extends ToolCommand<
 
   async execute(args: TransferTokensArgs): Promise<string> {
     try {
+      // Auto-initialize context if needed
+      const autoContext = AutoSafeToolContext.from(this.context);
+      const { hubId, keyPair, publicKey } = await autoContext.initializeAll();
+
       // Dynamic import to avoid circular dependencies
       const { read, send } = await import("../../../process.js");
 
       // Resolve token processId if needed
-      const tokenResolution = await resolveToken(
-        args.processId,
-        this.context.hubId,
-      );
+      const tokenResolution = await resolveToken(args.processId, hubId);
       if (!tokenResolution.resolved) {
         return JSON.stringify({
           error: "Token resolution failed",
@@ -85,10 +87,7 @@ export class TransferTokensCommand extends ToolCommand<
       const processId = tokenResolution.value!;
 
       // Resolve recipient address if needed
-      const addressResolution = await resolveAddress(
-        args.recipient,
-        this.context.hubId,
-      );
+      const addressResolution = await resolveAddress(args.recipient, hubId);
       if (!addressResolution.resolved) {
         return JSON.stringify({
           error: "Recipient resolution failed",
@@ -142,7 +141,7 @@ export class TransferTokensCommand extends ToolCommand<
       // First check current balance
       const balanceResult = await read(processId, [
         { name: "Action", value: "Balance" },
-        { name: "Target", value: this.context.publicKey },
+        { name: "Target", value: publicKey },
       ]);
 
       // Then attempt transfer
@@ -152,7 +151,7 @@ export class TransferTokensCommand extends ToolCommand<
         { name: "Quantity", value: actualQuantity },
       ];
 
-      const result = await send(this.context.keyPair, processId, tags, null);
+      const result = await send(keyPair, processId, tags, null);
 
       return JSON.stringify({
         balance: balanceResult?.Data ? JSON.parse(balanceResult.Data) : null,

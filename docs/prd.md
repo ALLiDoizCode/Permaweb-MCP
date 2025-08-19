@@ -119,21 +119,23 @@ MVP succeeds when users can:
 
 ## Future Enhancement: Agent UX Revolution
 
-The MVP provides the foundation for revolutionary agent collaboration features:
+The MVP + BMad integration provides the foundation for revolutionary agent collaboration features:
 
 ### Post-MVP Vision
 
 - **Claude Desktop**: Project conversations with agent role names (PM, Dev, UX) automatically activate specialist agents
 - **Claude Code**: File-based agent detection with persistent `.bmad/` project state
 - **Unified Intelligence**: Single Permamind hub enables cross-agent context sharing and team collaboration
+- **Permaweb Development**: Complete agentic development platform for the permanent web
 
 ### MVP Foundation Enables
 
 - **Memory System**: Essential for agent context sharing and handoffs
 - **AO Integration**: Required for persistent agent state and workflow coordination
 - **MCP Architecture**: Framework for expanding into agent orchestration tools
+- **BMad Integration**: Proven development methodology for complex project orchestration
 
-The 3-3-3 MVP establishes the core infrastructure that will power collaborative AI teams in future releases.
+The 3-3-3 MVP establishes the core infrastructure that will power collaborative AI teams and comprehensive Permaweb development in future releases.
 
 ---
 

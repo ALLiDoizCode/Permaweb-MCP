@@ -1,0 +1,64 @@
+schema: 1
+story: "8.4"
+story_title: "Fix ExecuteAction ADP Integration Issues - Brownfield Fix"
+gate: CONCERNS
+status_reason: "Core functionality working but test infrastructure reliability needs improvement, plus code duplication was found and refactored"
+reviewer: "Quinn (Test Architect)"
+updated: "2024-01-18T13:15:00Z"
+
+top_issues:
+  - issue: "Integration tests have excessive network dependencies causing timeouts and CI/CD reliability issues"
+    severity: medium
+    suggested_owner: dev
+    refs: ["tests/integration/ExecuteActionADPIntegration.integration.test.ts"]
+  - issue: "Process ID validation missing - accepts invalid formats causing Buffer creation errors"
+    severity: medium
+    suggested_owner: dev
+    refs: ["src/services/ADPProcessCommunicationService.ts"]
+  - issue: "Major code duplication (300+ lines) between ExecuteActionCommand and ADPProcessCommunicationService"
+    severity: high
+    status: fixed
+    refs: ["src/tools/process/commands/ExecuteActionCommand.ts"]
+
+waiver: { active: false }
+
+quality_score: 70
+expires: "2024-02-01T13:15:00Z"
+
+evidence:
+  tests_reviewed: 25
+  risks_identified: 3
+  trace:
+    ac_covered: [1, 2, 3, 5, 6, 7, 8, 9, 10]
+    ac_gaps: [4, 11, 12, 13, 14]
+
+nfr_validation:
+  security:
+    status: CONCERNS
+    notes: "Process ID validation missing, GraphQL queries could expose patterns, no rate limiting on ADP discovery"
+  performance:
+    status: PASS
+    notes: "ADP cache with 1-hour TTL appropriate, GraphQL queries properly filtered, reasonable timeouts"
+  reliability:
+    status: CONCERNS
+    notes: "Integration tests dependent on live network calls, causing timeouts and unreliable CI/CD"
+  maintainability:
+    status: PASS
+    notes: "Code duplication removed during review, clean separation of concerns, proper error handling"
+
+recommendations:
+  immediate:
+    - action: "Add process ID format validation (43-character Arweave IDs)"
+      refs: ["src/services/ADPProcessCommunicationService.ts:74"]
+    - action: "Reduce integration test network dependencies with mock AO processes"
+      refs:
+        ["tests/integration/ExecuteActionADPIntegration.integration.test.ts"]
+    - action: "Update File List to reflect ExecuteActionCommand.ts refactoring"
+      refs: ["docs/stories/8.4.story.md"]
+  future:
+    - action: "Add rate limiting for ADP discovery calls"
+      refs: ["src/services/ADPProcessCommunicationService.ts"]
+    - action: "Consider extracting natural language processing to utility service"
+      refs: ["src/services/ADPProcessCommunicationService.ts:226-354"]
+    - action: "Add performance monitoring for ADP discovery latency"
+      refs: ["src/services/ADPProcessCommunicationService.ts:62-104"]
