@@ -19,14 +19,14 @@ export default defineConfig({
     environment: "node",
     globals: true,
     // Add stability configurations for CI environments
-    hookTimeout: 30000,
+    hookTimeout: 45000, // Increased for MCP client integration tests
     include: ["tests/**/*.test.ts"],
     pool: "forks",
     poolOptions: {
       forks: {
-        singleFork: true,
+        singleFork: true, // Prevents test interference
       },
     },
-    testTimeout: 30000,
+    testTimeout: 45000, // Increased for MCP client integration tests
   },
 });

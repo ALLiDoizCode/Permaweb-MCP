@@ -65,8 +65,37 @@ export const AR_Token = "xU9zFkq3X2ZQ6olwNVvr1vUWIjc3kXTWr7xKQD6dh10";
 export const AO_Token = "0syT13r0s0tgPmIed95bJnuSqaD29HQNN8D3ElLSrsc";
 export const BazarUCM = "U3TjJAZWJjlWBB4KAXSHKzuky81jtyh0zqH8rUL4Wd0";
 
+// Transport Mode Configuration
+export type TransportMode = "httpStream" | "sse" | "stdio";
+
 export function formatNumber(num: number) {
   return num.toLocaleString();
+}
+
+export function getTestTransportConfig() {
+  const mode = getTransportMode();
+  const portString = process.env.TEST_TRANSPORT_PORT || "3000";
+  const port = isNaN(parseInt(portString, 10))
+    ? 3000
+    : parseInt(portString, 10);
+  const endpoint = process.env.TEST_TRANSPORT_ENDPOINT || "/mcp";
+
+  return {
+    endpoint,
+    mode,
+    port,
+  };
+}
+
+export function getTransportMode(): TransportMode {
+  const mode = process.env.TEST_TRANSPORT?.toLowerCase();
+  if (mode === "sse") {
+    return "sse";
+  }
+  if (mode === "httpstream") {
+    return "httpStream";
+  }
+  return "stdio"; // Default to stdio for backward compatibility
 }
 
 export function isMemoryEnabled(): boolean {
@@ -90,3 +119,29 @@ export const DEFAULT_MAX_QUEUE_SIZE = 50; // Maximum number of queued requests
 export const DEFAULT_WORKER_TIMEOUT_MS = 30000; // 30 second timeout per worker task
 export const DEFAULT_ENABLE_PRE_GENERATION = false; // Background pre-generation disabled by default
 export const DEFAULT_PRE_GENERATION_IDLE_THRESHOLD_MS = 60000; // 1 minute idle threshold
+
+// Load Network Storage Configuration
+export function getLoadNetworkAccessKey(): string {
+  const accessKey = process.env.LOAD_NETWORK_ACCESS_KEY;
+  if (!accessKey) {
+    throw new Error(
+      "LOAD_NETWORK_ACCESS_KEY environment variable is required for Load Network storage operations",
+    );
+  }
+  return accessKey;
+}
+
+export function getLoadNetworkBucketName(): string {
+  return process.env.LOAD_NETWORK_BUCKET_NAME || "permamind-storage";
+}
+
+export function getLoadNetworkMaxFileSize(): number {
+  const maxSize = process.env.LOAD_NETWORK_MAX_FILE_SIZE;
+  return maxSize ? parseInt(maxSize, 10) : 100 * 1024 * 1024; // 100MB default
+}
+
+export const LOAD_NETWORK_S3_CONFIG = {
+  endpoint: "https://s3.load.rs",
+  forcePathStyle: true,
+  region: "eu-west-2",
+} as const;

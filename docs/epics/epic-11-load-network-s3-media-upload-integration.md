@@ -50,11 +50,13 @@ export class LoadNetworkStorageService {
 
   constructor() {
     this.s3Client = new S3Client({
+      region: "eu-west-2",
       endpoint: "https://s3-node-0.load.network/~s3@1.0",
       credentials: {
         accessKeyId: process.env.LOAD_NETWORK_ACCESS_KEY || "",
-        secretAccessKey: process.env.LOAD_NETWORK_SECRET_KEY || "",
+        secretAccessKey: "", // Load Network requires empty secret key
       },
+      forcePathStyle: true, // Required for Load Network compatibility
     });
   }
 
@@ -88,11 +90,11 @@ export class LoadNetworkStorageService {
 
 **Technical Tasks:**
 
-- [ ] Install AWS S3 SDK: `npm install @aws-sdk/client-s3`
+- [x] Install AWS S3 SDK: `npm install @aws-sdk/client-s3` (already installed)
 - [ ] Create `src/services/LoadNetworkStorageService.ts`
-- [ ] Implement S3Client configuration with Load Network endpoint
+- [ ] Implement S3Client configuration with Load Network endpoint (region: eu-west-2, forcePathStyle: true)
+- [ ] Configure Load Network-specific authentication (accessKeyId only, empty secretAccessKey)
 - [ ] Add bucket management methods (createBucket, listBuckets, deleteBucket)
-- [ ] Implement environment variable configuration for access keys
 - [ ] Create comprehensive error handling and retry logic
 - [ ] Write unit tests with S3Client mocking
 - [ ] Add service documentation with usage examples
@@ -142,6 +144,22 @@ export class LoadNetworkStorageService {
 
 **Technical Tasks:**
 
+- [ ] Create MediaReference interface for media file metadata:
+
+```typescript
+export interface MediaReference {
+  fileId: string; // Unique identifier for the file
+  fileName: string; // Original file name
+  mimeType: string; // MIME type (e.g., 'image/png')
+  size: number; // File size in bytes
+  storageType: "temporal" | "permanent"; // Storage tier
+  uploadDate: string; // ISO timestamp of upload
+  url: string; // Access URL for the file
+  checksum?: string; // Optional integrity checksum
+}
+```
+
+- [ ] Extend MemoryContext interface to include mediaReferences field
 - [ ] Extend AIMemory interface to include mediaReferences field
 - [ ] Update AIMemoryService to handle media metadata
 - [ ] Implement media reference validation in memory storage
@@ -165,12 +183,21 @@ export class LoadNetworkStorageService {
 
 External dependency on Load Network S3 service availability affecting core Permamind functionality
 
+### Load Network-Specific Risks
+
+- **Beta Service Dependency**: Load Network S3 is in beta with potential service changes
+- **Regional Limitation**: eu-west-2 region only - no failover regions available
+- **Storage Capacity**: Current ~300TB storage space constraint
+- **Authentication Model**: Unique access-key-only auth pattern different from standard S3
+
 ### Mitigation Strategy
 
 - Service will gracefully degrade with fallback error messages
 - Media upload is optional functionality that doesn't break existing features
 - Comprehensive error handling with clear user feedback
 - Service can be disabled via feature flag if needed
+- Regional constraints documented for users
+- File size validation prevents storage quota issues
 
 ### Rollback Plan
 
@@ -219,7 +246,7 @@ External dependency on Load Network S3 service availability affecting core Perma
 ```bash
 # Load Network S3 Configuration
 LOAD_NETWORK_ACCESS_KEY=your_load_network_access_key
-LOAD_NETWORK_SECRET_KEY=your_load_network_secret_key
+# Note: LOAD_NETWORK_SECRET_KEY not needed - Load Network uses access key only
 LOAD_NETWORK_BUCKET_NAME=permamind-media  # Optional, default bucket
 
 # Media Upload Configuration

@@ -1,8 +1,11 @@
+import { MediaReference } from "./MediaReference.js";
 import { Memory } from "./Memory.js";
 
 export interface AIMemory extends Memory {
   context: MemoryContext;
   importance: number; // 0-1 relevance score
+  /** Optional media file references attached to this memory */
+  mediaReferences?: MediaReference[];
   memoryType: MemoryType;
   metadata: MemoryMetadata;
   reasoning?: ReasoningTrace;
@@ -61,6 +64,8 @@ export interface MemoryAnalytics {
 export interface MemoryContext {
   chunkIndex?: number;
   domain?: string;
+  /** Optional media file references within the context */
+  mediaReferences?: MediaReference[];
   relatedMemories?: string[];
   section?: string;
   sessionId?: string;
@@ -122,10 +127,16 @@ export type RelationshipType =
 
 export interface SearchFilters {
   domain?: string;
+  /** Filter memories that have media attachments */
+  hasMedia?: boolean;
   importanceThreshold?: number;
+  /** Filter by media file type (MIME type or category like 'image', 'document') */
+  mediaType?: string;
   memoryType?: MemoryType;
   relatedTo?: string;
   sessionId?: string;
+  /** Filter by storage type for media files */
+  storageType?: "permanent" | "temporal";
   timeRange?: {
     end: string;
     start: string;

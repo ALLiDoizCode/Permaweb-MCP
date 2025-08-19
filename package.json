@@ -29,8 +29,10 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "test:mcp-client": "NODE_ENV=test vitest run tests/integration/mcp-client-integration.integration.test.ts --testTimeout=60000",
+    "test:integration": "NODE_ENV=test vitest run tests/integration/ --testTimeout=60000",
     "audit": "npm audit --audit-level moderate",
-    "ci:quality": "npm run lint && npm run type-check && npm run build",
+    "ci:quality": "npm run lint && npm run type-check && npm run build && npm run test:coverage",
     "prepublishOnly": "npm run type-check && npm run build",
     "postpublish": "npm run test:install",
     "test:install": "npm pack --dry-run",
@@ -68,7 +70,10 @@
     "npm": ">=9.0.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.864.0",
+    "@aws-sdk/s3-request-presigner": "^3.864.0",
     "@permaweb/aoconnect": "^0.0.85",
+    "@types/mime-types": "^3.0.1",
     "arweave": "^1.15.7",
     "bip39-web-crypto": "^4.0.1",
     "chalk": "^5.4.1",
@@ -76,6 +81,7 @@
     "fastmcp": "^1.27.3",
     "human-crypto-keys": "^0.1.4",
     "lodash": "^4.17.21",
+    "mime-types": "^3.0.1",
     "yaml": "^2.8.0",
     "zod": "^3.24.4"
   },
@@ -98,6 +104,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.26.0",
+    "@modelcontextprotocol/sdk": "^1.17.3",
     "@tsconfig/node22": "^22.0.1",
     "@types/human-crypto-keys": "^0.1.3",
     "@types/node": "^24.0.3",

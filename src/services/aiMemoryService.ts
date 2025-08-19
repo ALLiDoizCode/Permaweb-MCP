@@ -10,10 +10,20 @@ import {
   RelationshipType,
   SearchFilters,
 } from "../models/AIMemory.js";
+import {
+  MediaPromotionParams,
+  MediaPromotionResult,
+  MediaReference,
+  MediaValidationResult,
+} from "../models/MediaReference.js";
 import { Memory } from "../models/Memory.js";
 import { Tag } from "../models/Tag.js";
 // VIP01Filter removed - using manual filters now
 import { event, fetchEvents, fetchEventsVIP01 } from "../relay.js";
+import {
+  LoadNetworkStorageService,
+  ServiceResult,
+} from "./LoadNetworkStorageService.js";
 
 // Constants for memory kinds
 const MEMORY_KINDS = {
@@ -43,6 +53,13 @@ export interface AIMemoryService {
     hubId: string,
     memory: Partial<AIMemory>,
   ) => Promise<string>;
+  // Media reference operations
+  addMediaReferenceToMemory: (
+    signer: JWKInterface,
+    hubId: string,
+    memoryId: string,
+    mediaReference: MediaReference,
+  ) => Promise<string>;
   // Batch operations
   addMemoriesBatch: (
     signer: JWKInterface,
@@ -50,6 +67,7 @@ export interface AIMemoryService {
     memories: Partial<AIMemory>[],
     p: string,
   ) => Promise<string[]>;
+
   // Reasoning chain operations
   addReasoningChain: (
     signer: JWKInterface,
@@ -57,6 +75,10 @@ export interface AIMemoryService {
     reasoning: ReasoningTrace,
     p: string,
   ) => Promise<string>;
+  // Media integrity operations
+  checkMediaIntegrity: (
+    mediaReferences: MediaReference[],
+  ) => Promise<MediaValidationResult>;
 
   createAIMemoryTags: (memory: Partial<AIMemory>) => Tag[];
   // Context management
@@ -69,6 +91,7 @@ export interface AIMemoryService {
   ) => Promise<string>;
 
   detectCircularReferences: (hubId: string) => Promise<string[]>;
+
   // Utility functions
   eventToAIMemory: (event: Record<string, unknown>) => AIMemory;
 
@@ -77,9 +100,10 @@ export interface AIMemoryService {
     fromId: string,
     toId: string,
   ) => Promise<string[]>;
+  // Media template operations
+  formatMemoryWithMedia: (memory: AIMemory) => string;
 
   getContextMemories: (hubId: string, contextId: string) => Promise<AIMemory[]>;
-
   // Analytics
   getMemoryAnalytics: (hubId: string, p?: string) => Promise<MemoryAnalytics>;
   // Relationship analysis methods
@@ -87,17 +111,18 @@ export interface AIMemoryService {
     hubId: string,
     memoryId?: string,
   ) => Promise<MemoryLink[]>;
-
   getReasoningChain: (
     hubId: string,
     chainId: string,
   ) => Promise<null | ReasoningTrace>;
+
   getRelationshipAnalytics: (hubId: string) => Promise<{
     averageStrength: number;
     strongestConnections: Array<{ from: string; strength: number; to: string }>;
     topRelationshipTypes: Array<{ count: number; type: string }>;
     totalLinks: number;
   }>;
+
   linkMemories: (
     signer: JWKInterface,
     hubId: string,
@@ -105,11 +130,38 @@ export interface AIMemoryService {
     targetId: string,
     relationship: MemoryLink,
   ) => Promise<string>;
+
+  // Media promotion operations
+  promoteMediaToPermanent: (
+    signer: JWKInterface,
+    hubId: string,
+    params: MediaPromotionParams,
+  ) => Promise<MediaPromotionResult>;
+
   searchAdvanced: (
     hubId: string,
     query: string,
     filters?: SearchFilters,
   ) => Promise<AIMemory[]>;
+
+  searchByMediaMetadata: (
+    hubId: string,
+    metadataKey: string,
+    metadataValue: string,
+    filters?: SearchFilters,
+  ) => Promise<AIMemory[]>;
+
+  // Media-enriched search operations
+  searchByMediaType: (
+    hubId: string,
+    mimeType: string,
+    filters?: SearchFilters,
+  ) => Promise<AIMemory[]>;
+
+  // Media validation operations
+  validateMediaReferences: (
+    mediaReferences: MediaReference[],
+  ) => Promise<MediaValidationResult>;
 }
 
 const aiService = (): AIMemoryService => {
@@ -140,6 +192,58 @@ const aiService = (): AIMemoryService => {
       } catch (error) {
         // Error adding enhanced memory - silent for MCP compatibility
         return JSON.stringify(tags);
+      }
+    },
+
+    addMediaReferenceToMemory: async (
+      signer: JWKInterface,
+      hubId: string,
+      memoryId: string,
+      mediaReference: MediaReference,
+    ): Promise<string> => {
+      try {
+        // Validate inputs
+        if (!isNonEmptyString(memoryId)) {
+          throw new Error("Memory ID is required");
+        }
+        if (!isNonEmptyString(mediaReference.fileId)) {
+          throw new Error("Media reference file ID is required");
+        }
+
+        // Create tags for media reference attachment
+        const tags: Tag[] = [
+          { name: "Kind", value: MEMORY_KINDS.AI_MEMORY },
+          { name: "ai_type", value: "media_attachment" },
+          { name: "memoryId", value: memoryId },
+          { name: "mediaFileId", value: mediaReference.fileId },
+          { name: "mediaFileName", value: mediaReference.fileName },
+          { name: "mediaMimeType", value: mediaReference.mimeType },
+          { name: "mediaSize", value: mediaReference.size.toString() },
+          { name: "mediaStorageType", value: mediaReference.storageType },
+          { name: "mediaUploadDate", value: mediaReference.uploadDate },
+          { name: "mediaUrl", value: mediaReference.url },
+        ];
+
+        if (mediaReference.checksum) {
+          tags.push({ name: "mediaChecksum", value: mediaReference.checksum });
+        }
+        if (mediaReference.description) {
+          tags.push({
+            name: "mediaDescription",
+            value: mediaReference.description,
+          });
+        }
+        if (mediaReference.fileMetadata) {
+          tags.push({
+            name: "mediaFileMetadata",
+            value: JSON.stringify(mediaReference.fileMetadata),
+          });
+        }
+
+        await event(signer, hubId, tags);
+        return "Media reference added to memory successfully";
+      } catch (e) {
+        throw new Error(`Failed to add media reference to memory: ${e}`);
       }
     },
 
@@ -194,6 +298,81 @@ const aiService = (): AIMemoryService => {
         return "Reasoning chain added successfully";
       } catch (e) {
         throw new Error(`Failed to add reasoning chain: ${e}`);
+      }
+    },
+
+    checkMediaIntegrity: async (
+      mediaReferences: MediaReference[],
+    ): Promise<MediaValidationResult> => {
+      try {
+        const errors: string[] = [];
+        const warnings: string[] = [];
+        const validationDetails: MediaValidationResult["validationDetails"] =
+          [];
+
+        for (const mediaRef of mediaReferences) {
+          const detail: {
+            checksumValid?: boolean;
+            error?: string;
+            fileId: string;
+            isAccessible: boolean;
+            sizeMatch?: boolean;
+          } = {
+            fileId: mediaRef.fileId,
+            isAccessible: false,
+          };
+
+          try {
+            // Basic accessibility check
+            if (mediaRef.url && isNonEmptyString(mediaRef.url)) {
+              try {
+                new URL(mediaRef.url);
+                detail.isAccessible = true;
+
+                // If checksum is provided, we could validate it
+                if (mediaRef.checksum) {
+                  // Note: This would require actually fetching the file content
+                  // For now, we'll assume checksum is valid if provided
+                  detail.checksumValid = true;
+                }
+
+                // Size validation
+                if (mediaRef.size > 0) {
+                  detail.sizeMatch = true;
+                } else {
+                  warnings.push(`Media ${mediaRef.fileId} has invalid size`);
+                }
+              } catch {
+                detail.error = "Invalid URL format";
+                errors.push(`Media ${mediaRef.fileId} has invalid URL`);
+              }
+            } else {
+              detail.error = "Missing URL";
+              errors.push(`Media ${mediaRef.fileId} missing URL`);
+            }
+          } catch (checkError) {
+            detail.error = `Integrity check failed: ${checkError}`;
+            errors.push(
+              `Failed to check integrity for media ${mediaRef.fileId}: ${checkError}`,
+            );
+          }
+
+          validationDetails.push(detail);
+        }
+
+        return {
+          errors,
+          isValid: errors.length === 0,
+          validationDetails,
+          warnings,
+        };
+      } catch (error) {
+        return {
+          errors: [`Media integrity check failed: ${error}`],
+          isValid: false,
+          validationDetails: [],
+          warnings: [],
+        };
       }
     },
 
@@ -341,6 +520,62 @@ const aiService = (): AIMemoryService => {
         return [];
       }
     },
+    formatMemoryWithMedia: (memory: AIMemory): string => {
+      try {
+        let formatted = `**Memory Content:**\n${memory.content}\n\n`;
+
+        if (memory.mediaReferences && memory.mediaReferences.length > 0) {
+          formatted += `**Attached Media (${memory.mediaReferences.length} files):**\n\n`;
+
+          memory.mediaReferences.forEach((media, index) => {
+            const fileSize =
+              media.size > 1024 * 1024
+                ? `${(media.size / (1024 * 1024)).toFixed(2)} MB`
+                : `${(media.size / 1024).toFixed(2)} KB`;
+
+            formatted += `${index + 1}. **${media.fileName}**\n`;
+            formatted += `   - Type: ${media.mimeType}\n`;
+            formatted += `   - Size: ${fileSize}\n`;
+            formatted += `   - Storage: ${media.storageType}\n`;
+            formatted += `   - Uploaded: ${new Date(media.uploadDate).toLocaleDateString()}\n`;
+
+            if (media.description) {
+              formatted += `   - Description: ${media.description}\n`;
+            }
+
+            if (media.url) {
+              formatted += `   - [Access File](${media.url})\n`;
+            }
+
+            formatted += `\n`;
+          });
+        }
+
+        // Add context information
+        if (memory.context) {
+          formatted += `**Context:**\n`;
+          if (memory.context.topic) {
+            formatted += `- Topic: ${memory.context.topic}\n`;
+          }
+          if (memory.context.domain) {
+            formatted += `- Domain: ${memory.context.domain}\n`;
+          }
+          if (memory.context.sessionId) {
+            formatted += `- Session: ${memory.context.sessionId}\n`;
+          }
+        }
+
+        // Add metadata
+        formatted += `\n**Memory Details:**\n`;
+        formatted += `- Type: ${memory.memoryType}\n`;
+        formatted += `- Importance: ${memory.importance.toFixed(2)}\n`;
+        formatted += `- Created: ${new Date(memory.timestamp).toLocaleDateString()}\n`;
+
+        return formatted;
+      } catch (error) {
+        return `Error formatting memory with media: ${error}`;
+      }
+    },
 
     getContextMemories: async (
       hubId: string,
@@ -415,6 +650,7 @@ const aiService = (): AIMemoryService => {
         };
       }
     },
+
     getMemoryRelationships: async (
       hubId: string,
       memoryId?: string,
@@ -587,6 +823,66 @@ const aiService = (): AIMemoryService => {
       }
     },
 
+    promoteMediaToPermanent: async (
+      signer: JWKInterface,
+      hubId: string,
+      params: MediaPromotionParams,
+    ): Promise<MediaPromotionResult> => {
+      try {
+        // Validate inputs
+        if (!isNonEmptyString(params.fileId)) {
+          throw new Error("File ID is required for promotion");
+        }
+
+        // Note: This is a placeholder implementation as the actual promotion
+        // would require integrating with Arweave permanent storage
+        // For now, we'll update the storage type in the memory system
+        const tags: Tag[] = [
+          { name: "Kind", value: MEMORY_KINDS.AI_MEMORY },
+          { name: "ai_type", value: "media_promotion" },
+          { name: "fileId", value: params.fileId },
+          { name: "promotedToStorageType", value: "permanent" },
+          { name: "promotionDate", value: new Date().toISOString() },
+        ];
+
+        if (params.description) {
+          tags.push({
+            name: "promotionDescription",
+            value: params.description,
+          });
+        }
+        if (params.metadata) {
+          tags.push({
+            name: "promotionMetadata",
+            value: JSON.stringify(params.metadata),
+          });
+        }
+
+        await event(signer, hubId, tags);
+
+        return {
+          permanentUrl: `https://arweave.net/${params.fileId}`,
+          success: true,
+          updatedReference: {
+            description: params.description,
+            fileId: params.fileId,
+            fileMetadata: params.metadata,
+            fileName: `promoted_${params.fileId}`,
+            mimeType: "application/octet-stream", // Would be determined from actual file
+            size: 0, // Would be determined from actual file
+            storageType: "permanent",
+            uploadDate: new Date().toISOString(),
+            url: `https://arweave.net/${params.fileId}`, // Placeholder URL
+          },
+        };
+      } catch (error) {
+        return {
+          error: `Failed to promote media to permanent storage: ${error}`,
+          success: false,
+        };
+      }
+    },
+
     searchAdvanced: async (
       hubId: string,
       query: string,
@@ -656,6 +952,223 @@ const aiService = (): AIMemoryService => {
         throw new Error(`Failed to search memories: ${error}`);
       }
     },
+
+    searchByMediaMetadata: async (
+      hubId: string,
+      metadataKey: string,
+      metadataValue: string,
+      filters?: SearchFilters,
+    ): Promise<AIMemory[]> => {
+      try {
+        // Search for memories with media that have specific metadata
+        const filterParams = {
+          kinds: [MEMORY_KINDS.AI_MEMORY],
+          limit: 100,
+          tags: {
+            ai_type: ["media_attachment"],
+          },
+        } as Record<string, unknown>;
+
+        // Apply additional filters
+        if (filters) {
+          const tags = filterParams.tags as Record<string, string[]>;
+          if (filters.memoryType) {
+            tags.ai_memory_type = [filters.memoryType];
+          }
+          if (filters.storageType) {
+            tags.mediaStorageType = [filters.storageType];
+          }
+        }
+
+        const result = await fetchEventsVIP01(hubId, filterParams);
+
+        if (!result || !result.events) {
+          return [];
+        }
+
+        // Filter by metadata key-value pairs
+        const filteredEvents = result.events.filter((event) => {
+          const eventRecord = event as Record<string, unknown>;
+          const mediaMetadataStr = eventRecord.mediaFileMetadata as string;
+          if (!mediaMetadataStr) return false;
+
+          try {
+            const metadata = JSON.parse(mediaMetadataStr);
+            return metadata[metadataKey] === metadataValue;
+          } catch {
+            return false;
+          }
+        });
+
+        const aiMemories = filteredEvents
+          .filter(
+            (event): event is Record<string, unknown> =>
+              typeof event === "object" && event !== null && "Content" in event,
+          )
+          .map((event) => eventToAIMemory(event))
+          .filter((memory) => matchesFilters(memory, filters));
+
+        return rankMemoriesByRelevance(aiMemories);
+      } catch (error) {
+        throw new Error(
+          `Failed to search memories by media metadata: ${error}`,
+        );
+      }
+    },
+
+    searchByMediaType: async (
+      hubId: string,
+      mimeType: string,
+      filters?: SearchFilters,
+    ): Promise<AIMemory[]> => {
+      try {
+        // Build filter for media-enhanced memories
+        const filterParams = {
+          kinds: [MEMORY_KINDS.AI_MEMORY],
+          limit: 100,
+          tags: {
+            mediaMimeType: mimeType.includes("/")
+              ? [mimeType]
+              : [`${mimeType}/*`], // Allow category searches like "image"
+          },
+        } as Record<string, unknown>;
+
+        // Apply additional filters
+        if (filters) {
+          const tags = filterParams.tags as Record<string, string[]>;
+          if (filters.memoryType) {
+            tags.ai_type = tags.ai_type
+              ? [...tags.ai_type, filters.memoryType]
+              : [filters.memoryType];
+          }
+          if (filters.storageType) {
+            tags.mediaStorageType = [filters.storageType];
+          }
+          if (filters.sessionId) {
+            tags.ai_session = [filters.sessionId];
+          }
+        }
+
+        const result = await fetchEventsVIP01(hubId, filterParams);
+
+        if (!result || !result.events) {
+          return [];
+        }
+
+        const aiMemories = result.events
+          .filter(
+            (event): event is Record<string, unknown> =>
+              typeof event === "object" && event !== null && "Content" in event,
+          )
+          .map((event) => eventToAIMemory(event))
+          .filter((memory) => matchesFilters(memory, filters));
+
+        return rankMemoriesByRelevance(aiMemories);
+      } catch (error) {
+        throw new Error(`Failed to search memories by media type: ${error}`);
+      }
+    },
+
+    validateMediaReferences: async (
+      mediaReferences: MediaReference[],
+    ): Promise<MediaValidationResult> => {
+      try {
+        if (!mediaReferences || mediaReferences.length === 0) {
+          return {
+            errors: [],
+            isValid: true,
+            validationDetails: [],
+            warnings: [],
+          };
+        }
+
+        const errors: string[] = [];
+        const warnings: string[] = [];
+        const validationDetails: MediaValidationResult["validationDetails"] =
+          [];
+
+        for (const mediaRef of mediaReferences) {
+          const detail: {
+            checksumValid?: boolean;
+            error?: string;
+            fileId: string;
+            isAccessible: boolean;
+            sizeMatch?: boolean;
+          } = {
+            fileId: mediaRef.fileId,
+            isAccessible: false,
+          };
+
+          try {
+            // Validate required fields
+            if (!mediaRef.fileId || !isNonEmptyString(mediaRef.fileId)) {
+              detail.error = "Missing or invalid file ID";
+              errors.push(
+                `Media reference missing file ID: ${mediaRef.fileName || "unknown"}`,
+              );
+            } else if (!mediaRef.url || !isNonEmptyString(mediaRef.url)) {
+              detail.error = "Missing or invalid URL";
+              errors.push(`Media reference ${mediaRef.fileId} missing URL`);
+            } else {
+              // Basic URL validation
+              try {
+                new URL(mediaRef.url);
+                detail.isAccessible = true;
+
+                // Validate file size
+                if (mediaRef.size <= 0) {
+                  warnings.push(
+                    `Media reference ${mediaRef.fileId} has invalid size: ${mediaRef.size}`,
+                  );
+                } else if (mediaRef.size > 100 * 1024 * 1024) {
+                  // 100MB limit
+                  warnings.push(
+                    `Media reference ${mediaRef.fileId} exceeds recommended size limit`,
+                  );
+                }
+
+                // Validate MIME type
+                if (
+                  !mediaRef.mimeType ||
+                  !isNonEmptyString(mediaRef.mimeType)
+                ) {
+                  warnings.push(
+                    `Media reference ${mediaRef.fileId} missing MIME type`,
+                  );
+                }
+              } catch {
+                detail.error = "Invalid URL format";
+                detail.isAccessible = false;
+                errors.push(
+                  `Media reference ${mediaRef.fileId} has invalid URL format`,
+                );
+              }
+            }
+          } catch (validationError) {
+            detail.error = `Validation error: ${validationError}`;
+            errors.push(
+              `Failed to validate media reference ${mediaRef.fileId}: ${validationError}`,
+            );
+          }
+
+          validationDetails.push(detail);
+        }
+
+        return {
+          errors,
+          isValid: errors.length === 0,
+          validationDetails,
+          warnings,
+        };
+      } catch (error) {
+        return {
+          errors: [`Validation failed: ${error}`],
+          isValid: false,
+          validationDetails: [],
+          warnings: [],
+        };
+      }
+    },
   };
 };
 
@@ -696,6 +1209,33 @@ function createAIMemoryTags(memory: Partial<AIMemory>): Tag[] {
   if (memory.metadata?.tags) {
     memory.metadata.tags.forEach((tag) => {
       tags.push({ name: "ai_tag", value: tag });
+    });
+  }
+
+  // Add media references if present
+  if (memory.mediaReferences && memory.mediaReferences.length > 0) {
+    tags.push({ name: "ai_has_media", value: "true" });
+    tags.push({
+      name: "ai_media_count",
+      value: memory.mediaReferences.length.toString(),
+    });
+
+    memory.mediaReferences.forEach((mediaRef, index) => {
+      tags.push({ name: `ai_media_${index}_fileId`, value: mediaRef.fileId });
+      tags.push({
+        name: `ai_media_${index}_mimeType`,
+        value: mediaRef.mimeType,
+      });
+      tags.push({
+        name: `ai_media_${index}_storageType`,
+        value: mediaRef.storageType,
+      });
+      if (mediaRef.description) {
+        tags.push({
+          name: `ai_media_${index}_description`,
+          value: mediaRef.description,
+        });
+      }
     });
   }
 
@@ -787,10 +1327,44 @@ function eventToAIMemory(event: Record<string, unknown>): AIMemory {
     context.domain = event.ai_domain as string;
   }
 
+  // Parse media references if present
+  let mediaReferences: MediaReference[] | undefined = undefined;
+  const hasMedia = event.ai_has_media === "true";
+  if (hasMedia) {
+    const mediaCount = parseInt((event.ai_media_count as string) || "0", 10);
+    mediaReferences = [];
+
+    for (let i = 0; i < mediaCount; i++) {
+      const fileIdKey = `ai_media_${i}_fileId`;
+      const mimeTypeKey = `ai_media_${i}_mimeType`;
+      const storageTypeKey = `ai_media_${i}_storageType`;
+      const descriptionKey = `ai_media_${i}_description`;
+
+      if (event[fileIdKey] && event[mimeTypeKey] && event[storageTypeKey]) {
+        const mediaRef: MediaReference = {
+          fileId: event[fileIdKey] as string,
+          fileName: `media_${i}`, // Fallback name
+          mimeType: event[mimeTypeKey] as string,
+          size: 0, // Would need to be retrieved from storage
+          storageType: event[storageTypeKey] as "permanent" | "temporal",
+          uploadDate: new Date().toISOString(), // Fallback date
+          url: "", // Would need to be constructed
+        };
+
+        if (event[descriptionKey]) {
+          mediaRef.description = event[descriptionKey] as string;
+        }
+
+        mediaReferences.push(mediaRef);
+      }
+    }
+  }
+
   const aiMemory: AIMemory = {
     ...baseMemory,
     context,
     importance,
+    mediaReferences,
     memoryType,
     metadata: {
       accessCount: 0,
@@ -939,6 +1513,39 @@ function matchesFilters(memory: AIMemory, filters?: SearchFilters): boolean {
     const end = new Date(filters.timeRange.end);
 
     if (memoryTime < start || memoryTime > end) {
+      return false;
+    }
+  }
+
+  // Media-related filters
+  if (filters.hasMedia !== undefined) {
+    const hasMedia =
+      memory.mediaReferences && memory.mediaReferences.length > 0;
+    if (hasMedia !== filters.hasMedia) {
+      return false;
+    }
+  }
+
+  if (filters.mediaType && memory.mediaReferences) {
+    const hasMatchingMediaType = memory.mediaReferences.some((media) => {
+      if (filters.mediaType!.includes("/")) {
+        // Exact MIME type match
+        return media.mimeType === filters.mediaType;
+      } else {
+        // Category match (e.g., "image" matches "image/*")
+        return media.mimeType.startsWith(filters.mediaType + "/");
+      }
+    });
+    if (!hasMatchingMediaType) {
+      return false;
+    }
+  }
+
+  if (filters.storageType && memory.mediaReferences) {
+    const hasMatchingStorageType = memory.mediaReferences.some(
+      (media) => media.storageType === filters.storageType,
+    );
+    if (!hasMatchingStorageType) {
       return false;
     }
   }

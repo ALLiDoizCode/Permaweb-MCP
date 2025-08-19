@@ -6,12 +6,14 @@ import { FastMCP } from "fastmcp";
 
 import type { ProcessDefinition } from "./services/ProcessCommunicationService.js";
 
+import { getTestTransportConfig, getTransportMode } from "./constants.js";
 import { defaultProcessService } from "./services/DefaultProcessService.js";
 import { TokenProcessTemplateService } from "./services/TokenProcessTemplateService.js";
 import { ContactToolFactory } from "./tools/contact/ContactToolFactory.js";
 import { DocumentationToolFactory } from "./tools/documentation/DocumentationToolFactory.js";
 import { HubToolFactory } from "./tools/hub/HubToolFactory.js";
 import { ToolContext, toolRegistry } from "./tools/index.js";
+import { MediaToolFactory } from "./tools/media/MediaToolFactory.js";
 import { MemoryToolFactory } from "./tools/memory/MemoryToolFactory.js";
 import { ProcessToolFactory } from "./tools/process/ProcessToolFactory.js";
 import { TokenToolFactory } from "./tools/token/TokenToolFactory.js";
@@ -152,6 +154,15 @@ function setupToolRegistry() {
 
   documentationFactory.registerTools(toolRegistry);
 
+  // Register Media tools
+  const mediaFactory = new MediaToolFactory({
+    categoryDescription: "Media file upload and management tools",
+    categoryName: "Media",
+    context,
+  });
+
+  mediaFactory.registerTools(toolRegistry);
+
   // Register Hub tools
   const hubFactory = new HubToolFactory({
     categoryDescription:
@@ -200,13 +211,46 @@ async function initializeAndStart() {
       server.addTool(toolDefinition);
     }
 
-    // Start the server with fully initialized tools
-    server.start({
-      transportType: "stdio",
-    });
+    // Start the server with fully initialized tools using configured transport
+    startServerWithTransport();
   } catch {
     // Error during initialization - start without tools silently for MCP compatibility
     // DO NOT use console.error or console.log as it breaks the MCP stdio protocol
+    startServerWithTransport();
+  }
+}
+
+// Helper function to start server with configured transport
+function startServerWithTransport() {
+  const transportConfig = getTestTransportConfig();
+  const transportMode = getTransportMode();
+
+  if (transportMode === "sse") {
+    // Ensure endpoint starts with "/" for FastMCP compatibility
+    const endpoint = transportConfig.endpoint.startsWith("/")
+      ? transportConfig.endpoint
+      : `/${transportConfig.endpoint}`;
+    server.start({
+      sse: {
+        endpoint: endpoint as `/${string}`,
+        port: transportConfig.port,
+      },
+      transportType: "sse",
+    });
+  } else if (transportMode === "httpStream") {
+    // Ensure endpoint starts with "/" for FastMCP compatibility
+    const endpoint = transportConfig.endpoint.startsWith("/")
+      ? transportConfig.endpoint
+      : `/${transportConfig.endpoint}`;
+    server.start({
+      httpStream: {
+        endpoint: endpoint as `/${string}`,
+        port: transportConfig.port,
+      },
+      transportType: "httpStream",
+    });
+  } else {
+    // Default stdio transport for backward compatibility
     server.start({
       transportType: "stdio",
     });
