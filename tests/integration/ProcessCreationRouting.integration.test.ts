@@ -93,7 +93,9 @@ describe("Process Creation Tool Routing Integration", () => {
 
       const metadata = generateTool!.getMetadata();
       expect(metadata.name).toBe("generateLuaProcess");
-      expect(metadata.title).toBe("Generate AO Process Code (Code Only - No Deployment)");
+      expect(metadata.title).toBe(
+        "Generate AO Process Code (Code Only - No Deployment)",
+      );
       expect(metadata.description).toContain(
         "Generate Lua code for AO processes with documentation-informed best practices",
       );
@@ -105,7 +107,9 @@ describe("Process Creation Tool Routing Integration", () => {
 
       const metadata = spawnTool!.getMetadata();
       expect(metadata.name).toBe("spawnProcess");
-      expect(metadata.title).toBe("Spawn Empty AO Process (Step 1/3 - Deployment Workflow)");
+      expect(metadata.title).toBe(
+        "Spawn Empty AO Process (Step 1/3 - Deployment Workflow)",
+      );
       expect(metadata.description).toContain("empty AO process container");
     });
   });
