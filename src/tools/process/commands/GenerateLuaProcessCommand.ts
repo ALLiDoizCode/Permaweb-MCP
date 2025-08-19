@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { LuaWorkflowOrchestrationService } from "../../../services/LuaWorkflowOrchestrationService.js";
+import { ParameterExtractionService } from "../../../services/ParameterExtractionService.js";
 import { ToolCommand, ToolContext, ToolMetadata } from "../../core/index.js";
 
 interface GenerateLuaProcessArgs {
@@ -57,10 +58,146 @@ export class GenerateLuaProcessCommand extends ToolCommand<
   });
 
   private readonly orchestrationService: LuaWorkflowOrchestrationService;
+  private readonly parameterExtractionService: ParameterExtractionService;
 
   constructor(private context: ToolContext) {
     super();
     this.orchestrationService = new LuaWorkflowOrchestrationService();
+    this.parameterExtractionService = new ParameterExtractionService();
+  }
+
+  /**
+   * Generate parameter validation suggestions based on parameter type and name
+   */
+  static generateParameterValidationSuggestion(
+    parameterName: string,
+    parameterType: string,
+  ): string {
+    const templates = this.getValidationRuleTemplates();
+    const lowerName = parameterName.toLowerCase();
+
+    // Address-related parameters
+    if (
+      lowerName.includes("address") ||
+      lowerName.includes("recipient") ||
+      lowerName.includes("sender") ||
+      lowerName.includes("owner")
+    ) {
+      if (parameterType === "address") {
+        return `validation = { pattern = "${templates.address.pattern}" } -- ${templates.address.description}`;
+      }
+    }
+
+    // Process ID parameters
+    if (lowerName.includes("process") && lowerName.includes("id")) {
+      return `validation = { pattern = "${templates.processId.pattern}" } -- ${templates.processId.description}`;
+    }
+
+    // Amount/quantity parameters
+    if (
+      lowerName.includes("amount") ||
+      lowerName.includes("quantity") ||
+      lowerName.includes("value") ||
+      lowerName.includes("balance")
+    ) {
+      if (parameterType === "number") {
+        return `validation = { min = ${templates.amount.min} } -- ${templates.amount.description}`;
+      }
+    }
+
+    // Token ticker parameters
+    if (lowerName.includes("ticker") || lowerName.includes("symbol")) {
+      return `validation = { pattern = "${templates.tokenTicker.pattern}" } -- ${templates.tokenTicker.description}`;
+    }
+
+    // Percentage parameters
+    if (
+      lowerName.includes("percent") ||
+      lowerName.includes("rate") ||
+      lowerName.includes("fee")
+    ) {
+      if (parameterType === "number") {
+        return `validation = { min = ${templates.percentage.min}, max = ${templates.percentage.max} } -- ${templates.percentage.description}`;
+      }
+    }
+
+    // String parameters
+    if (parameterType === "string") {
+      return `validation = { minLength = ${templates.stringLength.minLength}, maxLength = ${templates.stringLength.maxLength} } -- ${templates.stringLength.description}`;
+    }
+
+    // Number parameters (default positive)
+    if (parameterType === "number") {
+      return `validation = { min = ${templates.positiveNumber.min} } -- ${templates.positiveNumber.description}`;
+    }
+
+    return "validation = {} -- Add appropriate validation rules for this parameter";
+  }
+
+  /**
+   * Get standard validation rule templates for common parameter types
+   */
+  static getValidationRuleTemplates(): {
+    address: { description: string; pattern: string };
+    addressOptional: { description: string; pattern: string };
+    amount: { description: string; min: number };
+    commonEnums: {
+      actions: string[];
+      permissions: string[];
+      statuses: string[];
+    };
+    percentage: { description: string; max: number; min: number };
+    positiveNumber: { description: string; min: number };
+    processId: { description: string; pattern: string };
+    stringLength: { description: string; maxLength: number; minLength: number };
+    tokenTicker: { description: string; pattern: string };
+    walletAddress: { description: string; pattern: string };
+  } {
+    return {
+      address: {
+        description: "Standard Arweave address format validation",
+        pattern: "^[a-zA-Z0-9_-]{43}$",
+      },
+      addressOptional: {
+        description: "Optional Arweave address format validation",
+        pattern: "^([a-zA-Z0-9_-]{43})?$",
+      },
+      amount: {
+        description: "Non-negative amount validation for tokens/values",
+        min: 0,
+      },
+      commonEnums: {
+        actions: ["Transfer", "Mint", "Burn", "Approve", "Info", "Ping"],
+        permissions: ["read", "write", "admin", "owner"],
+        statuses: ["active", "inactive", "pending", "completed", "failed"],
+      },
+      percentage: {
+        description: "Percentage value validation (0-100)",
+        max: 100,
+        min: 0,
+      },
+      positiveNumber: {
+        description: "Positive number validation (greater than 0)",
+        min: 1,
+      },
+      processId: {
+        description: "AO process ID format validation",
+        pattern: "^[a-zA-Z0-9_-]{43}$",
+      },
+      stringLength: {
+        description: "Standard string length validation",
+        maxLength: 256,
+        minLength: 1,
+      },
+      tokenTicker: {
+        description: "Token ticker format validation (2-10 uppercase letters)",
+        pattern: "^[A-Z]{2,10}$",
+      },
+      walletAddress: {
+        description: "Wallet address format validation",
+        pattern: "^[a-zA-Z0-9_-]{43}$",
+      },
+    };
   }
 
   async execute(args: GenerateLuaProcessArgs): Promise<string> {
@@ -152,27 +289,46 @@ export class GenerateLuaProcessCommand extends ToolCommand<
   }
 
   /**
-   * Validate ADP compliance of generated Lua code
+   * Validate ADP compliance of generated Lua code with enhanced parameter checking
    */
   private validateADPCompliance(generatedCode: string): {
     checks: {
       hasCapabilities: boolean;
       hasHandlerRegistry: boolean;
       hasInfoHandler: boolean;
+      hasParameterCrossReference: boolean;
+      hasParameterDefinitions: boolean;
+      hasParameterTypeValidation: boolean;
       hasPingHandler: boolean;
       hasProtocolVersion: boolean;
+      hasValidationRules: boolean;
     };
     isCompliant: boolean;
+    parameterCoverage: {
+      handlersWithParameters: number;
+      totalHandlers: number;
+    };
+    parameterValidation: {
+      crossReferenceScore: number;
+      typeValidationScore: number;
+      validationRuleScore: number;
+    };
+    suggestions: string[];
     warnings: string[];
   } {
     const checks = {
       hasCapabilities: false,
       hasHandlerRegistry: false,
       hasInfoHandler: false,
+      hasParameterCrossReference: false,
+      hasParameterDefinitions: false,
+      hasParameterTypeValidation: false,
       hasPingHandler: false,
       hasProtocolVersion: false,
+      hasValidationRules: false,
     };
     const warnings: string[] = [];
+    const suggestions: string[] = [];
 
     // Check for Info handler
     if (
@@ -192,7 +348,7 @@ export class GenerateLuaProcessCommand extends ToolCommand<
     }
 
     // Check for handler registry
-    if (generatedCode.includes("handlers =") && generatedCode.includes("[")) {
+    if (generatedCode.includes("handlers =") && generatedCode.includes("{")) {
       checks.hasHandlerRegistry = true;
     } else {
       warnings.push("Missing handlers registry for ADP compliance");
@@ -218,16 +374,448 @@ export class GenerateLuaProcessCommand extends ToolCommand<
       warnings.push("Missing Ping handler - recommended for ADP testing");
     }
 
+    // Enhanced parameter validation
+    const parameterCoverage = this.validateParameterDefinitions(
+      generatedCode,
+      warnings,
+      suggestions,
+    );
+    checks.hasParameterDefinitions = parameterCoverage.coverage > 0.5; // At least 50% handlers have parameters
+
+    // Add new parameter-specific validation
+    const parameterTypeValidation = this.validateParameterTypes(
+      generatedCode,
+      warnings,
+      suggestions,
+    );
+    checks.hasParameterTypeValidation =
+      parameterTypeValidation.typeValidationScore > 0.7;
+
+    const crossReferenceValidation = this.validateParameterCrossReference(
+      generatedCode,
+      warnings,
+      suggestions,
+    );
+    checks.hasParameterCrossReference =
+      crossReferenceValidation.crossReferenceScore > 0.8;
+
+    const validationRuleCheck = this.validateValidationRules(
+      generatedCode,
+      warnings,
+      suggestions,
+    );
+    checks.hasValidationRules = validationRuleCheck.validationRuleScore > 0.6;
+
+    const parameterValidation = {
+      crossReferenceScore: crossReferenceValidation.crossReferenceScore,
+      typeValidationScore: parameterTypeValidation.typeValidationScore,
+      validationRuleScore: validationRuleCheck.validationRuleScore,
+    };
+
     const isCompliant =
       checks.hasInfoHandler &&
       checks.hasProtocolVersion &&
       checks.hasHandlerRegistry &&
-      checks.hasCapabilities;
+      checks.hasCapabilities &&
+      checks.hasParameterDefinitions &&
+      checks.hasParameterTypeValidation &&
+      checks.hasParameterCrossReference;
 
     return {
       checks,
       isCompliant,
+      parameterCoverage,
+      parameterValidation,
+      suggestions,
       warnings,
     };
+  }
+
+  /**
+   * Validate cross-reference between code usage and ADP parameter declarations
+   */
+  private validateParameterCrossReference(
+    generatedCode: string,
+    warnings: string[],
+    suggestions: string[],
+  ): {
+    crossReferenceScore: number;
+  } {
+    // Extract actual parameter usage from Lua code
+    const extractedParameters =
+      this.parameterExtractionService.extractParametersFromCode(generatedCode);
+
+    // Extract declared parameters from ADP metadata
+    const declaredParameters = new Map<string, Set<string>>();
+
+    const handlersJsonMatch = generatedCode.match(
+      /handlers\s*=\s*\{[\s\S]*?\n\s*\}(?=\s*[,\n]|$)/,
+    );
+
+    if (handlersJsonMatch) {
+      const handlersText = handlersJsonMatch[0];
+
+      // Extract all parameter names directly from the handlers text
+      // Look for action names and their associated parameters
+      const actionMatches = [
+        ...handlersText.matchAll(/action\s*=\s*["']([^"']+)["']/g),
+      ];
+
+      for (const actionMatch of actionMatches) {
+        const actionName = actionMatch[1];
+        const paramNames = new Set<string>();
+
+        // Find the position after this action declaration
+        const actionIndex = actionMatch.index!;
+        const remainingText = handlersText.substring(actionIndex);
+
+        // Find the parameters block for this action (could be on same line or next lines)
+        const parameterBlockMatch = remainingText.match(
+          /parameters\s*=\s*\{([\s\S]*?)\}\s*(?=\}|,\s*\})/,
+        );
+
+        if (parameterBlockMatch) {
+          const parameterBlock = parameterBlockMatch[1];
+          // Extract all parameter names from this block
+          const paramMatches = [
+            ...parameterBlock.matchAll(/name\s*=\s*["']([^"']+)["']/g),
+          ];
+          for (const paramMatch of paramMatches) {
+            paramNames.add(paramMatch[1]);
+          }
+        }
+
+        declaredParameters.set(actionName, paramNames);
+      }
+    }
+
+    let totalChecks = 0;
+    let passedChecks = 0;
+
+    // Check for unused declared parameters
+    for (const [actionName, declaredParams] of declaredParameters.entries()) {
+      const usedParams = extractedParameters.get(actionName);
+      const usedParamNames = new Set(usedParams?.map((p) => p.name) || []);
+
+      for (const declaredParam of declaredParams) {
+        totalChecks++;
+        if (usedParamNames.has(declaredParam)) {
+          passedChecks++;
+        } else {
+          warnings.push(
+            `Parameter '${declaredParam}' declared in '${actionName}' handler metadata but not used in code`,
+          );
+          suggestions.push(
+            `Remove unused parameter '${declaredParam}' from '${actionName}' handler metadata or implement its usage in the handler code`,
+          );
+        }
+      }
+    }
+
+    // Check for undeclared used parameters
+    for (const [actionName, usedParams] of extractedParameters.entries()) {
+      const declaredParams = declaredParameters.get(actionName) || new Set();
+
+      for (const usedParam of usedParams) {
+        totalChecks++;
+        if (declaredParams.has(usedParam.name)) {
+          passedChecks++;
+        } else {
+          warnings.push(
+            `Parameter '${usedParam.name}' used in '${actionName}' handler but not declared in ADP metadata`,
+          );
+          suggestions.push(
+            `Add parameter definition for '${usedParam.name}' in '${actionName}' handler metadata with type, required, and description fields`,
+          );
+        }
+      }
+    }
+
+    const crossReferenceScore =
+      totalChecks > 0 ? passedChecks / totalChecks : 1;
+
+    if (crossReferenceScore < 0.8 && totalChecks > 0) {
+      suggestions.push(
+        "Improve parameter cross-reference consistency by ensuring all used parameters are declared in ADP metadata and removing unused declarations",
+      );
+    }
+
+    return { crossReferenceScore };
+  }
+
+  /**
+   * Validate parameter definitions in ADP handler metadata
+   */
+  private validateParameterDefinitions(
+    generatedCode: string,
+    warnings: string[],
+    suggestions: string[],
+  ): {
+    coverage: number;
+    handlersWithParameters: number;
+    totalHandlers: number;
+  } {
+    // Extract parameters from the generated code
+    const extractedParameters =
+      this.parameterExtractionService.extractParametersFromCode(generatedCode);
+
+    // Count total handlers and handlers with parameters
+    let totalHandlers = 0;
+    let handlersWithParameters = 0;
+    let handlersWithDefinedParams = 0;
+
+    // Count handlers from code
+    const handlerMatches = generatedCode.matchAll(
+      /Handlers\.add\(\s*['"](.*?)['"].*?hasMatchingTag\(\s*['"]Action['"],\s*['"](.*?)['"]\)/gs,
+    );
+
+    const detectedHandlers = new Set<string>();
+    for (const match of handlerMatches) {
+      const actionValue = match[2];
+      if (actionValue && actionValue !== "Info" && actionValue !== "Ping") {
+        detectedHandlers.add(actionValue);
+        totalHandlers++;
+
+        // Check if this handler has extracted parameters
+        const params = extractedParameters.get(actionValue);
+        if (params && params.length > 0) {
+          handlersWithParameters++;
+        }
+      }
+    }
+
+    // Check for parameter definitions in the Lua metadata (handlers table)
+    // Use a more robust pattern to capture the complete handlers table
+    const handlersJsonMatch = generatedCode.match(
+      /handlers\s*=\s*\{[\s\S]*?\n\s*\}(?=\s*[,\n]|$)/,
+    );
+    if (handlersJsonMatch) {
+      const handlersText = handlersJsonMatch[0];
+
+      for (const handlerName of detectedHandlers) {
+        // Check if this handler has parameters defined in the metadata
+        const handlerPattern = new RegExp(
+          `action\\s*=\\s*["']${handlerName}["'][\\s\\S]*?parameters\\s*=`,
+          "i",
+        );
+        if (handlerPattern.test(handlersText)) {
+          handlersWithDefinedParams++;
+        } else {
+          warnings.push(
+            `Handler '${handlerName}' missing parameter definitions in ADP metadata`,
+          );
+          suggestions.push(
+            `Add parameters array to handler '${handlerName}' with proper name, type, required, and description fields`,
+          );
+        }
+      }
+    }
+
+    // Calculate coverage based on both extracted parameters and defined parameters
+    const coverage =
+      totalHandlers > 0 ? handlersWithDefinedParams / totalHandlers : 1;
+
+    if (coverage < 0.5) {
+      warnings.push(
+        `Low parameter definition coverage: ${(coverage * 100).toFixed(1)}% of handlers have parameter definitions`,
+      );
+      suggestions.push(
+        "Improve parameter definition coverage by adding parameters arrays to handlers that use message tags or data fields",
+      );
+    }
+
+    if (handlersWithParameters > handlersWithDefinedParams) {
+      warnings.push(
+        `${handlersWithParameters - handlersWithDefinedParams} handlers use parameters but lack ADP parameter definitions`,
+      );
+      suggestions.push(
+        "Add parameter definitions to handlers that extract data from msg.Tags or msg.Data for full ADP compliance",
+      );
+    }
+
+    return {
+      coverage,
+      handlersWithParameters: handlersWithDefinedParams,
+      totalHandlers,
+    };
+  }
+
+  /**
+   * Validate parameter types against ADP specification
+   */
+  private validateParameterTypes(
+    generatedCode: string,
+    warnings: string[],
+    suggestions: string[],
+  ): {
+    typeValidationScore: number;
+  } {
+    const validADPTypes = ["string", "number", "boolean", "address", "json"];
+    let validTypeCount = 0;
+    let totalParameterCount = 0;
+
+    // Extract parameter definitions from handlers metadata
+    // Use a more robust approach for nested structures
+    let handlersJsonMatch = generatedCode.match(
+      /handlers\s*=\s*\{[\s\S]*?\n\s*\}(?=\s*[,\n]|$)/,
+    );
+
+    // Fallback to broader match if the first one is incomplete
+    if (!handlersJsonMatch || !handlersJsonMatch[0].includes("}")) {
+      handlersJsonMatch = generatedCode.match(
+        /handlers\s*=\s*\{[\s\S]*\}[\s\S]*?\}/,
+      );
+    }
+
+    if (handlersJsonMatch) {
+      const handlersText = handlersJsonMatch[0];
+
+      // Find all parameter type declarations
+      const typeMatches = [
+        ...handlersText.matchAll(/type\s*=\s*["']([^"']+)["']/g),
+      ];
+
+      for (const match of typeMatches) {
+        totalParameterCount++;
+        const paramType = match[1];
+
+        if (validADPTypes.includes(paramType)) {
+          validTypeCount++;
+        } else {
+          warnings.push(
+            `Invalid parameter type "${paramType}" - must be one of: ${validADPTypes.join(", ")}`,
+          );
+          suggestions.push(
+            `Replace parameter type "${paramType}" with a valid ADP type: ${validADPTypes.join(", ")}`,
+          );
+        }
+      }
+    }
+
+    const typeValidationScore =
+      totalParameterCount > 0 ? validTypeCount / totalParameterCount : 1;
+
+    if (typeValidationScore < 1 && totalParameterCount > 0) {
+      suggestions.push(
+        "Ensure all parameter types conform to ADP specification: string, number, boolean, address, json",
+      );
+    }
+
+    return { typeValidationScore };
+  }
+
+  /**
+   * Validate parameter validation rules format and consistency
+   */
+  private validateValidationRules(
+    generatedCode: string,
+    warnings: string[],
+    suggestions: string[],
+  ): {
+    validationRuleScore: number;
+  } {
+    let totalValidationRules = 0;
+    let validRules = 0;
+
+    const handlersJsonMatch = generatedCode.match(
+      /handlers\s*=\s*\{[\s\S]*?\n\s*\}(?=\s*[,\n]|$)/,
+    );
+
+    if (handlersJsonMatch) {
+      const handlersText = handlersJsonMatch[0];
+
+      // Find parameters with validation rules
+      // Use a more robust regex that handles quoted strings properly
+      const validationMatches = [
+        ...handlersText.matchAll(/validation\s*=\s*\{[\s\S]*?\}/g),
+      ];
+
+      for (const validationMatch of validationMatches) {
+        totalValidationRules++;
+        const validationBlock = validationMatch[0];
+
+        // Check for valid validation rule patterns
+        const hasPattern = /pattern\s*=/.test(validationBlock);
+        const hasMin = /min\s*=/.test(validationBlock);
+        const hasMax = /max\s*=/.test(validationBlock);
+        const hasEnum = /enum\s*=/.test(validationBlock);
+
+        // Validate address patterns if present
+        if (hasPattern) {
+          const patternMatch = validationBlock.match(
+            /pattern\s*=\s*["']([^"']+)["']/,
+          );
+          if (patternMatch) {
+            const pattern = patternMatch[1];
+            // Check for common address pattern format
+            if (
+              pattern.includes("^[a-zA-Z0-9_-]{43}$") ||
+              pattern.includes("address")
+            ) {
+              validRules++;
+            } else {
+              warnings.push(
+                `Validation pattern "${pattern}" may not be appropriate for address validation`,
+              );
+              suggestions.push(
+                `Use standard address validation pattern: "^[a-zA-Z0-9_-]{43}$" for Arweave addresses`,
+              );
+            }
+          }
+        } else if (hasMin || hasMax || hasEnum) {
+          validRules++; // Other validation types are acceptable
+        }
+      }
+
+      // Check for address parameters without validation and provide specific suggestions
+      const paramBlocks = [
+        ...handlersText.matchAll(
+          /\{\s*[\s\S]*?name\s*=\s*["']([^"']+)["'][\s\S]*?type\s*=\s*["']([^"']+)["'][\s\S]*?\}/g,
+        ),
+      ];
+      for (const paramMatch of paramBlocks) {
+        const [fullMatch, paramName, paramType] = paramMatch;
+
+        if (paramType === "address" && !/validation\s*=/.test(fullMatch)) {
+          warnings.push(
+            `Address parameter '${paramName}' missing validation pattern`,
+          );
+          const suggestion =
+            GenerateLuaProcessCommand.generateParameterValidationSuggestion(
+              paramName,
+              paramType,
+            );
+          suggestions.push(
+            `Add validation for parameter '${paramName}': ${suggestion}`,
+          );
+        }
+
+        // Check other parameter types that commonly need validation
+        if (
+          (paramType === "number" || paramType === "string") &&
+          !/validation\s*=/.test(fullMatch)
+        ) {
+          const suggestion =
+            GenerateLuaProcessCommand.generateParameterValidationSuggestion(
+              paramName,
+              paramType,
+            );
+          suggestions.push(
+            `Consider adding validation for parameter '${paramName}': ${suggestion}`,
+          );
+        }
+      }
+    }
+
+    const validationRuleScore =
+      totalValidationRules > 0 ? validRules / totalValidationRules : 0.8; // Default good score if no rules
+
+    if (validationRuleScore < 0.6 && totalValidationRules > 0) {
+      suggestions.push(
+        "Improve validation rules by adding appropriate patterns for address types and min/max constraints for numbers",
+      );
+    }
+
+    return { validationRuleScore };
   }
 }

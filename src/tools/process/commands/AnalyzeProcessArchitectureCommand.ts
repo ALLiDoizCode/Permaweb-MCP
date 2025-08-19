@@ -5,6 +5,7 @@ import { ArchitectureExplanationService } from "../../../services/ArchitectureEx
 import { ArchitectureValidationService } from "../../../services/ArchitectureValidationService.js";
 import { ErrorHandlingPatternService } from "../../../services/ErrorHandlingPatternService.js";
 import { HandlerPatternRecommendationService } from "../../../services/HandlerPatternRecommendationService.js";
+import { LuaWorkflowOrchestrationService } from "../../../services/LuaWorkflowOrchestrationService.js";
 import { PermawebDocs } from "../../../services/PermawebDocsService.js";
 import { ProcessArchitectureAnalysisService } from "../../../services/ProcessArchitectureAnalysisService.js";
 import { RequirementAnalysisService } from "../../../services/RequirementAnalysisService.js";
@@ -111,6 +112,7 @@ export class AnalyzeProcessArchitectureCommand extends ToolCommand<
   private errorHandlingService!: ErrorHandlingPatternService;
   private explanationService!: ArchitectureExplanationService;
   private handlerPatternService!: HandlerPatternRecommendationService;
+  private luaWorkflowOrchestrationService!: LuaWorkflowOrchestrationService;
   private permawebDocsService!: PermawebDocs;
   private requirementAnalysisService!: RequirementAnalysisService;
   private stateManagementService!: StateManagementGuidanceService;
@@ -120,11 +122,24 @@ export class AnalyzeProcessArchitectureCommand extends ToolCommand<
     args: AnalyzeProcessArchitectureArgs,
     context: ToolContext,
   ): Promise<string> {
+    const startTime = performance.now();
+    let integrationStartTime: number;
+    let integrationEndTime: number;
+    const performanceData = {
+      codePreviewTime: 0,
+      integrationTime: 0,
+      totalTime: 0,
+    };
+
     try {
       this.initializeServices();
 
-      // Step 1: Analyze user requirements
+      // Step 1: Analyze user requirements (with integration timing)
+      integrationStartTime = performance.now();
       const requirements = await this.analyzeRequirements(args);
+      integrationEndTime = performance.now();
+      performanceData.integrationTime +=
+        integrationEndTime - integrationStartTime;
 
       // Step 2: Analyze architectural patterns from documentation
       const patternAnalysis = await this.analyzeArchitecturalPatterns(
@@ -167,13 +182,43 @@ export class AnalyzeProcessArchitectureCommand extends ToolCommand<
         );
       }
 
-      // Step 7: Format and return results
-      return this.formatResults(
+      // Step 7: Generate code preview (if examples requested) with performance timing
+      let codePreviewData;
+      if (args.includeExamples) {
+        const codePreviewStart = performance.now();
+        codePreviewData = await this.generateCodePreview(requirements, args);
+        const codePreviewEnd = performance.now();
+        performanceData.codePreviewTime = codePreviewEnd - codePreviewStart;
+        performanceData.integrationTime += performanceData.codePreviewTime;
+      }
+
+      // Calculate total time and verify performance requirements
+      const totalTime = performance.now() - startTime;
+      performanceData.totalTime = totalTime;
+
+      // Log performance metrics if integration time exceeds warning threshold (150ms)
+      if (performanceData.integrationTime > 150) {
+        console.warn(
+          `AnalyzeProcessArchitecture integration time: ${performanceData.integrationTime.toFixed(2)}ms (threshold: 200ms)`,
+        );
+      }
+
+      // Step 8: Format and return results
+      const result = await this.formatResults(
         enhancedRecommendation,
         validationReport,
         explanation,
         args,
+        codePreviewData,
       );
+
+      // Add performance data to debug output (only if detailed explanation requested)
+      if (args.detailedExplanation && performanceData.integrationTime > 0) {
+        const performanceSummary = `\n---\n*Performance: Integration ${performanceData.integrationTime.toFixed(1)}ms (Code Preview: ${performanceData.codePreviewTime.toFixed(1)}ms) / Total: ${performanceData.totalTime.toFixed(1)}ms*`;
+        return result + performanceSummary;
+      }
+
+      return result;
     } catch (error) {
       return this.formatError(error, args.userRequest);
     }
@@ -198,11 +243,12 @@ export class AnalyzeProcessArchitectureCommand extends ToolCommand<
   }
 
   /**
-   * Analyze user requirements
+   * Analyze user requirements using shared orchestration service
    */
   private async analyzeRequirements(args: AnalyzeProcessArchitectureArgs) {
+    // Use the shared requirement analysis from orchestration service
     const requirements =
-      await this.requirementAnalysisService.analyzeRequirements(
+      await this.luaWorkflowOrchestrationService.analyzeRequirements(
         args.userRequest,
       );
 
@@ -289,12 +335,17 @@ Please try again with a refined request.`;
   /**
    * Format the final results
    */
-  private formatResults(
+  private async formatResults(
     recommendation: any,
     validationReport?: any,
     explanation?: any,
     args?: AnalyzeProcessArchitectureArgs,
-  ): string {
+    codePreviewData?: {
+      adpCompliance?: any;
+      codePreview?: string;
+      handlerSignatures?: string[];
+    },
+  ): Promise<string> {
     let result = `# AO Process Architecture Analysis\n\n`;
 
     // Overview section
@@ -336,6 +387,33 @@ Please try again with a refined request.`;
             result += `\`\`\`lua\n${handler.template.substring(0, 200)}${handler.template.length > 200 ? "..." : ""}\n\`\`\`\n\n`;
           }
         });
+    }
+
+    // Code Preview and Handler Signatures (Enhanced Integration)
+    if (codePreviewData?.codePreview && args?.includeExamples) {
+      result += `### 💻 Generated Code Preview\n\n`;
+      result += `Preview of actual code structure that would be generated:\n\n`;
+      result += `\`\`\`lua\n${codePreviewData.codePreview}\n\`\`\`\n\n`;
+
+      if (
+        codePreviewData.handlerSignatures &&
+        codePreviewData.handlerSignatures.length > 0
+      ) {
+        result += `**Handler Signatures:**\n`;
+        codePreviewData.handlerSignatures
+          .slice(0, 5)
+          .forEach((signature: string) => {
+            result += `- \`${signature}\`\n`;
+          });
+        result += `\n`;
+      }
+
+      if (codePreviewData.adpCompliance) {
+        result += `**ADP Compliance Preview:**\n`;
+        result += `- Info Handler: ${codePreviewData.adpCompliance.hasInfoHandler ? "✅" : "❌"}\n`;
+        result += `- Handler Registry: ${codePreviewData.adpCompliance.hasHandlerRegistry ? "✅" : "❌"}\n`;
+        result += `- Protocol Version: ${codePreviewData.adpCompliance.isCompliant ? "✅" : "❌"}\n\n`;
+      }
     }
 
     // Error Handling Patterns
@@ -434,6 +512,56 @@ Please try again with a refined request.`;
   }
 
   /**
+   * Generate code preview using orchestration service
+   */
+  private async generateCodePreview(
+    requirements: any,
+    args: AnalyzeProcessArchitectureArgs,
+  ): Promise<{
+    adpCompliance?: any;
+    codePreview?: string;
+    handlerSignatures?: string[];
+  }> {
+    try {
+      // Generate a small code preview using the workflow orchestration
+      const documentedRequirements =
+        await this.luaWorkflowOrchestrationService.analyzeAndQuery(
+          args.userRequest,
+        );
+      const codeResult =
+        await this.luaWorkflowOrchestrationService.generateLuaCode(
+          documentedRequirements.relevantDocs,
+          requirements,
+        );
+
+      // Extract first 500 characters of generated code as preview
+      const codePreview =
+        codeResult.generatedCode.substring(0, 500) +
+        (codeResult.generatedCode.length > 500 ? "\n-- ... (truncated)" : "");
+
+      // Extract handler signatures from the generated code
+      const handlerSignatures = codeResult.handlerPatterns.map(
+        (pattern) =>
+          `Handlers.add('${pattern.name}', function(msg) -- ${pattern.description}`,
+      );
+
+      // Simple ADP compliance check
+      const adpCompliance = {
+        hasHandlerRegistry: codeResult.generatedCode.includes("handlers ="),
+        hasInfoHandler: codeResult.generatedCode.includes(
+          "Handlers.add('Info'",
+        ),
+        isCompliant: codeResult.generatedCode.includes("protocolVersion"),
+      };
+
+      return { adpCompliance, codePreview, handlerSignatures };
+    } catch (error) {
+      console.warn("Code preview generation failed:", error);
+      return {};
+    }
+  }
+
+  /**
    * Generate comprehensive explanation
    */
   private async generateExplanation(
@@ -457,6 +585,12 @@ Please try again with a refined request.`;
     // Initialize base services
     this.permawebDocsService = new PermawebDocs();
     this.requirementAnalysisService = new RequirementAnalysisService();
+
+    // Initialize Lua workflow orchestration service for code integration
+    this.luaWorkflowOrchestrationService = new LuaWorkflowOrchestrationService(
+      this.permawebDocsService,
+      this.requirementAnalysisService,
+    );
 
     // Initialize core architecture services
     this.architectureAnalysisService = new ProcessArchitectureAnalysisService(

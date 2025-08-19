@@ -94,13 +94,17 @@ describe("GenerateLuaProcessCommand", () => {
     it("should have correct metadata", () => {
       const metadata = (command as any).metadata;
       expect(metadata.name).toBe("generateLuaProcess");
-      expect(metadata.title).toBe("Create/Generate AO Process Code");
+      expect(metadata.title).toBe(
+        "Generate AO Process Code (Code Only - No Deployment)",
+      );
       expect(metadata.readOnlyHint).toBe(true);
       expect(metadata.openWorldHint).toBe(false);
       expect(metadata.description).toContain(
-        "Create, build, generate, or make AO process",
+        "Generate Lua code for AO processes",
       );
-      expect(metadata.description).toContain("Permaweb documentation");
+      expect(metadata.description).toContain(
+        "documentation-informed best practices",
+      );
     });
   });
 
@@ -338,12 +342,12 @@ describe("GenerateLuaProcessCommand", () => {
 
       expect(toolDef.name).toBe("generateLuaProcess");
       expect(toolDef.description).toContain(
-        "Create, build, generate, or make AO process",
+        "Generate Lua code for AO processes",
       );
       expect(toolDef.annotations?.openWorldHint).toBe(false);
       expect(toolDef.annotations?.readOnlyHint).toBe(true);
       expect(toolDef.annotations?.title).toBe(
-        "Create/Generate AO Process Code",
+        "Generate AO Process Code (Code Only - No Deployment)",
       );
       expect(typeof toolDef.execute).toBe("function");
     });
@@ -373,6 +377,386 @@ describe("GenerateLuaProcessCommand", () => {
       const result2 = await toolDef.execute({ userRequest: "" });
       const parsedResult2 = JSON.parse(result2);
       expect(typeof result2).toBe("string");
+    });
+  });
+
+  describe("Enhanced ADP Validation", () => {
+    let command: GenerateLuaProcessCommand;
+
+    beforeEach(() => {
+      command = new GenerateLuaProcessCommand(mockContext);
+    });
+
+    describe("validateParameterTypes", () => {
+      it("should validate parameter types against ADP specification", () => {
+        const codeWithValidTypes = `
+          handlers = {
+            {
+              action = "Transfer",
+              parameters = {
+                { name = "Recipient", type = "address", required = true },
+                { name = "Amount", type = "number", required = true },
+                { name = "Data", type = "json", required = false }
+              }
+            }
+          }
+        `;
+
+        const warnings: string[] = [];
+        const suggestions: string[] = [];
+        const result = (command as any).validateParameterTypes(
+          codeWithValidTypes,
+          warnings,
+          suggestions,
+        );
+
+        expect(result.typeValidationScore).toBe(1);
+        expect(warnings).toHaveLength(0);
+      });
+
+      it("should detect invalid parameter types", () => {
+        const codeWithInvalidTypes = `
+          handlers = {
+            {
+              action = "Transfer",
+              parameters = {
+                { name = "Amount", type = "currency", required = true },
+                { name = "Status", type = "enum", required = false }
+              }
+            }
+          }
+        `;
+
+        const warnings: string[] = [];
+        const suggestions: string[] = [];
+        const result = (command as any).validateParameterTypes(
+          codeWithInvalidTypes,
+          warnings,
+          suggestions,
+        );
+
+        expect(result.typeValidationScore).toBe(0);
+        expect(warnings).toContain(
+          'Invalid parameter type "currency" - must be one of: string, number, boolean, address, json',
+        );
+        expect(warnings).toContain(
+          'Invalid parameter type "enum" - must be one of: string, number, boolean, address, json',
+        );
+        expect(suggestions).toContain(
+          'Replace parameter type "currency" with a valid ADP type: string, number, boolean, address, json',
+        );
+      });
+    });
+
+    describe("validateParameterCrossReference", () => {
+      it("should detect unused declared parameters", () => {
+        // Mock the parameter extraction service to return used parameters
+        const mockExtractedParams = new Map([
+          ["Transfer", [{ name: "Amount", required: true, type: "number" }]],
+        ]);
+        (command as any).parameterExtractionService = {
+          extractParametersFromCode: vi
+            .fn()
+            .mockReturnValue(mockExtractedParams),
+        };
+
+        const codeWithUnusedParams = `
+          handlers = {
+            {
+              action = "Transfer",
+              parameters = {
+                { name = "Amount", type = "number", required = true },
+                { name = "Memo", type = "string", required = false }
+              }
+            }
+          }
+        `;
+
+        const warnings: string[] = [];
+        const suggestions: string[] = [];
+        const result = (command as any).validateParameterCrossReference(
+          codeWithUnusedParams,
+          warnings,
+          suggestions,
+        );
+
+        expect(result.crossReferenceScore).toBeLessThan(1);
+        expect(
+          warnings.some((w) =>
+            w.includes(
+              "Parameter 'Memo' declared in 'Transfer' handler metadata but not used in code",
+            ),
+          ),
+        ).toBe(true);
+        expect(
+          suggestions.some((s) => s.includes("Remove unused parameter 'Memo'")),
+        ).toBe(true);
+      });
+
+      it("should detect undeclared used parameters", () => {
+        const mockExtractedParams = new Map([
+          [
+            "Transfer",
+            [
+              { name: "Amount", required: true, type: "number" },
+              { name: "Recipient", required: true, type: "string" },
+            ],
+          ],
+        ]);
+        (command as any).parameterExtractionService = {
+          extractParametersFromCode: vi
+            .fn()
+            .mockReturnValue(mockExtractedParams),
+        };
+
+        const codeWithMissingDeclarations = `
+          handlers = {
+            {
+              action = "Transfer",
+              parameters = {
+                { name = "Amount", type = "number", required = true }
+              }
+            }
+          }
+        `;
+
+        const warnings: string[] = [];
+        const suggestions: string[] = [];
+        const result = (command as any).validateParameterCrossReference(
+          codeWithMissingDeclarations,
+          warnings,
+          suggestions,
+        );
+
+        expect(result.crossReferenceScore).toBeLessThan(1);
+        expect(
+          warnings.some((w) =>
+            w.includes(
+              "Parameter 'Recipient' used in 'Transfer' handler but not declared in ADP metadata",
+            ),
+          ),
+        ).toBe(true);
+        expect(
+          suggestions.some((s) =>
+            s.includes("Add parameter definition for 'Recipient'"),
+          ),
+        ).toBe(true);
+      });
+    });
+
+    describe("validateValidationRules", () => {
+      it("should validate address parameters have validation patterns", () => {
+        const codeWithoutAddressValidation = `
+          handlers = {
+            {
+              action = "Transfer",
+              parameters = {
+                { name = "Recipient", type = "address", required = true },
+                { name = "Amount", type = "number", required = true }
+              }
+            }
+          }
+        `;
+
+        const warnings: string[] = [];
+        const suggestions: string[] = [];
+        const result = (command as any).validateValidationRules(
+          codeWithoutAddressValidation,
+          warnings,
+          suggestions,
+        );
+
+        expect(
+          warnings.some((w) =>
+            w.includes(
+              "Address parameter 'Recipient' missing validation pattern",
+            ),
+          ),
+        ).toBe(true);
+        expect(
+          suggestions.some((s) =>
+            s.includes('validation = { pattern = "^[a-zA-Z0-9_-]{43}$" }'),
+          ),
+        ).toBe(true);
+      });
+
+      it("should accept valid validation patterns", () => {
+        const codeWithValidValidation = `
+          handlers = {
+            {
+              action = "Transfer",
+              parameters = {
+                { 
+                  name = "Recipient", 
+                  type = "address", 
+                  required = true,
+                  validation = { pattern = "^[a-zA-Z0-9_-]{43}$" }
+                }
+              }
+            }
+          }
+        `;
+
+        const warnings: string[] = [];
+        const suggestions: string[] = [];
+        const result = (command as any).validateValidationRules(
+          codeWithValidValidation,
+          warnings,
+          suggestions,
+        );
+
+        expect(result.validationRuleScore).toBeGreaterThan(0.5);
+      });
+    });
+
+    describe("getValidationRuleTemplates", () => {
+      it("should provide standard validation templates", () => {
+        const templates =
+          GenerateLuaProcessCommand.getValidationRuleTemplates();
+
+        expect(templates.address.pattern).toBe("^[a-zA-Z0-9_-]{43}$");
+        expect(templates.amount.min).toBe(0);
+        expect(templates.percentage.min).toBe(0);
+        expect(templates.percentage.max).toBe(100);
+        expect(templates.commonEnums.actions).toContain("Transfer");
+        expect(templates.commonEnums.permissions).toContain("admin");
+      });
+    });
+
+    describe("generateParameterValidationSuggestion", () => {
+      it("should generate appropriate suggestions for address parameters", () => {
+        const suggestion =
+          GenerateLuaProcessCommand.generateParameterValidationSuggestion(
+            "recipient",
+            "address",
+          );
+        expect(suggestion).toContain('pattern = "^[a-zA-Z0-9_-]{43}$"');
+        expect(suggestion).toContain(
+          "Standard Arweave address format validation",
+        );
+      });
+
+      it("should generate appropriate suggestions for amount parameters", () => {
+        const suggestion =
+          GenerateLuaProcessCommand.generateParameterValidationSuggestion(
+            "amount",
+            "number",
+          );
+        expect(suggestion).toContain("min = 0");
+        expect(suggestion).toContain("Non-negative amount validation");
+      });
+
+      it("should generate appropriate suggestions for ticker parameters", () => {
+        const suggestion =
+          GenerateLuaProcessCommand.generateParameterValidationSuggestion(
+            "ticker",
+            "string",
+          );
+        expect(suggestion).toContain('pattern = "^[A-Z]{2,10}$"');
+        expect(suggestion).toContain("Token ticker format validation");
+      });
+
+      it("should provide default suggestions for unknown parameter types", () => {
+        const suggestion =
+          GenerateLuaProcessCommand.generateParameterValidationSuggestion(
+            "unknownParam",
+            "string",
+          );
+        expect(suggestion).toContain("minLength = 1, maxLength = 256");
+      });
+    });
+
+    describe("enhanced validateADPCompliance", () => {
+      it("should include enhanced parameter validation checks", () => {
+        // Mock the parameter extraction service
+        (command as any).parameterExtractionService = {
+          extractParametersFromCode: vi.fn().mockReturnValue(new Map()),
+        };
+
+        const compliantCode = `
+          Handlers.add("Info", function(msg)
+            msg.reply({
+              Data = json.encode({
+                protocolVersion = "1.0",
+                handlers = {
+                  {
+                    action = "Ping",
+                    parameters = {
+                      { name = "Message", type = "string", required = false }
+                    }
+                  }
+                },
+                capabilities = {
+                  supportsHandlerRegistry = true,
+                  supportsParameterValidation = true,
+                  supportsExamples = true
+                }
+              })
+            })
+          end)
+          
+          Handlers.add("Ping", function(msg)
+            msg.reply({ Data = "Pong" })
+          end)
+        `;
+
+        const result = (command as any).validateADPCompliance(compliantCode);
+
+        expect(result.checks.hasInfoHandler).toBe(true);
+        expect(result.checks.hasProtocolVersion).toBe(true);
+        expect(result.checks.hasHandlerRegistry).toBe(true);
+        expect(result.checks.hasCapabilities).toBe(true);
+        expect(result.checks.hasPingHandler).toBe(true);
+        expect(result.checks).toHaveProperty("hasParameterTypeValidation");
+        expect(result.checks).toHaveProperty("hasParameterCrossReference");
+        expect(result.checks).toHaveProperty("hasValidationRules");
+        expect(result).toHaveProperty("parameterValidation");
+        expect(result).toHaveProperty("suggestions");
+        expect(Array.isArray(result.suggestions)).toBe(true);
+      });
+
+      it("should provide comprehensive scoring for parameter validation", () => {
+        (command as any).parameterExtractionService = {
+          extractParametersFromCode: vi.fn().mockReturnValue(new Map()),
+        };
+
+        const partiallyCompliantCode = `
+          Handlers.add("Info", function(msg)
+            msg.reply({
+              Data = json.encode({
+                protocolVersion = "1.0",
+                handlers = {},
+                capabilities = {
+                  supportsHandlerRegistry = true
+                }
+              })
+            })
+          end)
+        `;
+
+        const result = (command as any).validateADPCompliance(
+          partiallyCompliantCode,
+        );
+
+        expect(result.parameterValidation).toHaveProperty(
+          "crossReferenceScore",
+        );
+        expect(result.parameterValidation).toHaveProperty(
+          "typeValidationScore",
+        );
+        expect(result.parameterValidation).toHaveProperty(
+          "validationRuleScore",
+        );
+        expect(typeof result.parameterValidation.crossReferenceScore).toBe(
+          "number",
+        );
+        expect(typeof result.parameterValidation.typeValidationScore).toBe(
+          "number",
+        );
+        expect(typeof result.parameterValidation.validationRuleScore).toBe(
+          "number",
+        );
+      });
     });
   });
 });

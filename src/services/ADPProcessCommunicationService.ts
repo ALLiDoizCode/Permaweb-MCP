@@ -1429,55 +1429,6 @@ export class ADPProcessCommunicationService {
   }
 
   /**
-   * Infer parameters from handler examples when parameters field is missing
-   */
-  private static inferParametersFromExamples(
-    handler: HandlerMetadata,
-  ): HandlerParameter[] {
-    const inferredParams: HandlerParameter[] = [];
-    
-    if (!handler.examples || handler.examples.length === 0) {
-      return inferredParams;
-    }
-    
-    // Analyze examples to find parameter patterns
-    for (const example of handler.examples) {
-      // Look for patterns like "A=5 and B=3" or "A=5 B=3"
-      const paramMatches = example.match(/(\w+)=([^=\s]+)/g);
-      if (paramMatches) {
-        for (const match of paramMatches) {
-          const [, name, value] = match.match(/(\w+)=(.+)/) || [];
-          if (name && value && !inferredParams.some(p => p.name === name)) {
-            // Infer parameter type from example value
-            let type: "address" | "boolean" | "json" | "number" | "string" = "string";
-            if (/^-?\d+(\.\d+)?$/.test(value)) {
-              type = "number";
-            } else if (/^(true|false)$/i.test(value)) {
-              type = "boolean";
-            } else if (/^[a-zA-Z0-9_-]{20,}$/.test(value)) {
-              type = "address";
-            }
-            
-            inferredParams.push({
-              name,
-              type,
-              required: true, // Assume required if shown in examples
-              description: `Inferred ${type} parameter from examples`,
-            });
-          }
-        }
-      }
-    }
-    
-    this.debugLog(
-      `Inferred ${inferredParams.length} parameters from examples`,
-      { handler: handler.action, inferredParams }
-    );
-    
-    return inferredParams;
-  }
-
-  /**
    * Extract parameters from user request based on handler metadata
    */
   private static extractParametersFromRequest(
@@ -1495,12 +1446,12 @@ export class ADPProcessCommunicationService {
         // Use inferred parameters for extraction
         for (const param of inferredParams) {
           let value = this.extractParameterValue(requestLower, param);
-          
+
           // If primary extraction failed, try fallback patterns
           if (value === null) {
             value = this.applyFallbackPatterns(requestLower, param);
           }
-          
+
           // Validate the extracted value
           if (value !== null) {
             const validation = this.validateParameterValue(value, param);
@@ -1517,7 +1468,7 @@ export class ADPProcessCommunicationService {
             );
           }
         }
-        
+
         // Add extraction errors as metadata for debugging
         if (extractionErrors.length > 0) {
           parameters._extractionErrors = extractionErrors;
@@ -2507,6 +2458,56 @@ export class ADPProcessCommunicationService {
       }
     }
     return false;
+  }
+
+  /**
+   * Infer parameters from handler examples when parameters field is missing
+   */
+  private static inferParametersFromExamples(
+    handler: HandlerMetadata,
+  ): HandlerParameter[] {
+    const inferredParams: HandlerParameter[] = [];
+
+    if (!handler.examples || handler.examples.length === 0) {
+      return inferredParams;
+    }
+
+    // Analyze examples to find parameter patterns
+    for (const example of handler.examples) {
+      // Look for patterns like "A=5 and B=3" or "A=5 B=3"
+      const paramMatches = example.match(/(\w+)=([^=\s]+)/g);
+      if (paramMatches) {
+        for (const match of paramMatches) {
+          const [, name, value] = match.match(/(\w+)=(.+)/) || [];
+          if (name && value && !inferredParams.some((p) => p.name === name)) {
+            // Infer parameter type from example value
+            let type: "address" | "boolean" | "json" | "number" | "string" =
+              "string";
+            if (/^-?\d+(\.\d+)?$/.test(value)) {
+              type = "number";
+            } else if (/^(true|false)$/i.test(value)) {
+              type = "boolean";
+            } else if (/^[a-zA-Z0-9_-]{20,}$/.test(value)) {
+              type = "address";
+            }
+
+            inferredParams.push({
+              description: `Inferred ${type} parameter from examples`,
+              name,
+              required: true, // Assume required if shown in examples
+              type,
+            });
+          }
+        }
+      }
+    }
+
+    this.debugLog(
+      `Inferred ${inferredParams.length} parameters from examples`,
+      { handler: handler.action, inferredParams },
+    );
+
+    return inferredParams;
   }
 
   /**

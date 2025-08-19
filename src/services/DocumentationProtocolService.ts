@@ -194,7 +194,11 @@ end)`;
       // If handler doesn't define parameters, add all provided parameters as tags
       // This handles cases where parameters were inferred from examples
       Object.entries(parameters).forEach(([name, value]) => {
-        if (value !== undefined && value !== null && name !== '_extractionErrors') {
+        if (
+          value !== undefined &&
+          value !== null &&
+          name !== "_extractionErrors"
+        ) {
           tags.push({ name, value: String(value) });
         }
       });

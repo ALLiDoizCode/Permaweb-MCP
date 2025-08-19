@@ -19,6 +19,7 @@ import {
   DocumentationProtocolService,
   HandlerMetadata,
 } from "./DocumentationProtocolService.js";
+import { ParameterExtractionService } from "./ParameterExtractionService.js";
 import { PermawebDocsResult } from "./PermawebDocsService.js";
 
 /**
@@ -33,6 +34,9 @@ import { PermawebDocsResult } from "./PermawebDocsService.js";
  * - Comprehensive handler metadata for automatic tool integration
  */
 export class LuaCodeGeneratorService {
+  private readonly parameterExtractionService =
+    new ParameterExtractionService();
+
   private readonly templates = {
     basic: {
       handler: `Handlers.add(
@@ -1003,8 +1007,15 @@ end`,
       codeBlocks.push(this.processTemplate(pattern.template, requirements));
     }
 
-    // Add ADP-compliant process info handler (always included)
-    const adpInfoHandler = this.generateADPInfoHandler(patterns, requirements);
+    // Build temporary code for parameter extraction (without ADP handler)
+    const tempCode = codeBlocks.join("\n\n");
+
+    // Add ADP-compliant process info handler (always included) with parameter extraction
+    const adpInfoHandler = this.generateADPInfoHandler(
+      patterns,
+      requirements,
+      tempCode,
+    );
     codeBlocks.push(adpInfoHandler);
 
     // Add a basic Ping handler if not already included for ADP testing
@@ -1344,11 +1355,13 @@ end)`);
   private generateADPInfoHandler(
     patterns: HandlerPattern[],
     requirements: RequirementAnalysis,
+    generatedCode?: string,
   ): string {
-    // Generate handler metadata from the selected patterns
+    // Generate handler metadata from the selected patterns with parameter extraction
     const handlerMetadata = this.generateHandlerMetadata(
       patterns,
       requirements,
+      generatedCode,
     );
 
     // Create standard info object with dynamic runtime values
@@ -1357,9 +1370,8 @@ end)`);
       Name: "Generated AO Process",
     };
 
-    // Format handlers JSON for Lua embedding with proper indentation
-    const handlersJson = JSON.stringify(handlerMetadata, null, 8);
-    const formattedHandlers = handlersJson.replace(/\\n/g, "\\n        ");
+    // Format handlers as Lua table syntax for ADP compliance
+    const handlersLuaTable = this.convertHandlerMetadataToLua(handlerMetadata);
 
     return `
 -- AO Documentation Protocol (ADP) v1.0 - Enhanced Info Handler
@@ -1372,7 +1384,7 @@ Handlers.add('Info', Handlers.utils.hasMatchingTag('Action', 'Info'), function(m
         ProcessId = ao.id,
         protocolVersion = "1.0",
         lastUpdated = os.date("!%Y-%m-%dT%H:%M:%S.000Z"),
-        handlers = ${formattedHandlers},
+        handlers = ${handlersLuaTable},
         capabilities = {
             supportsHandlerRegistry = true,
             supportsTagValidation = true,
@@ -1474,11 +1486,12 @@ The code follows AO best practices including proper message handling, error vali
   }
 
   /**
-   * Generate handler metadata for ADP compliance
+   * Generate handler metadata for ADP compliance with parameter extraction
    */
   private generateHandlerMetadata(
     patterns: HandlerPattern[],
     requirements: RequirementAnalysis,
+    generatedCode?: string,
   ): HandlerMetadata[] {
     const metadata: HandlerMetadata[] = [];
 
@@ -1503,6 +1516,19 @@ The code follows AO best practices including proper message handling, error vali
       });
     }
 
+    // Extract parameters from generated code if available
+    let extractedParameters: Map<string, HandlerMetadata["parameters"]> =
+      new Map();
+    if (generatedCode) {
+      const parameterMap =
+        this.parameterExtractionService.extractParametersFromCode(
+          generatedCode,
+        );
+      extractedParameters = new Map(
+        [...parameterMap.entries()].map(([action, params]) => [action, params]),
+      );
+    }
+
     // Generate metadata based on selected patterns
     for (const pattern of patterns) {
       const handlerMetadata = this.generateMetadataForPattern(
@@ -1510,6 +1536,20 @@ The code follows AO best practices including proper message handling, error vali
         requirements,
       );
       if (handlerMetadata) {
+        // Enhance with extracted parameters if available
+        const actionName = handlerMetadata.action;
+        const extractedParams = extractedParameters.get(actionName);
+
+        if (extractedParams && extractedParams.length > 0) {
+          // Use extracted parameters, merging with any existing ones
+          const existingParams = handlerMetadata.parameters || [];
+          const mergedParams = this.mergeParameters(
+            existingParams,
+            extractedParams,
+          );
+          handlerMetadata.parameters = mergedParams;
+        }
+
         metadata.push(handlerMetadata);
       }
     }
@@ -1545,6 +1585,15 @@ The code follows AO best practices including proper message handling, error vali
     requirements: RequirementAnalysis,
   ): HandlerMetadata | null {
     switch (pattern.name) {
+      case "addition-handler":
+        return {
+          action: "Add",
+          category: "custom",
+          description: "Calculator addition handler with numeric validation",
+          examples: ["Calculator addition handler with numeric validation"],
+          pattern: ["Action"],
+        };
+
       case "auto-reply-handler":
         return {
           action: "Message",
@@ -1710,6 +1759,15 @@ The code follows AO best practices including proper message handling, error vali
           pattern: ["Action"],
         };
 
+      case "subtraction-handler":
+        return {
+          action: "Subtract",
+          category: "custom",
+          description: "Calculator subtraction handler with numeric validation",
+          examples: ["Calculator subtraction handler with numeric validation"],
+          pattern: ["Action"],
+        };
+
       case "transfer-handler":
         return {
           action: "Transfer",
@@ -1737,7 +1795,6 @@ The code follows AO best practices including proper message handling, error vali
           ],
           pattern: ["Action"],
         };
-
       case "vote-handler":
         return {
           action: "Vote",
@@ -1765,7 +1822,6 @@ The code follows AO best practices including proper message handling, error vali
           ],
           pattern: ["Action"],
         };
-
       default:
         // For unknown patterns, create a generic handler metadata
         return {
@@ -2047,6 +2103,33 @@ Handlers.add('Ping', Handlers.utils.hasMatchingTag('Action', 'Ping'), function(m
         Data = "pong"
     })
 end)`;
+  }
+
+  /**
+   * Merge existing parameters with extracted parameters, preferring extracted ones
+   */
+  private mergeParameters(
+    existing: HandlerMetadata["parameters"] = [],
+    extracted: HandlerMetadata["parameters"] = [],
+  ): HandlerMetadata["parameters"] {
+    const merged = new Map<string, (typeof extracted)[0]>();
+
+    // Add existing parameters
+    for (const param of existing) {
+      merged.set(param.name, param);
+    }
+
+    // Override with extracted parameters (they are more accurate)
+    for (const param of extracted) {
+      merged.set(param.name, param);
+    }
+
+    return Array.from(merged.values()).sort((a, b) => {
+      // Sort required parameters first
+      if (a.required && !b.required) return -1;
+      if (!a.required && b.required) return 1;
+      return a.name.localeCompare(b.name);
+    });
   }
 
   /**

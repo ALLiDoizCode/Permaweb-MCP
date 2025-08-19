@@ -753,6 +753,45 @@ Fix critical quality issues in ADP (AO Documentation Protocol) parameter transla
 - Provide user guidance for alternative input formats when automatic translation fails
 - Create process-specific parameter format detection based on ADP metadata
 
+#### Story 9.4: Fix Tool Integration - analyzeProcessArchitecture Should Use generateLuaProcess
+
+**User Story:** As a developer using Permamind tools, I want analyzeProcessArchitecture to integrate with generateLuaProcess so that architectural recommendations are consistent with actual code generation capabilities.
+
+**Acceptance Criteria:**
+
+- analyzeProcessArchitecture imports and uses LuaWorkflowOrchestrationService for consistent analysis
+- Architectural analysis leverages the same requirement analysis as code generation
+- Recommendations include actual code samples from generateLuaProcess
+- Both tools use consistent complexity assessment and pattern detection
+- Service consolidation removes duplicate analysis logic between architecture services
+- Enhanced output includes preview of generated code structure and actual handler signatures
+
+#### Story 9.5: Fix Missing ADP Parameter Definitions in Generated Code
+
+**User Story:** As a developer using AO processes, I want generated Lua code to include complete ADP parameter definitions so that processes are truly self-documenting and ADP-compliant.
+
+**Acceptance Criteria:**
+
+- Extract parameter usage from generated Lua handler code (msg.Tags.A, msg.Tags.B patterns)
+- Identify parameter types (string, number, boolean, address) from code usage
+- Determine required vs optional parameters based on validation patterns
+- Include parameters array in all handler definitions in ADP metadata
+- Follow ADP v1.0 parameter specification format with validation rules
+- Update Info handler generation to populate parameter metadata dynamically
+
+#### Story 9.6: Enhanced ADP Compliance Validation with Parameter Checking
+
+**User Story:** As a developer generating AO processes, I want comprehensive ADP compliance validation that includes parameter definitions so that I can ensure my processes are fully ADP-compliant and self-documenting.
+
+**Acceptance Criteria:**
+
+- Check that all handlers with parameters have parameters array defined in ADP metadata
+- Validate parameter objects have required fields: name, type, required, description
+- Ensure parameter types are valid ADP types: string, number, boolean, address, json
+- Cross-reference parameters used in Lua code vs declared in ADP metadata
+- Warn when code uses parameters not declared in metadata or vice versa
+- Provide detailed validation reports with specific suggestions for fixing failures
+
 ### Compatibility Requirements
 
 - [ ] Existing executeAction API remains unchanged for consumers
@@ -772,10 +811,16 @@ Fix critical quality issues in ADP (AO Documentation Protocol) parameter transla
 - [ ] Story 9.1: Parameter extraction logic fixed with comprehensive test coverage for natural language patterns
 - [ ] Story 9.2: Parameter validation and error handling implemented with detailed logging and debugging capabilities
 - [ ] Story 9.3: Fallback mechanisms and alternative input methods implemented and tested
+- [ ] Story 9.4: analyzeProcessArchitecture integrates with generateLuaProcess for consistent architectural recommendations
+- [ ] Story 9.5: Generated Lua code includes complete ADP parameter definitions in handler metadata
+- [ ] Story 9.6: Enhanced ADP compliance validation includes parameter definition checking and cross-referencing
 - [ ] Natural language requests like "Add 5 and 3" correctly generate tags A=5, B=3 for calculator processes
 - [ ] Elimination of "Invalid input" errors when proper numeric values are provided in natural language
 - [ ] Consistent behavior across all mathematical and operational request types
 - [ ] Parameter translation failures provide clear error messages with suggested alternatives
+- [ ] analyzeProcessArchitecture and generateLuaProcess use shared services and provide consistent guidance
+- [ ] Generated processes have complete ADP parameter definitions that match actual code usage
+- [ ] ADP validation catches parameter definition issues and provides actionable feedback
 - [ ] No regression in existing successful parameter extractions or process communication
 - [ ] Comprehensive unit and integration test coverage for all parameter translation scenarios
 - [ ] QA validation confirms end-to-end calculator process communication works with natural language

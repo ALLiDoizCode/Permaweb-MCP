@@ -37,12 +37,33 @@ Fix critical quality issues in ADP parameter translation system to ensure reliab
 - **Focus:** Robust fallback systems for failed translations
 - **Impact:** Ensures users can always interact with processes
 
+### [Story 9.4: Fix Tool Integration - analyzeProcessArchitecture Should Use generateLuaProcess](./story-9.4-fix-tool-integration-analyzeprocessarchitecture-generateluaprocess.md)
+
+- **Status:** Open
+- **Focus:** Architecture tool integration and consistency
+- **Impact:** Ensures architectural recommendations align with code generation
+
+### [Story 9.5: Fix Missing ADP Parameter Definitions in Generated Code](./story-9.5-fix-missing-adp-parameter-definitions-generated-code.md)
+
+- **Status:** Open
+- **Focus:** Complete ADP parameter definitions in generated processes
+- **Impact:** Enables truly self-documenting ADP-compliant processes
+
+### [Story 9.6: Enhanced ADP Compliance Validation with Parameter Checking](./story-9.6-enhanced-adp-compliance-validation-parameter-checking.md)
+
+- **Status:** Open
+- **Focus:** Comprehensive ADP compliance validation including parameters
+- **Impact:** Ensures generated processes meet full ADP standards
+
 ## Success Criteria
 
 - [ ] Natural language requests like "Add 5 and 3" correctly generate tags A=5, B=3
 - [ ] Elimination of "Invalid input" errors when proper numeric values are provided
 - [ ] Consistent behavior across all mathematical and operational request types
 - [ ] Clear error messages with suggested alternatives for failures
+- [ ] analyzeProcessArchitecture and generateLuaProcess use shared services and provide consistent guidance
+- [ ] Generated processes have complete ADP parameter definitions that match actual code usage
+- [ ] ADP validation catches parameter definition issues and provides actionable feedback
 - [ ] No regression in existing successful parameter extractions
 - [ ] End-to-end calculator process communication works with natural language
 

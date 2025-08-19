@@ -99,7 +99,8 @@ export class ArchitectureDecisionService {
   ) {}
 
   /**
-   * Evaluate architectural complexity based on requirements
+   * Evaluate architectural complexity based on requirements (DEPRECATED - use shared service)
+   * @deprecated Use createComplexityEvaluationFromRequirements instead
    */
   async evaluateArchitecturalComplexity(
     requirements: RequirementAnalysis,
@@ -165,9 +166,9 @@ export class ArchitectureDecisionService {
     patternResult: any, // ArchitecturePatternResult from analysis service
   ): Promise<ArchitectureRecommendation> {
     try {
-      // Evaluate complexity
+      // Use complexity from shared RequirementAnalysisService instead of duplicating logic
       const complexity =
-        await this.evaluateArchitecturalComplexity(requirements);
+        await this.createComplexityEvaluationFromRequirements(requirements);
 
       // Get process type recommendation
       const processTypeRec = await this.recommendProcessType(
@@ -494,6 +495,73 @@ export class ArchitectureDecisionService {
     confidence += Math.min(requirements.extractedKeywords.length / 10, 0.2);
 
     return Math.min(confidence, 1.0);
+  }
+
+  /**
+   * Convert complexity level to score (for compatibility with existing logic)
+   */
+  private complexityLevelToScore(level: ComplexityLevel): number {
+    switch (level) {
+      case "complex":
+        return 0.8;
+      case "moderate":
+        return 0.5;
+      case "simple":
+        return 0.2;
+      default:
+        return 0.5;
+    }
+  }
+
+  /**
+   * Create ComplexityEvaluation from shared RequirementAnalysis (delegating to shared service)
+   */
+  private async createComplexityEvaluationFromRequirements(
+    requirements: RequirementAnalysis,
+  ): Promise<ComplexityEvaluation> {
+    try {
+      // Use the complexity level from the shared RequirementAnalysisService
+      const level = requirements.complexity;
+      const score = this.complexityLevelToScore(level);
+
+      // Create simplified factors based on shared analysis
+      const factors = [
+        {
+          description: "Detected patterns and functionality complexity",
+          name: "Pattern Complexity",
+          score: requirements.detectedPatterns.length * 0.15,
+          weight: 0.4,
+        },
+        {
+          description: "Process type and interaction requirements",
+          name: "Process Interaction",
+          score:
+            requirements.processType === "multi-process"
+              ? 0.8
+              : requirements.processType === "stateful"
+                ? 0.5
+                : 0.3,
+          weight: 0.3,
+        },
+        {
+          description: "Keyword richness and technical complexity",
+          name: "Technical Complexity",
+          score: Math.min(requirements.extractedKeywords.length * 0.05, 0.8),
+          weight: 0.3,
+        },
+      ];
+
+      return {
+        factors,
+        level,
+        recommendations: this.generateComplexityRecommendations(level),
+        score,
+      };
+    } catch (error) {
+      throw new Error(
+        `ArchitectureDecisionService.createComplexityEvaluationFromRequirements failed: ${error}`,
+      );
+    }
   }
 
   /**

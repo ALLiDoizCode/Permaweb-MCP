@@ -66,6 +66,14 @@ vi.mock("../../../../src/services/PermawebDocsService.js", () => ({
   PermawebDocs: vi.fn().mockImplementation(() => ({})),
 }));
 
+vi.mock("../../../../src/services/LuaWorkflowOrchestrationService.js", () => ({
+  LuaWorkflowOrchestrationService: vi.fn().mockImplementation(() => ({
+    analyzeAndQuery: vi.fn(),
+    analyzeRequirements: vi.fn(),
+    generateLuaCode: vi.fn(),
+  })),
+}));
+
 describe("AnalyzeProcessArchitectureCommand", () => {
   let command: AnalyzeProcessArchitectureCommand;
   let mockContext: ToolContext;
@@ -274,9 +282,12 @@ describe("AnalyzeProcessArchitectureCommand", () => {
         relatedPatterns: ["token-patterns", "state-management"],
       };
 
-      // Mock service calls
+      // Initialize services before mocking
+      command["initializeServices"]();
+
+      // Mock service calls - now uses orchestration service for requirements
       vi.mocked(
-        command["requirementAnalysisService"]["analyzeRequirements"],
+        command["luaWorkflowOrchestrationService"]["analyzeRequirements"],
       ).mockResolvedValue(mockRequirements);
 
       vi.mocked(
@@ -407,9 +418,12 @@ describe("AnalyzeProcessArchitectureCommand", () => {
         },
       };
 
-      // Mock minimal service calls
+      // Initialize services before mocking
+      command["initializeServices"]();
+
+      // Mock minimal service calls - now uses orchestration service
       vi.mocked(
-        command["requirementAnalysisService"]["analyzeRequirements"],
+        command["luaWorkflowOrchestrationService"]["analyzeRequirements"],
       ).mockResolvedValue(mockRequirements);
 
       vi.mocked(
@@ -461,8 +475,11 @@ describe("AnalyzeProcessArchitectureCommand", () => {
         },
       };
 
+      // Initialize services before mocking
+      command["initializeServices"]();
+
       vi.mocked(
-        command["requirementAnalysisService"]["analyzeRequirements"],
+        command["luaWorkflowOrchestrationService"]["analyzeRequirements"],
       ).mockResolvedValue(mockRequirements);
 
       vi.mocked(
@@ -500,8 +517,11 @@ describe("AnalyzeProcessArchitectureCommand", () => {
     });
 
     it("should handle errors gracefully", async () => {
+      // Initialize services before mocking
+      command["initializeServices"]();
+
       vi.mocked(
-        command["requirementAnalysisService"]["analyzeRequirements"],
+        command["luaWorkflowOrchestrationService"]["analyzeRequirements"],
       ).mockRejectedValue(new Error("Requirements analysis failed"));
 
       const args = {
@@ -517,8 +537,11 @@ describe("AnalyzeProcessArchitectureCommand", () => {
     });
 
     it("should handle unknown errors", async () => {
+      // Initialize services before mocking
+      command["initializeServices"]();
+
       vi.mocked(
-        command["requirementAnalysisService"]["analyzeRequirements"],
+        command["luaWorkflowOrchestrationService"]["analyzeRequirements"],
       ).mockRejectedValue("Non-error object");
 
       const args = {
@@ -529,6 +552,196 @@ describe("AnalyzeProcessArchitectureCommand", () => {
 
       expect(result).toContain("❌ Architecture Analysis Error");
       expect(result).toContain("Unknown error occurred");
+    });
+
+    it("should generate code preview when includeExamples is true", async () => {
+      const mockRequirements = {
+        complexity: "simple" as const,
+        detectedPatterns: ["calculator"],
+        extractedKeywords: ["add", "subtract"],
+        processType: "stateless" as const,
+        suggestedDomains: ["ao"],
+        userRequest: "Create a calculator",
+      };
+
+      const mockRecommendation = {
+        alternativeApproaches: [],
+        confidence: 0.9,
+        documentationSupport: [],
+        reasoning: [],
+        recommendedApproach: {
+          complexity: "simple",
+          description: "Calculator",
+          documentation: [],
+          name: "Simple Calculator",
+          processType: "stateless",
+          suitableFor: ["Math operations"],
+        },
+      };
+
+      const mockDocumentedRequirements = {
+        analysis: mockRequirements,
+        confidence: 0.9,
+        relevantDocs: [],
+      };
+
+      const mockCodeResult = {
+        bestPractices: ["Input validation"],
+        generatedCode: `-- AO Process: Simple Calculator
+Handlers.add('Add', function(msg)
+  local a = tonumber(msg.Tags.A)
+  local b = tonumber(msg.Tags.B)
+  if a and b then
+    ao.send({Target = msg.From, Data = tostring(a + b)})
+  else
+    ao.send({Target = msg.From, Data = "Error: Invalid numbers"})
+  end
+end)
+
+Handlers.add('Info', function(msg)
+  ao.send({Target = msg.From, Data = json.encode({
+    protocolVersion = "1.0",
+    handlers = {{action = "Add", description = "Add two numbers"}}
+  })})
+end)`,
+        handlerPatterns: [
+          { description: "Add two numbers together", name: "Add" },
+          { description: "Get process information", name: "Info" },
+        ],
+        usedTemplates: ["calculator-template"],
+      };
+
+      // Initialize services before mocking
+      command["initializeServices"]();
+
+      // Mock the orchestration service calls
+      vi.mocked(
+        command["luaWorkflowOrchestrationService"]["analyzeRequirements"],
+      ).mockResolvedValue(mockRequirements);
+
+      vi.mocked(
+        command["luaWorkflowOrchestrationService"]["analyzeAndQuery"],
+      ).mockResolvedValue(mockDocumentedRequirements);
+
+      vi.mocked(
+        command["luaWorkflowOrchestrationService"]["generateLuaCode"],
+      ).mockResolvedValue(mockCodeResult);
+
+      // Mock other services
+      vi.mocked(
+        command["architectureAnalysisService"]["analyzeArchitecturalPatterns"],
+      ).mockResolvedValue({
+        documentationCoverage: [],
+        patterns: [],
+        processTypes: {
+          multiProcess: { patterns: [] },
+          stateful: { patterns: [] },
+          stateless: { patterns: [] },
+        },
+      });
+
+      vi.mocked(
+        command["architectureDecisionService"][
+          "generateArchitectureRecommendation"
+        ],
+      ).mockResolvedValue(mockRecommendation);
+
+      const args = {
+        detailedExplanation: true,
+        includeExamples: true, // Enable code preview
+        includeValidation: false,
+        userRequest: "Create a simple calculator",
+      };
+
+      const result = await command.execute(args, mockContext);
+
+      // Verify code preview features
+      expect(result).toContain("### 💻 Generated Code Preview");
+      expect(result).toContain("Handlers.add('Add'");
+      expect(result).toContain("**Handler Signatures:**");
+      expect(result).toContain("**ADP Compliance Preview:**");
+      expect(result).toContain("Info Handler:");
+      expect(result).toContain("Handler Registry:");
+      expect(result).toContain("Protocol Version:");
+      expect(result).toContain("*Performance: Integration");
+
+      // Verify orchestration service was called
+      expect(
+        command["luaWorkflowOrchestrationService"]["analyzeAndQuery"],
+      ).toHaveBeenCalledWith("Create a simple calculator");
+      expect(
+        command["luaWorkflowOrchestrationService"]["generateLuaCode"],
+      ).toHaveBeenCalled();
+    });
+
+    it("should not generate code preview when includeExamples is false", async () => {
+      const mockRequirements = {
+        complexity: "simple" as const,
+        detectedPatterns: ["calculator"],
+        extractedKeywords: ["add"],
+        processType: "stateless" as const,
+        suggestedDomains: ["ao"],
+        userRequest: "Create a calculator",
+      };
+
+      const mockRecommendation = {
+        alternativeApproaches: [],
+        confidence: 0.9,
+        documentationSupport: [],
+        reasoning: [],
+        recommendedApproach: {
+          complexity: "simple",
+          description: "Calculator",
+          name: "Simple Calculator",
+          processType: "stateless",
+        },
+      };
+
+      // Initialize services before mocking
+      command["initializeServices"]();
+
+      vi.mocked(
+        command["luaWorkflowOrchestrationService"]["analyzeRequirements"],
+      ).mockResolvedValue(mockRequirements);
+
+      vi.mocked(
+        command["architectureAnalysisService"]["analyzeArchitecturalPatterns"],
+      ).mockResolvedValue({
+        documentationCoverage: [],
+        patterns: [],
+        processTypes: {
+          multiProcess: { patterns: [] },
+          stateful: { patterns: [] },
+          stateless: { patterns: [] },
+        },
+      });
+
+      vi.mocked(
+        command["architectureDecisionService"][
+          "generateArchitectureRecommendation"
+        ],
+      ).mockResolvedValue(mockRecommendation);
+
+      const args = {
+        includeExamples: false, // Disable code preview
+        includeValidation: false,
+        userRequest: "Create a simple calculator",
+      };
+
+      const result = await command.execute(args, mockContext);
+
+      // Verify code preview features are NOT present
+      expect(result).not.toContain("### 💻 Generated Code Preview");
+      expect(result).not.toContain("**Handler Signatures:**");
+      expect(result).not.toContain("**ADP Compliance Preview:**");
+
+      // Verify orchestration service was NOT called for code generation
+      expect(
+        command["luaWorkflowOrchestrationService"]["analyzeAndQuery"],
+      ).not.toHaveBeenCalled();
+      expect(
+        command["luaWorkflowOrchestrationService"]["generateLuaCode"],
+      ).not.toHaveBeenCalled();
     });
   });
 
