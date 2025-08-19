@@ -464,7 +464,7 @@ end)`;
 
       // Step 3: Simulate ADP discovery (this would happen when executeAction queries the process)
       const adpResponseMatch = generatedCode.match(
-        /handlers\s*=\s*(\[[\s\S]*?\])/,
+        /handlers\s*=\s*(\{[\s\S]*?\})/,
       );
       expect(adpResponseMatch).toBeTruthy();
 
