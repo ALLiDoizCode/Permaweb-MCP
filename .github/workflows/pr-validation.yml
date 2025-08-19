@@ -128,12 +128,16 @@ jobs:
 
       - name: Run unit tests
         id: unit-tests
+        env:
+          NODE_ENV: test  # Ensure test environment for consistent behavior
         run: |
           npm run test || echo "⚠️ Unit test issues detected"
           exit 0
 
       - name: Run integration tests
         id: integration-tests
+        env:
+          NODE_ENV: test  # Ensure test environment for consistent behavior
         run: |
           npm run test:coverage || echo "⚠️ Integration test issues detected"
           exit 0
@@ -301,6 +305,7 @@ jobs:
 
       - name: Run integration tests
         env:
+          NODE_ENV: test  # Explicitly set to prevent mainnet endpoint usage
           SEED_PHRASE: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'  # Test seed phrase
         run: |
           echo "🔗 Running integration tests..."
