@@ -448,30 +448,95 @@ export class GenerateLuaProcessCommand extends ToolCommand<
     // Extract declared parameters from ADP metadata
     const declaredParameters = new Map<string, Set<string>>();
 
-    const handlersJsonMatch = generatedCode.match(
-      /handlers\s*=\s*\{[\s\S]*?\n\s*\}(?=\s*[,\n]|$)/,
-    );
+    // Extract the complete handlers section by counting braces to ensure we get the full array
+    const handlersStart = generatedCode.indexOf("handlers = {");
+    let handlersJsonMatch: RegExpMatchArray | null = null;
+    
+    if (handlersStart !== -1) {
+      let braceCount = 0;
+      let i = handlersStart + "handlers = ".length;
+      let foundStart = false;
+      let endPosition = -1;
+      
+      while (i < generatedCode.length) {
+        const char = generatedCode[i];
+        if (char === "{") {
+          braceCount++;
+          foundStart = true;
+        } else if (char === "}") {
+          braceCount--;
+          if (foundStart && braceCount === 0) {
+            endPosition = i + 1;
+            break;
+          }
+        }
+        i++;
+      }
+      
+      if (endPosition !== -1) {
+        const handlersText = generatedCode.substring(handlersStart, endPosition);
+        handlersJsonMatch = [handlersText];
+      }
+    }
 
     if (handlersJsonMatch) {
       const handlersText = handlersJsonMatch[0];
 
-      // Extract all parameter names directly from the handlers text
-      // Look for action names and their associated parameters
-      const actionMatches = [
-        ...handlersText.matchAll(/action\s*=\s*["']([^"']+)["']/g),
-      ];
+      // Parse individual handlers using a simpler approach that splits on handler boundaries
+      // First, remove the outer handlers = { ... } wrapper
+      const innerHandlersContent = handlersText
+        .replace(/^handlers\s*=\s*\{\s*/, '')
+        .replace(/\s*\}\s*$/, '');
+      
+      // Now split handlers by looking for complete { ... } blocks that contain "action ="
+      const handlerObjects: Array<{action: string, text: string}> = [];
+      
+      // Split the content and find each handler block
+      let currentPos = 0;
+      while (currentPos < innerHandlersContent.length) {
+        // Find the next opening brace that starts a handler
+        let openBracePos = innerHandlersContent.indexOf('{', currentPos);
+        if (openBracePos === -1) break;
+        
+        // Count braces to find the matching closing brace
+        let braceCount = 1;
+        let closeBracePos = openBracePos + 1;
+        
+        while (closeBracePos < innerHandlersContent.length && braceCount > 0) {
+          if (innerHandlersContent[closeBracePos] === '{') {
+            braceCount++;
+          } else if (innerHandlersContent[closeBracePos] === '}') {
+            braceCount--;
+          }
+          closeBracePos++;
+        }
+        
+        if (braceCount === 0) {
+          const handlerText = innerHandlersContent.substring(openBracePos, closeBracePos);
+          
+          // Check if this block contains an action (i.e., it's a handler object)
+          const actionMatch = handlerText.match(/action\s*=\s*["']([^"']+)["']/);
+          if (actionMatch) {
+            handlerObjects.push({
+              action: actionMatch[1],
+              text: handlerText
+            });
+          }
+          
+          currentPos = closeBracePos;
+        } else {
+          // If we can't find matching braces, move past this position
+          currentPos = openBracePos + 1;
+        }
+      }
 
-      for (const actionMatch of actionMatches) {
-        const actionName = actionMatch[1];
+      // Now extract parameters from each complete handler object
+      for (const handler of handlerObjects) {
         const paramNames = new Set<string>();
-
-        // Find the position after this action declaration
-        const actionIndex = actionMatch.index!;
-        const remainingText = handlersText.substring(actionIndex);
-
-        // Find the parameters block for this action (could be on same line or next lines)
-        const parameterBlockMatch = remainingText.match(
-          /parameters\s*=\s*\{([\s\S]*?)\}\s*(?=\}|,\s*\})/,
+        
+        // Look for parameters block within this specific handler
+        const parameterBlockMatch = handler.text.match(
+          /parameters\s*=\s*\{([\s\S]*?)\}/,
         );
 
         if (parameterBlockMatch) {
@@ -485,7 +550,7 @@ export class GenerateLuaProcessCommand extends ToolCommand<
           }
         }
 
-        declaredParameters.set(actionName, paramNames);
+        declaredParameters.set(handler.action, paramNames);
       }
     }
 
@@ -585,10 +650,36 @@ export class GenerateLuaProcessCommand extends ToolCommand<
     }
 
     // Check for parameter definitions in the Lua metadata (handlers table)
-    // Use a more robust pattern to capture the complete handlers table
-    const handlersJsonMatch = generatedCode.match(
-      /handlers\s*=\s*\{[\s\S]*?\n\s*\}(?=\s*[,\n]|$)/,
-    );
+    // Extract the complete handlers section by counting braces to ensure we get the full array
+    const handlersStart = generatedCode.indexOf("handlers = {");
+    let handlersJsonMatch: RegExpMatchArray | null = null;
+    
+    if (handlersStart !== -1) {
+      let braceCount = 0;
+      let i = handlersStart + "handlers = ".length;
+      let foundStart = false;
+      let endPosition = -1;
+      
+      while (i < generatedCode.length) {
+        const char = generatedCode[i];
+        if (char === "{") {
+          braceCount++;
+          foundStart = true;
+        } else if (char === "}") {
+          braceCount--;
+          if (foundStart && braceCount === 0) {
+            endPosition = i + 1;
+            break;
+          }
+        }
+        i++;
+      }
+      
+      if (endPosition !== -1) {
+        const handlersText = generatedCode.substring(handlersStart, endPosition);
+        handlersJsonMatch = [handlersText];
+      }
+    }
     if (handlersJsonMatch) {
       const handlersText = handlersJsonMatch[0];
 
