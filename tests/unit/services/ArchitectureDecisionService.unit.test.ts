@@ -544,10 +544,11 @@ describe("ArchitectureDecisionService", () => {
         userRequest: "Test request",
       };
 
-      // Mock evaluateArchitecturalComplexity to throw error
-      vi.spyOn(service, "evaluateArchitecturalComplexity").mockRejectedValue(
-        new Error("Complexity evaluation failed"),
-      );
+      // Mock createComplexityEvaluationFromRequirements to throw error
+      vi.spyOn(
+        service as any,
+        "createComplexityEvaluationFromRequirements",
+      ).mockRejectedValue(new Error("Complexity evaluation failed"));
 
       await expect(
         service.generateArchitectureRecommendation(mockRequirements, {

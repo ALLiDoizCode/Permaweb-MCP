@@ -561,23 +561,23 @@ return { data = result }`,
     let score = 100;
 
     // Check for basic validation
-    if (!code.includes("if not") && !code.includes("validate")) {
+    if (!/if\s+not\s+/.test(code) && !code.includes("validate")) {
       issues.push("Missing input validation");
-      score -= 20;
+      score -= 25;
       suggestions.push("Add input validation to prevent invalid operations");
     }
 
     // Check for error returns
-    if (!code.includes("error") && !code.includes("return {")) {
+    if (!/return\s*\{.*error/.test(code) && !/error\s*=/.test(code)) {
       issues.push("Missing error return statements");
-      score -= 15;
+      score -= 20;
       suggestions.push("Add proper error return statements");
     }
 
     // Check for protected calls in complex systems
-    if (requirements.complexity === "complex" && !code.includes("pcall")) {
+    if (requirements.complexity === "complex" && !/pcall\s*\(/.test(code)) {
       issues.push("Missing protected calls for complex operations");
-      score -= 10;
+      score -= 15;
       suggestions.push("Use pcall for protected execution of risky operations");
     }
 
@@ -588,7 +588,7 @@ return { data = result }`,
       !code.includes("validate")
     ) {
       issues.push("Missing state validation");
-      score -= 15;
+      score -= 20;
       suggestions.push("Add state validation before and after operations");
     }
 
@@ -663,7 +663,7 @@ return { data = result }`,
       );
       customized = customized.replace(
         "processRequest(msg.Data)",
-        "processTokenRequest(msg)",
+        "executeTokenOperation(msg.Data)",
       );
     }
 

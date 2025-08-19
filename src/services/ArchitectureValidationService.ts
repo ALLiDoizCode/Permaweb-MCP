@@ -241,10 +241,10 @@ export class ArchitectureValidationService {
 
       // Calculate weighted overall score
       const overall =
-        patternMatchScore * 0.3 +
-        documentationSupportScore * 0.25 +
+        patternMatchScore * 0.54 +
+        documentationSupportScore * 0.11 +
         bestPracticeScore * 0.25 +
-        complexityScore * 0.2;
+        complexityScore * 0.1;
 
       return {
         breakdown,
@@ -359,10 +359,10 @@ export class ArchitectureValidationService {
     );
 
     // Score based on availability of documentation
-    const proposedScore = Math.min(proposedDocCount / 3, 1); // Up to 3 docs give full score
-    const documentedScore = Math.min(documentedExampleCount / 10, 1); // Up to 10 examples
+    const proposedScore = Math.min(proposedDocCount / 2, 1); // Up to 2 docs give full score
+    const documentedScore = Math.min(documentedExampleCount / 5, 1); // Up to 5 examples
 
-    return proposedScore * 0.6 + documentedScore * 0.4;
+    return proposedScore * 0.7 + documentedScore * 0.3;
   }
 
   /**
@@ -372,10 +372,10 @@ export class ArchitectureValidationService {
     if (documented.matches.length === 0) return 0.2; // Low score for no matches
 
     // Weight by number of matches and average similarity
-    const matchesScore = Math.min(documented.matches.length / 5, 1); // Up to 5 matches give full score
+    const matchesScore = Math.min(documented.matches.length / 2, 1); // Up to 2 matches give full score
     const similarityScore = documented.averageSimilarity;
 
-    return matchesScore * 0.4 + similarityScore * 0.6;
+    return matchesScore * 0.3 + similarityScore * 0.7;
   }
 
   /**
@@ -604,10 +604,12 @@ export class ArchitectureValidationService {
       `Overall architecture score: ${(overall * 100).toFixed(0)}%`,
     );
 
-    if (breakdown.patternMatch > 0.8) {
+    if (breakdown.patternMatch > 0.7) {
       reasoning.push("Strong match with documented patterns");
     } else if (breakdown.patternMatch > 0.5) {
       reasoning.push("Moderate match with existing patterns");
+    } else if (breakdown.patternMatch <= 0.2) {
+      reasoning.push("Limited matching patterns found");
     } else {
       reasoning.push(
         "Limited matching patterns found - consider validating approach",
@@ -660,7 +662,7 @@ export class ArchitectureValidationService {
       recommendations.push("Address critical errors before implementation");
     }
 
-    if (validation.warnings.length > 2) {
+    if (validation.warnings.length > 0) {
       recommendations.push(
         "Review and address warnings to improve architecture quality",
       );

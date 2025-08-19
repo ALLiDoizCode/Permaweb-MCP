@@ -607,7 +607,15 @@ describe("ErrorHandlingPatternService", () => {
     });
 
     it("should handle analyzeErrorPatternsFromDocs errors", async () => {
-      const mockDocs: PermawebDocsResult[] = [];
+      const mockDocs: PermawebDocsResult[] = [
+        {
+          content: "Sample content",
+          domain: "ao",
+          isFullDocument: true,
+          relevanceScore: 0.5,
+          url: "https://example.com",
+        },
+      ];
 
       // Mock internal method to throw error
       vi.spyOn(service as any, "detectErrorPatterns").mockImplementation(() => {
