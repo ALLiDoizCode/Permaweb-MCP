@@ -545,21 +545,21 @@ export class GenerateLuaProcessCommand extends ToolCommand<
         // Look for parameters block within this specific handler
         // Use improved regex that properly handles nested braces in parameters array
         let parameterBlockMatch = null;
-        const paramStart = handler.text.indexOf('parameters = {');
-        
+        const paramStart = handler.text.indexOf("parameters = {");
+
         if (paramStart !== -1) {
           // Find the complete parameters block by counting braces
           let braceCount = 0;
-          let i = paramStart + 'parameters = '.length;
+          let i = paramStart + "parameters = ".length;
           let foundStart = false;
           let endPosition = -1;
-          
+
           while (i < handler.text.length) {
             const char = handler.text[i];
-            if (char === '{') {
+            if (char === "{") {
               braceCount++;
               foundStart = true;
-            } else if (char === '}') {
+            } else if (char === "}") {
               braceCount--;
               if (foundStart && braceCount === 0) {
                 endPosition = i + 1;
@@ -568,9 +568,12 @@ export class GenerateLuaProcessCommand extends ToolCommand<
             }
             i++;
           }
-          
+
           if (endPosition !== -1) {
-            const parameterBlock = handler.text.substring(paramStart + 'parameters = {'.length, endPosition - 1);
+            const parameterBlock = handler.text.substring(
+              paramStart + "parameters = {".length,
+              endPosition - 1,
+            );
             parameterBlockMatch = [null, parameterBlock]; // Match format for compatibility
           }
         }
