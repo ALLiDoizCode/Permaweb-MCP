@@ -244,6 +244,192 @@ MCP_LOG_LEVEL=info                                # Logging level
 
 ---
 
+## 🧪 Testing
+
+### Understanding MCP Server Design Constraints
+
+Permamind is designed as an **interactive MCP server** using the stdio transport protocol, which creates specific challenges in automated testing environments:
+
+#### Why Testing is Complex
+
+- **Stdio Transport Dependency**: MCP servers communicate via stdin/stdout streams, which conflict with CI test runners that also use these channels
+- **Interactive Protocol**: The MCP protocol requires continuous bidirectional communication between client and server
+- **Stateful Sessions**: Tool registration and context management happen during protocol handshake
+
+#### Testing Limitations
+
+⚠️ **Important**: Traditional unit testing patterns don't work well with stdio-based MCP servers. Direct server testing in CI environments can cause conflicts and unreliable results.
+
+### Test Mode Configuration
+
+Permamind supports alternative transport modes specifically for testing:
+
+```bash
+# Server-Sent Events (SSE) transport for testing
+TEST_TRANSPORT=sse
+TEST_TRANSPORT_PORT=3001
+TEST_TRANSPORT_ENDPOINT=/sse
+
+# HTTP Stream transport for testing
+TEST_TRANSPORT=httpStream
+TEST_TRANSPORT_PORT=3002
+TEST_TRANSPORT_ENDPOINT=/stream
+```
+
+**How Transport Selection Works:**
+
+1. **Default**: stdio transport for production MCP clients
+2. **Test Mode**: When `TEST_TRANSPORT` is set, server uses alternative transport
+3. **Fallback**: Automatic fallback to stdio if test transport fails
+
+### Recommended Testing Approach
+
+#### 1. MCP Client Integration Tests
+
+Use the official MCP client SDK for integration testing:
+
+```bash
+# Install test dependencies
+npm install --save-dev @modelcontextprotocol/sdk
+
+# Run MCP client integration tests
+npm run test:mcp-client
+
+# Run with coverage
+npm run test:coverage
+```
+
+#### 2. Unit Tests for Business Logic
+
+Test individual services and utilities separately:
+
+```bash
+# Run unit tests only
+npm test -- tests/unit/
+
+# Test specific service
+npm test -- tests/unit/services/AIMemoryService.unit.test.ts
+```
+
+#### 3. CI/CD Configuration
+
+GitHub Actions example with proper environment setup:
+
+```yaml
+name: Test Suite
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm ci
+
+      # Standard unit and integration tests
+      - run: npm test
+        env:
+          NODE_ENV: test
+          SEED_PHRASE: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+
+      # Optional: MCP client integration tests (requires [mcp] in PR title)
+      - if: contains(github.event.pull_request.title, '[mcp]')
+        run: npm run test:mcp-client
+        env:
+          NODE_ENV: test
+          TEST_TRANSPORT: sse
+          TEST_TRANSPORT_PORT: 3001
+          SEED_PHRASE: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+```
+
+### Testing Best Practices
+
+#### Environment Variables for Testing
+
+```bash
+# Required for all tests
+NODE_ENV=test                    # Prevents mainnet endpoint usage
+SEED_PHRASE="test phrase..."     # Deterministic test wallet
+
+# For MCP client integration tests
+TEST_TRANSPORT=sse               # Use non-stdio transport
+TEST_TRANSPORT_PORT=3001         # Avoid port conflicts
+```
+
+#### Test Isolation Patterns
+
+- **Separate Process**: Each MCP integration test spawns isolated server instance
+- **Unique Ports**: Dynamic port allocation prevents conflicts
+- **Clean State**: Fresh server instance per test suite
+- **Timeout Configuration**: Extended timeouts for server startup/shutdown
+
+#### Common Pitfalls to Avoid
+
+❌ **Don't**: Try to test stdio transport in CI  
+✅ **Do**: Use SSE or HTTP Stream transport for automated tests
+
+❌ **Don't**: Share server instances between tests  
+✅ **Do**: Spawn fresh server instance per test suite
+
+❌ **Don't**: Use production endpoints in tests  
+✅ **Do**: Set `NODE_ENV=test` to use test endpoints
+
+### Test File Organization
+
+```
+tests/
+├── unit/                    # Individual service/utility tests
+├── integration/             # Cross-service functionality tests
+└── helpers/                 # Test utilities and helpers
+    └── mcp-client-test-helper.ts  # MCP server startup & client helpers
+```
+
+### Troubleshooting Test Issues
+
+#### Server Won't Start in Tests
+
+```bash
+# Check if port is available
+lsof -ti:3001
+
+# Verify test environment
+echo $NODE_ENV $TEST_TRANSPORT
+
+# Check server logs
+DEBUG=true npm run test:mcp-client
+```
+
+#### Client Connection Failures
+
+```bash
+# Verify server is ready before connecting
+await waitForServerReady(port, timeout)
+
+# Use proper transport configuration
+const client = new Client(
+  new SSEClientTransport(new URL(`http://localhost:${port}/sse`))
+);
+```
+
+#### Timeout Issues
+
+```bash
+# Increase test timeouts in vitest.config.ts
+export default defineConfig({
+  test: {
+    testTimeout: 45000,  // 45s for MCP tests
+  }
+});
+```
+
+For comprehensive testing guidance, see [Developer Testing Guide](docs/developer-testing-guide.md).
+
+---
+
 ## 🌐 Ecosystem & Links
 
 ### Core Technologies
