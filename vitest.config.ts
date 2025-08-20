@@ -28,13 +28,13 @@ export default defineConfig({
     environment: "node",
     globals: true,
     // Optimized configurations for different test scenarios
-    hookTimeout: process.env.CI ? 20000 : 45000, // Faster in CI for unit tests
+    hookTimeout: process.env.CI ? 10000 : 20000, // Faster timeout for quicker failure detection
     include: ["tests/**/*.test.ts"],
     pool: "forks",
     poolOptions: {
       forks: {
-        maxForks: process.env.CI ? 2 : 4, // Limit parallelism in CI
-        singleFork: true, // Prevents test interference
+        maxForks: process.env.CI ? 4 : 8, // Increase parallel workers for better performance
+        singleFork: false, // Enable parallel execution for faster test runs
       },
     },
     // Fix deprecated reporter configuration
@@ -42,6 +42,6 @@ export default defineConfig({
       ? ["dot", "json", "junit"] // Minimal output for CI
       : [["default", { summary: true }]], // Detailed for local dev
     setupFiles: ["./tests/setup.ts"],
-    testTimeout: process.env.CI ? 15000 : 30000, // Faster timeout in CI
+    testTimeout: process.env.CI ? 8000 : 15000, // Faster timeout in CI for quicker feedback
   },
 });

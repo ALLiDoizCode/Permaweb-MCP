@@ -160,7 +160,7 @@ jobs:
           NODE_ENV: test
         run: |
           echo "🧪 Running unit tests..."
-          npm run test tests/unit/ -- --reporter=dot || {
+          npm run test:ci:fast || {
             echo "::error::Unit tests failed"
             exit 1
           }
@@ -192,14 +192,14 @@ jobs:
       - name: Run critical integration tests
         env:
           NODE_ENV: test
-        timeout-minutes: 10
+        timeout-minutes: 8
         run: |
           echo "🔗 Running critical integration tests..."
           # Run only the most critical, fast integration tests
           npm run test \
             tests/integration/media-memory.integration.test.ts \
             tests/integration/ProcessArchitectureAnalysis.integration.test.ts \
-            -- --reporter=dot --testTimeout=20000 || {
+            -- --reporter=dot --testTimeout=15000 || {
             echo "::warning::Some integration tests failed - review needed"
             exit 0
           }
