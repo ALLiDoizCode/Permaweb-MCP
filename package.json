@@ -29,6 +29,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "test:ci": "NODE_ENV=test vitest run --pool=threads --poolOptions.threads.singleThread=true",
     "test:mcp-client": "NODE_ENV=test vitest run tests/integration/mcp-client-integration.integration.test.ts --testTimeout=60000",
     "test:integration": "NODE_ENV=test vitest run tests/integration/ --testTimeout=60000",
     "audit": "npm audit --audit-level moderate",

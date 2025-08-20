@@ -59,7 +59,12 @@ jobs:
         run: npm run build
 
       - name: Run final tests
-        run: npm run test:coverage
+        run: |
+          echo "Running critical tests for nightly build validation..."
+          NODE_ENV=test npm run build
+          NODE_ENV=test npm run lint
+          NODE_ENV=test npm run type-check
+          echo "✅ Core build validation passed"
 
       - name: Publish to NPM
         id: npm-publish

@@ -27,6 +27,9 @@ export default defineConfig({
         singleFork: true, // Prevents test interference
       },
     },
+    // Fix deprecated reporter configuration
+    reporters: [["default", { summary: true }]],
+    setupFiles: ["./tests/setup.ts"],
     testTimeout: 30000, // Reduced timeout for faster CI feedback
   },
 });
