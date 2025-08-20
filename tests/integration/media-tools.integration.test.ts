@@ -2,47 +2,49 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock LoadNetworkStorageService for testing - MUST be before any other imports
 vi.mock("../../src/services/LoadNetworkStorageService.js", async () => {
-  const actual = await vi.importActual("../../src/services/LoadNetworkStorageService.js");
+  const actual = await vi.importActual(
+    "../../src/services/LoadNetworkStorageService.js",
+  );
   return {
     ...actual,
     LoadNetworkStorageService: vi.fn().mockImplementation(() => ({
       downloadFile: vi.fn().mockResolvedValue({
-      contentLength: 13,
-      contentType: "text/plain",
-      data: new Uint8Array([
-        72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100, 33,
-      ]), // "Hello, world!"
-      etag: "test-etag-12345",
-      lastModified: new Date("2024-01-01T12:00:00Z"),
-      success: true,
-    }),
+        contentLength: 13,
+        contentType: "text/plain",
+        data: new Uint8Array([
+          72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100, 33,
+        ]), // "Hello, world!"
+        etag: "test-etag-12345",
+        lastModified: new Date("2024-01-01T12:00:00Z"),
+        success: true,
+      }),
       listFiles: vi.fn().mockResolvedValue({
-      isTruncated: false,
-      objects: [
-        {
-          etag: "test-etag-12345",
-          key: "media/temporal/1640995200000-abc123-test.txt",
-          lastModified: new Date("2024-01-01T12:00:00Z"),
-          size: 13,
-          storageClass: "STANDARD",
-        },
-        {
-          etag: "test-etag-67890",
-          key: "media/permanent/1640995300000-def456-image.jpg",
-          lastModified: new Date("2024-01-01T12:05:00Z"),
-          size: 50000,
-          storageClass: "STANDARD",
-        },
-      ],
-      success: true,
+        isTruncated: false,
+        objects: [
+          {
+            etag: "test-etag-12345",
+            key: "media/temporal/1640995200000-abc123-test.txt",
+            lastModified: new Date("2024-01-01T12:00:00Z"),
+            size: 13,
+            storageClass: "STANDARD",
+          },
+          {
+            etag: "test-etag-67890",
+            key: "media/permanent/1640995300000-def456-image.jpg",
+            lastModified: new Date("2024-01-01T12:05:00Z"),
+            size: 50000,
+            storageClass: "STANDARD",
+          },
+        ],
+        success: true,
       }),
       uploadFile: vi.fn().mockResolvedValue({
-      etag: "test-etag-12345",
-      key: "media/temporal/1640995200000-abc123-test.txt",
-      location:
-        "https://test-bucket.s3.amazonaws.com/media/temporal/1640995200000-abc123-test.txt",
-      size: 13,
-      success: true,
+        etag: "test-etag-12345",
+        key: "media/temporal/1640995200000-abc123-test.txt",
+        location:
+          "https://test-bucket.s3.amazonaws.com/media/temporal/1640995200000-abc123-test.txt",
+        size: 13,
+        success: true,
       }),
     })),
   };

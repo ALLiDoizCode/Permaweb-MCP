@@ -5,6 +5,7 @@ export default defineConfig({
     // Bail on first test failure in CI for faster feedback
     bail: process.env.CI ? 1 : 0,
     coverage: {
+      enabled: process.env.COVERAGE === "true", // Disable coverage by default
       exclude: [
         "node_modules/",
         "dist/",
@@ -20,10 +21,6 @@ export default defineConfig({
         lines: 85,
         statements: 85,
       },
-    },
-    // Disable coverage by default, enable explicitly when needed
-    coverage: {
-      enabled: process.env.COVERAGE === "true",
     },
     env: {
       NODE_ENV: "test", // Explicitly set NODE_ENV for all tests to prevent mainnet endpoint usage

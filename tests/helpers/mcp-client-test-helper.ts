@@ -198,11 +198,11 @@ export async function startTestServer(
     const serverProcess = spawn("npm", ["start"], {
       env: {
         ...process.env,
+        // Use test access key to avoid LoadNetwork initialization errors
+        LOAD_NETWORK_ACCESS_KEY: "test-access-key",
         NODE_ENV: "test",
         // Use test seed phrase to avoid wallet issues in CI
         SEED_PHRASE: "test seed phrase for integration testing only",
-        // Use test access key to avoid LoadNetwork initialization errors
-        LOAD_NETWORK_ACCESS_KEY: "test-access-key",
         TEST_TRANSPORT: config.transport,
         TEST_TRANSPORT_ENDPOINT: config.endpoint,
         TEST_TRANSPORT_PORT: config.port.toString(),
