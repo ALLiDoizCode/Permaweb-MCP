@@ -36,6 +36,20 @@ export class GenerateKeypairCommand extends ToolCommand<
 
   async execute(params: GenerateKeypairParams): Promise<string> {
     try {
+      // Check if keypair already exists in server state
+      const { getCurrentContext, setUserState } = await import(
+        "../../../server.js"
+      );
+      const currentContext = getCurrentContext();
+
+      if (currentContext.keyPair && currentContext.publicKey) {
+        // Return existing keypair
+        return JSON.stringify({
+          publicKey: currentContext.publicKey,
+          success: true,
+        });
+      }
+
       const arweave = Arweave.init({});
       let keyPair;
 
@@ -52,12 +66,21 @@ export class GenerateKeypairCommand extends ToolCommand<
         // Generate keypair from seed phrase
         keyPair = await getKeyFromMnemonic(params.seedPhrase);
       } else {
-        // Generate random keypair
-        keyPair = await arweave.wallets.generate();
+        // Check if SEED_PHRASE env var is available
+        const envSeedPhrase = process.env.SEED_PHRASE;
+        if (envSeedPhrase) {
+          keyPair = await getKeyFromMnemonic(envSeedPhrase);
+        } else {
+          // Generate random keypair
+          keyPair = await arweave.wallets.generate();
+        }
       }
 
       // Get public key (address)
       const publicKey = await arweave.wallets.jwkToAddress(keyPair);
+
+      // Store the keypair in server state for persistence
+      setUserState({ keyPair, publicKey });
 
       return JSON.stringify({
         publicKey,

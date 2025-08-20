@@ -32,6 +32,14 @@ export const getCurrentUserState = () => ({
   publicKey,
 });
 
+// Export getter for current context (dynamic)
+export const getCurrentContext = (): ToolContext => ({
+  embeddedTemplates,
+  hubId,
+  keyPair,
+  publicKey,
+});
+
 // Export setter for server state (used by hub initialization tools)
 export const setUserState = (newState: {
   hubId?: string;

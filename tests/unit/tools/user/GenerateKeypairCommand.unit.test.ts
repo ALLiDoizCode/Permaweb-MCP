@@ -10,6 +10,15 @@ vi.mock("../../../../src/mnemonic.js", () => ({
   validateMnemonic: vi.fn(),
 }));
 
+// Mock the server module
+const mockSetUserState = vi.fn();
+const mockGetCurrentContext = vi.fn();
+
+vi.mock("../../../../src/server.js", () => ({
+  getCurrentContext: mockGetCurrentContext,
+  setUserState: mockSetUserState,
+}));
+
 // Mock Arweave
 const mockWallets = {
   generate: vi.fn(),
@@ -40,6 +49,17 @@ describe("GenerateKeypairCommand", () => {
 
     // Reset all mocks
     vi.clearAllMocks();
+
+    // Set up default mock returns - no existing keypair in server state
+    mockGetCurrentContext.mockReturnValue({
+      embeddedTemplates: new Map(),
+      hubId: undefined,
+      keyPair: undefined,
+      publicKey: undefined,
+    });
+
+    // Clear environment variable for clean tests
+    delete process.env.SEED_PHRASE;
   });
 
   describe("execute", () => {
@@ -145,6 +165,83 @@ describe("GenerateKeypairCommand", () => {
       expect(parsed.error).toBe(
         "Failed to generate keypair: Mnemonic key generation failed",
       );
+    });
+
+    it("should return existing keypair when one already exists in server state", async () => {
+      const existingKeyPair = {
+        d: "existing-d",
+        dp: "existing-dp",
+        dq: "existing-dq",
+        e: "AQAB",
+        kty: "RSA",
+        n: "existing-n",
+        p: "existing-p",
+        q: "existing-q",
+      } as JWKInterface;
+      const existingPublicKey = "existing-generated-public-key";
+
+      // Mock server state to return existing keypair
+      mockGetCurrentContext.mockReturnValue({
+        embeddedTemplates: new Map(),
+        hubId: "test-hub",
+        keyPair: existingKeyPair,
+        publicKey: existingPublicKey,
+      });
+
+      const result = await command.execute({});
+      const parsed = JSON.parse(result);
+
+      expect(parsed.success).toBe(true);
+      expect(parsed.publicKey).toBe(existingPublicKey);
+
+      // Should not call wallet generation functions when keypair already exists
+      expect(mockWallets.generate).not.toHaveBeenCalled();
+      expect(mockWallets.jwkToAddress).not.toHaveBeenCalled();
+      expect(mockSetUserState).not.toHaveBeenCalled();
+    });
+
+    it("should use SEED_PHRASE environment variable when no parameters provided", async () => {
+      const envSeedPhrase =
+        "test env seed phrase with twelve words for validation";
+      const mockKeyPair = {
+        d: "env-d",
+        dp: "env-dp",
+        dq: "env-dq",
+        e: "AQAB",
+        kty: "RSA",
+        n: "env-n",
+        p: "env-p",
+        q: "env-q",
+      } as JWKInterface;
+      const mockPublicKey = "env-generated-public-key";
+
+      // Set environment variable
+      process.env.SEED_PHRASE = envSeedPhrase;
+
+      // Mock mnemonic functions
+      const { getKeyFromMnemonic } = await import(
+        "../../../../src/mnemonic.js"
+      );
+      vi.mocked(getKeyFromMnemonic).mockResolvedValue(mockKeyPair);
+
+      mockWallets.jwkToAddress.mockResolvedValue(mockPublicKey);
+
+      const result = await command.execute({});
+      const parsed = JSON.parse(result);
+
+      expect(parsed.success).toBe(true);
+      expect(parsed.publicKey).toBe(mockPublicKey);
+      expect(getKeyFromMnemonic).toHaveBeenCalledWith(envSeedPhrase);
+      expect(mockSetUserState).toHaveBeenCalledWith({
+        keyPair: mockKeyPair,
+        publicKey: mockPublicKey,
+      });
+
+      // Should not use random generation when env var is available
+      expect(mockWallets.generate).not.toHaveBeenCalled();
+
+      // Clean up
+      delete process.env.SEED_PHRASE;
     });
   });
 
