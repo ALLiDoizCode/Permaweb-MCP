@@ -65,47 +65,65 @@ export async function autoPublicKey(context: ToolContext): Promise<string> {
 /**
  * Helper to safely extract hubId with non-null assertion
  */
-export function safeHubId(context: ToolContext): string {
-  if (!context.hubId) {
+export async function safeHubId(_context: ToolContext): Promise<string> {
+  // Get fresh context to check current state
+  const { getCurrentContext } = await import("../../server.js");
+  const currentContext = getCurrentContext();
+
+  if (!currentContext.hubId) {
     throw new Error("Hub not initialized. Please run initializeHub first.");
   }
-  return context.hubId;
+  return currentContext.hubId;
 }
 
 /**
  * Helper to safely extract keyPair with non-null assertion
  * This provides better error messaging during development
  */
-export function safeKeyPair(context: ToolContext): JWKInterface {
-  if (!context.keyPair) {
+export async function safeKeyPair(
+  _context: ToolContext,
+): Promise<JWKInterface> {
+  // Get fresh context to check current state
+  const { getCurrentContext } = await import("../../server.js");
+  const currentContext = getCurrentContext();
+
+  if (!currentContext.keyPair) {
     throw new Error("Wallet not initialized. Please run initializeHub first.");
   }
-  return context.keyPair;
+  return currentContext.keyPair;
 }
 
 /**
  * Helper to safely extract publicKey with non-null assertion
  */
-export function safePublicKey(context: ToolContext): string {
-  if (!context.publicKey) {
+export async function safePublicKey(_context: ToolContext): Promise<string> {
+  // Get fresh context to check current state
+  const { getCurrentContext } = await import("../../server.js");
+  const currentContext = getCurrentContext();
+
+  if (!currentContext.publicKey) {
     throw new Error("Wallet not initialized. Please run initializeHub first.");
   }
-  return context.publicKey;
+  return currentContext.publicKey;
 }
 
 /**
  * Auto-generates a keypair if none exists in the context
  */
-async function autoGenerateKeypair(context: ToolContext): Promise<{
+async function autoGenerateKeypair(_context: ToolContext): Promise<{
   generated: boolean;
   keyPair: JWKInterface;
   publicKey: string;
 }> {
-  if (context.keyPair && context.publicKey) {
+  // Get fresh context to check current state
+  const { getCurrentContext } = await import("../../server.js");
+  const currentContext = getCurrentContext();
+
+  if (currentContext.keyPair && currentContext.publicKey) {
     return {
       generated: false,
-      keyPair: context.keyPair,
-      publicKey: context.publicKey,
+      keyPair: currentContext.keyPair,
+      publicKey: currentContext.publicKey,
     };
   }
 
@@ -139,12 +157,16 @@ async function autoGenerateKeypair(context: ToolContext): Promise<{
 async function autoInitializeHub(
   keyPair: JWKInterface,
   publicKey: string,
-  context: ToolContext,
+  _context: ToolContext,
 ): Promise<{ created: boolean; hubId: string }> {
-  if (context.hubId) {
+  // Get fresh context to check current state
+  const { getCurrentContext } = await import("../../server.js");
+  const currentContext = getCurrentContext();
+
+  if (currentContext.hubId) {
     return {
       created: false,
-      hubId: context.hubId,
+      hubId: currentContext.hubId,
     };
   }
 

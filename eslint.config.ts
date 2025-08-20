@@ -15,6 +15,7 @@ export default tseslint.config(
     files: [
       "src/services/**/*.ts",
       "src/tools/process/commands/*.ts",
+      "src/tools/core/ContextHelpers.ts",
       "src/models/WorkflowMemory.ts",
       "tests/**/*.ts",
     ],
