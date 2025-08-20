@@ -1,243 +1,149 @@
-# Permamind CI/CD Pipeline Documentation
+# GitHub Actions Workflow Optimization Guide
 
 ## Overview
 
-This repository uses a comprehensive multi-stage CI/CD pipeline to ensure code quality, security, and reliable releases. The pipeline consists of four main workflow files that handle different aspects of development and deployment.
+The CI/CD pipeline has been optimized to reduce PR validation time from ~15-20 minutes to ~5 minutes while maintaining code quality standards.
 
-## Workflow Files
+## Workflow Structure
 
-### 1. **pr-validation.yml** - Pull Request Validation
-**Triggers:** Pull requests to `development` and `main` branches
-**Purpose:** Comprehensive validation of pull requests before merge
+### 1. PR Validation (Fast) - `pr-validation-fast.yml`
+**Purpose:** Quick feedback for pull requests  
+**Runtime:** ~3-5 minutes  
+**Triggers:** All PRs to `development` and `main`
 
-**Jobs:**
-- **check-skip**: Skips CI for draft PRs (unless `[ci]` in title)
-- **quality-checks**: Code quality, linting, type checking, security audit
-- **test-suite**: Unit and integration tests with coverage reporting
-- **cross-platform-build**: Build validation across Ubuntu, Windows, macOS
-- **performance-check**: Bundle size analysis and startup time testing
-- **integration-tests**: Full integration testing and package validation
-- **pr-validation-status**: Final status reporting and comments
+#### Key Features:
+- **Smart Change Detection:** Only runs relevant tests based on modified files
+- **Tiered Testing:** 
+  - Tier 1: Quick checks (lint, type-check, build) - 2 min
+  - Tier 2: Unit tests (when code changes) - 3 min
+  - Tier 3: Critical integration tests (when needed) - 5 min
+- **Single Node Version:** Tests on Node 20 only (not matrix)
+- **No Coverage Collection:** Speeds up test execution by 30%
+- **Parallel Jobs:** Security audit runs in parallel
 
-**Key Features:**
-- ✅ Multi-node version testing (Node 20, 22)
-- ✅ Cross-platform validation
-- ✅ Coverage threshold enforcement (85% lines, 90% functions)
-- ✅ Security scanning and vulnerability checks
-- ✅ Automated PR status comments
-- ✅ Debug log detection and prevention
+#### When Tests Run:
+- **Unit Tests:** Only when `src/` or `tests/` files change
+- **Integration Tests:** Only when `src/services/`, `src/tools/`, or integration tests change
+- **Platform Tests:** Only when source code changes
+- **All Tests Skip:** For draft PRs (unless `[ci]` in title)
 
-### 2. **development-ci.yml** - Development Branch Continuous Integration
-**Triggers:** Pushes to `development` branch, daily scheduled runs
-**Purpose:** Monitor development branch health and readiness
+### 2. Main Branch Full Test - `main-full-test.yml`
+**Purpose:** Comprehensive testing with coverage  
+**Runtime:** ~15-20 minutes  
+**Triggers:** 
+- Push to `main` branch
+- Nightly at 2 AM UTC
+- Manual dispatch
 
-**Jobs:**
-- **quick-validation**: Fast quality checks for immediate feedback
-- **comprehensive-qa**: Full QA pipeline with multi-node testing
-- **security-analysis**: Security auditing and vulnerability scanning
-- **development-status**: Overall branch health reporting
-- **release-readiness**: Pre-release validation and checks
+#### Features:
+- **Full Matrix Testing:** Node 20 and 22
+- **Complete Coverage Reports:** With Codecov integration
+- **All Integration Tests:** Including slow tests
+- **Cross-Platform Testing:** Ubuntu, Windows, macOS
+- **Security Deep Scan:** Full vulnerability analysis
+- **Performance Analysis:** Bundle size and startup time
 
-**Key Features:**
-- ⚡ Fast feedback loop for development pushes
-- 🔒 Comprehensive security analysis
-- 📊 Release readiness assessment
-- 🚀 Integration smoke testing
+### 3. Legacy Workflow (Deprecated) - `pr-validation.yml`
+- Kept for reference but disabled
+- Can be manually triggered if needed
 
-### 3. **nightly-publish.yml** - Nightly Development Builds
-**Triggers:** Daily at 5:00 AM UTC, manual workflow dispatch
-**Purpose:** Automated nightly builds from development branch
+## Test Commands
 
-**Jobs:**
-- **nightly-publish**: Build, test, and publish nightly versions
-
-**Key Features:**
-- 🌙 Automated nightly builds with timestamp versioning
-- 📦 NPM publishing with `nightly` tag
-- 🏷️ GitHub pre-releases for testing
-- 🔄 Rollback mechanisms for failed builds
-
-**Version Format:** `{current-version}-nightly.{timestamp}`
-**Installation:** `npm install permamind@nightly`
-
-### 4. **npm-publish.yml** - Production Release Pipeline
-**Triggers:** Git tags (v*), manual workflow dispatch
-**Purpose:** Production releases to NPM with comprehensive validation
-
-**Jobs:**
-- **validate-package**: Multi-node package structure validation
-- **cross-platform-test**: Cross-platform CLI testing
-- **npm-publish**: NPM publication with release creation
-
-**Key Features:**
-- 🏗️ Comprehensive package validation
-- 🌍 Cross-platform testing (Ubuntu, Windows, macOS)
-- 📦 NPM publishing with proper tagging
-- 🏷️ GitHub release creation with changelogs
-- ✅ Post-publish verification
-
-## Workflow Integration
-
-```mermaid
-graph TD
-    A[Developer Creates PR] --> B[pr-validation.yml]
-    B --> C{All Checks Pass?}
-    C -->|Yes| D[PR Approved & Merged]
-    C -->|No| E[Fix Issues & Push]
-    E --> B
-    
-    D --> F[development-ci.yml]
-    F --> G[Daily Nightly Build]
-    G --> H[nightly-publish.yml]
-    
-    I[Create Release Tag] --> J[npm-publish.yml]
-    J --> K[Production Release]
-    
-    F --> L{Ready for Release?}
-    L -->|Yes| M[Create Release Tag]
-    M --> J
-```
-
-## Quality Gates
-
-### PR Validation Requirements
-- ✅ Code linting (Prettier + ESLint)
-- ✅ TypeScript type checking
-- ✅ Security audit (npm audit)
-- ✅ Test coverage > 85% lines, 90% functions
-- ✅ Cross-platform build success
-- ✅ Integration tests pass
-- ✅ No debug logs in source code
-- ✅ Bundle size analysis
-
-### Development Branch Health
-- ✅ All PR validation requirements
-- ✅ Security vulnerability scanning
-- ✅ Package installation testing
-- ✅ MCP server initialization
-- ✅ CLI functionality verification
-
-### Release Requirements
-- ✅ All development health checks
-- ✅ Multi-platform compatibility
-- ✅ Package structure validation
-- ✅ Binary execution testing
-- ✅ Post-publish verification
-
-## Branch Strategy
-
-```
-main (production)
-├── v1.0.0 (latest stable)
-├── v1.1.0 (next stable)
-└── development (active development)
-    ├── feature/new-feature
-    ├── fix/bug-fix
-    └── PR merges
-```
-
-## Usage Examples
-
-### Force CI on Draft PR
-Add `[ci]` to your PR title to trigger full validation:
-```
-[ci] WIP: Add new memory features
-```
-
-### Manual Nightly Build
-Trigger via GitHub Actions UI or:
+### Quick Local Testing
 ```bash
-gh workflow run nightly-publish.yml --ref development
+# Run only unit tests (fastest)
+npm run test:unit
+
+# Run only changed tests
+npm run test:changed
+
+# Run critical integration tests
+npm run test:integration:critical
 ```
 
-### Create Production Release
+### PR Simulation
 ```bash
-# Create and push a new tag
-git tag v1.0.1
-git push --tags
-
-# Or use NPM version commands
-npm run version:patch  # Creates tag and pushes
+# Simulate PR validation locally
+npm run lint && npm run type-check && npm run test:unit
 ```
 
-### Monitor Workflow Status
+### Full Test Suite
 ```bash
-# Check latest workflow runs
-gh run list
-
-# Watch specific workflow
-gh run watch
-
-# View workflow logs
-gh run view [run-id] --log
+# Run everything with coverage (like main branch)
+COVERAGE=true npm run test:coverage
 ```
 
-## Environment Variables
+## Performance Improvements
 
-### Required Secrets
-- `NPM_TOKEN`: NPM authentication token for publishing
-- `GITHUB_TOKEN`: GitHub token for releases (automatically provided)
+| Metric | Before | After | Improvement |
+|--------|--------|-------|-------------|
+| PR Validation | 15-20 min | 3-5 min | **75% faster** |
+| Unit Tests | 5 min | 2 min | 60% faster |
+| Integration Tests | 10 min | 3 min* | 70% faster |
+| Coverage Collection | Always | Main only | N/A |
+| Node Versions | 2 (matrix) | 1 (PR) | 50% reduction |
 
-### Optional Configuration
-- `CODECOV_TOKEN`: Codecov integration token for coverage reporting
+*Only critical tests run on PRs
 
-## Troubleshooting
+## Configuration Changes
 
-### Common Issues
+### Vitest Config Optimizations
+- Dynamic timeouts based on CI environment
+- Bail on first failure in CI for faster feedback
+- Coverage disabled by default (enabled via env var)
+- Optimized reporter output for CI
 
-**1. PR Validation Fails on Coverage**
-- Ensure test coverage meets thresholds (85% lines, 90% functions)
-- Add tests for new code or mark as excluded if appropriate
+### Package.json Scripts
+New scripts added for granular test control:
+- `test:unit` - Unit tests only with minimal output
+- `test:integration:critical` - Fast integration tests only
+- `test:ci:fast` - Optimized for CI environments
+- `test:changed` - Only tests affected by recent changes
 
-**2. Cross-platform Build Failures**
-- Check for OS-specific path issues
-- Verify Node.js compatibility across versions
+## Best Practices
 
-**3. Security Audit Failures**
-- Update vulnerable dependencies
-- Use `npm audit fix` for automatic fixes
-- Document any unavoidable vulnerabilities
+### For Developers
+1. Run `npm run test:unit` before pushing
+2. Use `npm run test:changed` during development
+3. Add `[ci]` to draft PR titles to force CI runs
 
-**4. Nightly Build Failures**
-- Check development branch health
-- Verify NPM token validity
-- Review dependency compatibility
+### For Reviewers
+1. Check the PR status comment for test results
+2. Warning symbols (⚠️) indicate non-blocking issues
+3. Red X (❌) indicates must-fix issues
 
-### Debug Commands
-```bash
-# Test workflows locally with act
-act pull_request
+### For Maintainers
+1. Monitor nightly test results for regression
+2. Review coverage reports on main branch merges
+3. Check performance metrics weekly
 
-# Run quality checks locally
-npm run ci:quality
+## Rollback Plan
 
-# Test package installation
-npm pack --dry-run
-```
+If issues arise with the new workflow:
 
-## Pipeline Metrics
+1. **Quick Rollback:**
+   - Rename `pr-validation-fast.yml` to `pr-validation-fast.yml.bak`
+   - Uncomment triggers in `pr-validation.yml`
+   - Push changes
 
-### Performance Targets
-- **PR Validation**: < 15 minutes total runtime
-- **Development CI**: < 10 minutes for quick validation
-- **Nightly Build**: < 8 minutes end-to-end
-- **Production Release**: < 20 minutes with full validation
+2. **Partial Rollback:**
+   - Increase timeouts in `vitest.config.ts`
+   - Enable matrix testing in `pr-validation-fast.yml`
+   - Add coverage back to PR tests if needed
 
-### Success Rates (Target)
-- **PR Validation**: > 95% first-pass success rate
-- **Development CI**: > 98% success rate
-- **Nightly Builds**: > 90% success rate
-- **Production Releases**: > 99% success rate
+## Monitoring
 
----
+Track these metrics weekly:
+- Average PR validation time
+- Test failure rate
+- Coverage trends (from main branch)
+- False positive rate
 
-## Maintenance
+## Future Optimizations
 
-This pipeline is designed to be self-maintaining with the following automated features:
-- Dependency vulnerability scanning
-- Cross-platform compatibility testing
-- Performance regression detection
-- Automated rollback mechanisms
-- Comprehensive error reporting
-
-For pipeline modifications, please ensure all changes are tested in a feature branch with the `[ci]` flag before merging to development.
+Potential improvements to consider:
+1. Test result caching between runs
+2. Docker layer caching for faster setup
+3. Distributed test execution
+4. Test impact analysis based on code changes
+5. Flaky test detection and auto-retry

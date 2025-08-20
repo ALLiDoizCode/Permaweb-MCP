@@ -1,0 +1,374 @@
+name: Full Test Suite (Main Branch)
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      coverage_report:
+        description: 'Generate coverage report'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+env:
+  NODE_VERSION: '20'
+  CI: true
+  SEED_PHRASE: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
+
+jobs:
+  # Full matrix testing
+  full-test-matrix:
+    name: Full Test Suite (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 22]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Full linting
+        run: npm run lint
+
+      - name: Type checking
+        run: npm run type-check
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run ALL unit tests
+        env:
+          NODE_ENV: test
+        run: npm run test tests/unit/
+
+      - name: Run ALL integration tests with coverage
+        env:
+          NODE_ENV: test
+        timeout-minutes: 30
+        run: |
+          if [ "${{ matrix.node-version }}" == "${{ env.NODE_VERSION }}" ]; then
+            echo "📊 Running full test suite with coverage..."
+            npm run test:coverage
+          else
+            echo "🧪 Running full test suite..."
+            npm run test
+          fi
+
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == env.NODE_VERSION
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/coverage-final.json
+          flags: unittests,integration
+          name: codecov-${{ matrix.node-version }}
+          fail_ci_if_error: true
+          verbose: true
+
+      - name: Generate coverage report
+        if: matrix.node-version == env.NODE_VERSION
+        run: |
+          echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "coverage/coverage-summary.json" ]; then
+            LINES=$(node -p "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json', 'utf8')).total.lines.pct")
+            FUNCTIONS=$(node -p "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json', 'utf8')).total.functions.pct")
+            BRANCHES=$(node -p "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json', 'utf8')).total.branches.pct")
+            STATEMENTS=$(node -p "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json', 'utf8')).total.statements.pct")
+            
+            echo "| Metric | Coverage | Target | Status |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|----------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+            
+            # Check line coverage
+            if (( $(echo "$LINES >= 85" | bc -l) )); then
+              echo "| Lines | ${LINES}% | 85% | ✅ |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| Lines | ${LINES}% | 85% | ⚠️ |" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            # Check function coverage
+            if (( $(echo "$FUNCTIONS >= 90" | bc -l) )); then
+              echo "| Functions | ${FUNCTIONS}% | 90% | ✅ |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| Functions | ${FUNCTIONS}% | 90% | ⚠️ |" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            # Check branch coverage
+            if (( $(echo "$BRANCHES >= 75" | bc -l) )); then
+              echo "| Branches | ${BRANCHES}% | 75% | ✅ |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| Branches | ${BRANCHES}% | 75% | ⚠️ |" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            echo "| Statements | ${STATEMENTS}% | - | ℹ️ |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Archive coverage reports
+        if: matrix.node-version == env.NODE_VERSION
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+  # Cross-platform comprehensive testing
+  cross-platform-full:
+    name: Cross-Platform Full Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [20]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run tests
+        env:
+          NODE_ENV: test
+        run: npm run test
+
+      - name: CLI functionality test
+        run: |
+          node bin/permamind.js --version
+          node bin/permamind.js --help
+
+  # Performance and bundle analysis
+  performance-analysis:
+    name: Performance & Bundle Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for production
+        run: NODE_ENV=production npm run build
+
+      - name: Analyze bundle size
+        run: |
+          echo "## 📦 Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Total size
+          TOTAL_SIZE=$(du -sh dist/ | cut -f1)
+          echo "**Total dist size:** $TOTAL_SIZE" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Top 10 largest files
+          echo "### Top 10 Largest Files" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          find dist/ -name "*.js" -exec ls -lh {} \; | sort -k5 -rh | head -10 | awk '{print $9 ": " $5}' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Startup performance test
+        run: |
+          echo "## 🚀 Startup Performance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Measure startup time
+          START=$(date +%s%N)
+          timeout 10s node bin/permamind.js --help > /dev/null
+          END=$(date +%s%N)
+          DURATION=$((($END - $START) / 1000000))
+          
+          echo "**CLI startup time:** ${DURATION}ms" >> $GITHUB_STEP_SUMMARY
+          
+          if [ $DURATION -lt 500 ]; then
+            echo "✅ Excellent startup performance!" >> $GITHUB_STEP_SUMMARY
+          elif [ $DURATION -lt 1000 ]; then
+            echo "⚠️ Good startup performance, but could be optimized" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Slow startup - optimization needed!" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Security deep scan
+  security-deep-scan:
+    name: Security Deep Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Full security audit
+        run: |
+          echo "## 🔒 Security Audit Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Run full audit
+          npm audit --json > audit.json || true
+          
+          # Parse results
+          if [ -f audit.json ]; then
+            CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' audit.json)
+            HIGH=$(jq '.metadata.vulnerabilities.high // 0' audit.json)
+            MODERATE=$(jq '.metadata.vulnerabilities.moderate // 0' audit.json)
+            LOW=$(jq '.metadata.vulnerabilities.low // 0' audit.json)
+            
+            echo "| Severity | Count | Status |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "$CRITICAL" -eq 0 ]; then
+              echo "| Critical | $CRITICAL | ✅ |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| Critical | $CRITICAL | ❌ |" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            if [ "$HIGH" -eq 0 ]; then
+              echo "| High | $HIGH | ✅ |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| High | $HIGH | ⚠️ |" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            echo "| Moderate | $MODERATE | ℹ️ |" >> $GITHUB_STEP_SUMMARY
+            echo "| Low | $LOW | ℹ️ |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: License compliance check
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📜 License Compliance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for problematic licenses
+          npm ls --json --depth=0 | jq -r '.dependencies | to_entries[] | .key' | while read dep; do
+            LICENSE=$(npm view "$dep" license 2>/dev/null || echo "Unknown")
+            if [[ "$LICENSE" == *"GPL"* ]] || [[ "$LICENSE" == *"AGPL"* ]]; then
+              echo "⚠️ $dep: $LICENSE (Copyleft license)" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+  # MCP integration test suite
+  mcp-integration-full:
+    name: MCP Integration Full Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run MCP integration tests
+        env:
+          NODE_ENV: test
+        timeout-minutes: 20
+        run: |
+          echo "🔗 Running full MCP integration test suite..."
+          npm run test:mcp-client
+
+  # Final report
+  main-test-report:
+    name: Main Branch Test Report
+    runs-on: ubuntu-latest
+    needs: [full-test-matrix, cross-platform-full, performance-analysis, security-deep-scan, mcp-integration-full]
+    if: always()
+    steps:
+      - name: Generate final report
+        run: |
+          echo "# 📊 Main Branch Full Test Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check each job status
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.full-test-matrix.result }}" == "success" ]; then
+            echo "| Full Test Matrix | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Full Test Matrix | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.cross-platform-full.result }}" == "success" ]; then
+            echo "| Cross-Platform Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Cross-Platform Tests | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.performance-analysis.result }}" == "success" ]; then
+            echo "| Performance Analysis | ✅ Completed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Performance Analysis | ⚠️ Issues |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.security-deep-scan.result }}" == "success" ]; then
+            echo "| Security Scan | ✅ Clean |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Security Scan | ⚠️ Vulnerabilities |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.mcp-integration-full.result }}" == "success" ]; then
+            echo "| MCP Integration | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| MCP Integration | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Overall status
+          if [ "${{ needs.full-test-matrix.result }}" == "success" ] && \
+             [ "${{ needs.cross-platform-full.result }}" == "success" ] && \
+             [ "${{ needs.mcp-integration-full.result }}" == "success" ]; then
+            echo "## ✅ All critical tests passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Some tests failed - investigation required" >> $GITHUB_STEP_SUMMARY
+          fi
