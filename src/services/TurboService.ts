@@ -774,7 +774,7 @@ export class TurboService {
     }
   }
 
-  private async collectFiles(
+  async collectFiles(
     folderPath: string,
     includePatterns: string[] = [],
     excludePatterns: string[] = [],

@@ -215,8 +215,9 @@ export class UploadToArweaveCommand extends ToolCommand<
           });
         }
 
-        // Store the calculated token amount for later use
-        calculatedTokenAmount = priceResult.tokenAmount || "0";
+        // Store and normalize the calculated token amount for later use
+        const rawTokenAmount = priceResult.tokenAmount || "0";
+        calculatedTokenAmount = this.normalizeTokenAmount(rawTokenAmount);
 
         // Validate the calculated amount is reasonable
         const tokenValidationResult = this.validateTokenAmount(
@@ -337,6 +338,28 @@ export class UploadToArweaveCommand extends ToolCommand<
     };
 
     return mimeMap[extension || ""] || "application/octet-stream";
+  }
+
+  private normalizeTokenAmount(tokenAmount: string): string {
+    try {
+      // Handle scientific notation and decimal formats from Turbo SDK
+      const numericValue = parseFloat(tokenAmount);
+
+      // If the value is not a valid number, return as-is for validation to catch
+      if (isNaN(numericValue) || !isFinite(numericValue)) {
+        return tokenAmount;
+      }
+
+      // Convert to integer string (Winston units are always integers)
+      // Use Math.ceil to ensure we have at least enough tokens (round up)
+      const winstonAmount = Math.ceil(numericValue);
+
+      // Ensure it's positive
+      return Math.max(0, winstonAmount).toString();
+    } catch {
+      // If parsing fails, return original for validation to catch
+      return tokenAmount;
+    }
   }
 
   private validateTokenAmount(tokenAmount: string): {
