@@ -12,10 +12,10 @@ const mockCollectFiles = vi.fn();
 const mockGetTokenPriceForBytes = vi.fn();
 vi.mock("../../../../src/services/TurboService.js", () => ({
   TurboService: vi.fn().mockImplementation(() => ({
-    topUpWithTokens: mockTopUpWithTokens,
-    uploadFolder: mockUploadFolder,
     collectFiles: mockCollectFiles,
     getTokenPriceForBytes: mockGetTokenPriceForBytes,
+    topUpWithTokens: mockTopUpWithTokens,
+    uploadFolder: mockUploadFolder,
   })),
 }));
 
@@ -56,25 +56,25 @@ describe("UploadFolderToArweaveCommand", () => {
     mockTopUpWithTokens.mockClear();
     mockCollectFiles.mockClear();
     mockGetTokenPriceForBytes.mockClear();
-    
+
     // Set up default mock behaviors for tokens payment method (default)
     mockCollectFiles.mockResolvedValue({
-      success: true,
       files: [
         { filePath: "index.html", relativePath: "index.html", size: 500 },
         { filePath: "style.css", relativePath: "style.css", size: 200 },
         { filePath: "script.js", relativePath: "script.js", size: 100 },
         { filePath: "data.json", relativePath: "data.json", size: 50 },
       ],
+      success: true,
     });
-    
+
     mockGetTokenPriceForBytes.mockResolvedValue({
       success: true,
       tokenAmount: "1000000000000", // 0.001 AR in winston
       tokenType: "arweave",
       wincAmount: "850000",
     });
-    
+
     mockTopUpWithTokens.mockResolvedValue({
       success: true,
     });
@@ -665,63 +665,65 @@ describe("UploadFolderToArweaveCommand", () => {
       const result = await command.execute({
         folderPath: testFolderPath,
         paymentMethod: "tokens",
-        tokenAmount: "5000000000000", // 0.005 AR
+        // tokenAmount is now auto-calculated, not passed as parameter
       });
 
       const parsed = JSON.parse(result);
       expect(parsed.success).toBe(true);
       expect(parsed.paymentMethod).toBe("tokens");
-      expect(parsed.tokenAmount).toBe("5000000000000");
+      expect(parsed.tokenAmount).toBe("1000000000000"); // Auto-calculated from mock
       expect(parsed.manifestId).toBe("token-manifest-456");
       expect(mockTopUpWithTokens).toHaveBeenCalledWith({
-        tokenAmount: "5000000000000",
+        tokenAmount: "1000000000000", // Auto-calculated value from mock
       });
     });
   });
 
-  describe("Token Amount Validation", () => {
-    it("should reject non-numeric token amounts", async () => {
-      const result = await command.execute({
-        folderPath: testFolderPath,
-        paymentMethod: "tokens",
-        tokenAmount: "invalid-amount",
-      });
-
-      const parsed = JSON.parse(result);
-      expect(parsed.success).toBe(false);
-      expect(parsed.error.code).toBe("INVALID_TOKEN_AMOUNT_FORMAT");
-      expect(parsed.error.solutions).toContain(
-        "Use getTokenPriceForBytes to estimate total cost for folder",
-      );
-    });
-
-    it("should reject zero token amounts", async () => {
-      const result = await command.execute({
-        folderPath: testFolderPath,
-        paymentMethod: "tokens",
-        tokenAmount: "0",
-      });
-
-      const parsed = JSON.parse(result);
-      expect(parsed.success).toBe(false);
-      expect(parsed.error.code).toBe("TOKEN_AMOUNT_TOO_SMALL");
-      expect(parsed.error.solutions).toContain(
-        "Consider using 'credits' payment method for very small folders",
-      );
-    });
-
-    it("should accept large token amounts for folder uploads", async () => {
-      // Folder uploads have a higher limit (10000 AR vs 1000 AR for single files)
-      mockTopUpWithTokens.mockResolvedValue({
+  describe("Token Auto-Calculation", () => {
+    it("should handle empty folder with token payment", async () => {
+      // Mock empty folder scenario
+      mockCollectFiles.mockResolvedValue({
+        files: [], // No files found
         success: true,
-        transactionId: "large-topup-tx",
-        wincAmount: "50000000",
       });
 
+      const result = await command.execute({
+        folderPath: testFolderPath,
+        paymentMethod: "tokens",
+      });
+
+      const parsed = JSON.parse(result);
+      expect(parsed.success).toBe(false);
+      expect(parsed.error.code).toBe("EMPTY_FOLDER");
+      expect(parsed.error.solutions).toContain(
+        "Ensure the folder contains files",
+      );
+    });
+
+    it("should handle price calculation failure during auto-calculation", async () => {
+      mockGetTokenPriceForBytes.mockResolvedValue({
+        error: { message: "Network error during price calculation" },
+        success: false,
+      });
+
+      const result = await command.execute({
+        folderPath: testFolderPath,
+        paymentMethod: "tokens",
+      });
+
+      const parsed = JSON.parse(result);
+      expect(parsed.success).toBe(false);
+      expect(parsed.error.code).toBe("PRICE_CALCULATION_FAILED");
+      expect(parsed.error.solutions).toContain(
+        "Consider using 'credits' payment method as fallback",
+      );
+    });
+
+    it("should successfully auto-calculate token amount for valid folder", async () => {
       mockUploadFolder.mockResolvedValue({
         failedFiles: 0,
         individualResults: [],
-        manifestId: "large-manifest",
+        manifestId: "auto-calc-manifest",
         success: true,
         totalFiles: 4,
         totalSize: 1500,
@@ -731,29 +733,36 @@ describe("UploadFolderToArweaveCommand", () => {
       const result = await command.execute({
         folderPath: testFolderPath,
         paymentMethod: "tokens",
-        tokenAmount: "5000000000000000", // 5000 AR (within 10000 AR limit)
       });
 
       const parsed = JSON.parse(result);
       expect(parsed.success).toBe(true);
+      expect(parsed.tokenAmount).toBe("1000000000000"); // Auto-calculated value
+      expect(mockCollectFiles).toHaveBeenCalledWith(testFolderPath, [], []);
+      expect(mockGetTokenPriceForBytes).toHaveBeenCalledWith({
+        byteCount: 850, // Total folder size from mock (500+200+100+50)
+      });
       expect(mockTopUpWithTokens).toHaveBeenCalledWith({
-        tokenAmount: "5000000000000000",
+        tokenAmount: "1000000000000",
       });
     });
 
-    it("should reject excessively large token amounts", async () => {
+    it("should handle folder scan failure during auto-calculation", async () => {
+      mockCollectFiles.mockResolvedValue({
+        error: { message: "Permission denied reading folder" },
+        success: false,
+      });
+
       const result = await command.execute({
         folderPath: testFolderPath,
         paymentMethod: "tokens",
-        tokenAmount: "20000000000000000", // 20000 AR (over 10000 AR limit)
       });
 
       const parsed = JSON.parse(result);
       expect(parsed.success).toBe(false);
-      expect(parsed.error.code).toBe("TOKEN_AMOUNT_TOO_LARGE");
-      expect(parsed.error.message).toContain("10000 AR");
+      expect(parsed.error.code).toBe("FOLDER_SCAN_FAILED");
       expect(parsed.error.solutions).toContain(
-        "Use 'credits' payment method for very large folder uploads",
+        "Check that the folder exists and is readable",
       );
     });
   });
