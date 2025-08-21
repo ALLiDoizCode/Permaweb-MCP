@@ -173,24 +173,7 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
       let calculatedTokenAmount: string | undefined;
       if (effectivePaymentMethod === "tokens") {
         // First, collect files to calculate total size
-        const filesResult = await (
-          turboService as unknown as {
-            collectFiles: (
-              folderPath: string,
-              includePatterns: string[],
-              excludePatterns: string[],
-              maxFileSize?: number,
-            ) => Promise<{
-              error?: { code: string; message: string; solutions: string[] };
-              files?: Array<{
-                filePath: string;
-                relativePath: string;
-                size: number;
-              }>;
-              success: boolean;
-            }>;
-          }
-        ).collectFiles(
+        const filesResult = await turboService.collectFiles(
           args.folderPath,
           args.includePatterns || [],
           args.excludePatterns || [],

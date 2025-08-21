@@ -8,10 +8,14 @@ import { UploadFolderToArweaveCommand } from "../../../../src/tools/documentatio
 // Mock TurboService
 const mockUploadFolder = vi.fn();
 const mockTopUpWithTokens = vi.fn();
+const mockCollectFiles = vi.fn();
+const mockGetTokenPriceForBytes = vi.fn();
 vi.mock("../../../../src/services/TurboService.js", () => ({
   TurboService: vi.fn().mockImplementation(() => ({
     topUpWithTokens: mockTopUpWithTokens,
     uploadFolder: mockUploadFolder,
+    collectFiles: mockCollectFiles,
+    getTokenPriceForBytes: mockGetTokenPriceForBytes,
   })),
 }));
 
@@ -50,6 +54,30 @@ describe("UploadFolderToArweaveCommand", () => {
     // Reset mock function behavior
     mockUploadFolder.mockClear();
     mockTopUpWithTokens.mockClear();
+    mockCollectFiles.mockClear();
+    mockGetTokenPriceForBytes.mockClear();
+    
+    // Set up default mock behaviors for tokens payment method (default)
+    mockCollectFiles.mockResolvedValue({
+      success: true,
+      files: [
+        { filePath: "index.html", relativePath: "index.html", size: 500 },
+        { filePath: "style.css", relativePath: "style.css", size: 200 },
+        { filePath: "script.js", relativePath: "script.js", size: 100 },
+        { filePath: "data.json", relativePath: "data.json", size: 50 },
+      ],
+    });
+    
+    mockGetTokenPriceForBytes.mockResolvedValue({
+      success: true,
+      tokenAmount: "1000000000000", // 0.001 AR in winston
+      tokenType: "arweave",
+      wincAmount: "850000",
+    });
+    
+    mockTopUpWithTokens.mockResolvedValue({
+      success: true,
+    });
   });
 
   afterEach(async () => {
@@ -580,20 +608,19 @@ describe("UploadFolderToArweaveCommand", () => {
       expect(mockTopUpWithTokens).not.toHaveBeenCalled();
     });
 
-    it("should require tokenAmount when paymentMethod is tokens", async () => {
-      // Test Zod schema validation
+    it("should accept tokens payment method without tokenAmount (auto-calculated)", async () => {
+      // Test Zod schema validation - tokenAmount is now auto-calculated
       const schema = command["parametersSchema"];
       const validationResult = schema.safeParse({
         folderPath: testFolderPath,
         paymentMethod: "tokens",
-        // tokenAmount is missing
+        // tokenAmount is auto-calculated, not required
       });
 
-      expect(validationResult.success).toBe(false);
-      if (!validationResult.success) {
-        expect(validationResult.error.message).toContain(
-          "tokenAmount is required",
-        );
+      expect(validationResult.success).toBe(true);
+      if (validationResult.success) {
+        expect(validationResult.data.paymentMethod).toBe("tokens");
+        expect(validationResult.data.folderPath).toBe(testFolderPath);
       }
     });
 
@@ -779,38 +806,38 @@ describe("UploadFolderToArweaveCommand", () => {
   });
 
   describe("Parameter Validation with Payment Methods", () => {
-    it("should validate payment method and token amount relationship", async () => {
+    it("should validate payment method accepts both credits and tokens", async () => {
       const schema = command["parametersSchema"];
 
-      // Test tokenAmount without tokens payment method
-      const result = schema.safeParse({
+      // Test credits payment method
+      const creditsResult = schema.safeParse({
         folderPath: testFolderPath,
         paymentMethod: "credits",
-        tokenAmount: "1000000000000",
       });
 
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0].message).toContain(
-          "paymentMethod must be 'tokens'",
-        );
-      }
+      // Test tokens payment method (auto-calculates amount)
+      const tokensResult = schema.safeParse({
+        folderPath: testFolderPath,
+        paymentMethod: "tokens",
+      });
+
+      expect(creditsResult.success).toBe(true);
+      expect(tokensResult.success).toBe(true);
     });
 
-    it("should validate tokens payment method requires tokenAmount", async () => {
+    it("should validate tokens payment method with auto-calculation", async () => {
       const schema = command["parametersSchema"];
 
       const result = schema.safeParse({
         folderPath: testFolderPath,
         paymentMethod: "tokens",
-        // tokenAmount is missing
+        // tokenAmount is auto-calculated in execute()
       });
 
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0].message).toContain(
-          "tokenAmount is required",
-        );
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.paymentMethod).toBe("tokens");
+        expect(result.data.folderPath).toBe(testFolderPath);
       }
     });
 
