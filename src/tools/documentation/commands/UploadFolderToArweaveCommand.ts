@@ -19,7 +19,6 @@ interface UploadFolderToArweaveArgs {
   includePatterns?: string[];
   paymentMethod?: "credits" | "tokens";
   tags?: { name: string; value: string }[];
-  tokenAmount?: string;
 }
 
 export class UploadFolderToArweaveCommand extends ToolCommand<
@@ -49,18 +48,19 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
     - Gateway-browsable URLs for deployed applications
     
     Payment Methods:
-    - 'tokens': Pay directly with Arweave (AR) tokens - default
+    - 'tokens': Pay directly with Arweave (AR) tokens - default (amount auto-calculated)
     - 'credits': Use Turbo credits (winc) - alternative, cost-effective
     
     Prerequisites:
     - SEED_PHRASE environment variable with valid 12-word mnemonic
-    - Sufficient Turbo credits OR Arweave tokens for all file uploads and manifest
+    - Sufficient Turbo credits OR Arweave tokens for upload costs
     - Folder must be accessible with readable files
     
     Returns:
     - Manifest transaction ID for browsable folder access
     - Individual file transaction IDs and status
     - Upload statistics and cost information
+    - Auto-calculated token amount (for token payments)
     - Detailed error reporting with solutions`,
     name: "uploadFolderToArweave",
     openWorldHint: true,
@@ -68,77 +68,53 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
     title: "Upload Folder to Arweave (ArDrive/Turbo)",
   };
 
-  protected parametersSchema = z
-    .object({
-      concurrentUploads: z
-        .number()
-        .int()
-        .min(1)
-        .max(20)
-        .optional()
-        .default(5)
-        .describe(
-          "Number of concurrent uploads (1-20, default: 5). Higher values may be faster but use more resources.",
-        ),
-      excludePatterns: z
-        .array(z.string())
-        .optional()
-        .describe(
-          "Array of glob patterns for files to exclude (e.g., ['*.tmp', '*.log', 'node_modules/*']). Applied after include patterns.",
-        ),
-      folderPath: z
-        .string()
-        .min(1)
-        .describe(
-          "Path to the folder/directory to upload. Can be absolute or relative path.",
-        ),
-      includePatterns: z
-        .array(z.string())
-        .optional()
-        .describe(
-          "Array of glob patterns for files to include (e.g., ['*.html', '*.css', '*.js']). If not provided, includes all files.",
-        ),
-      paymentMethod: z
-        .enum(["credits", "tokens"])
-        .optional()
-        .describe(
-          "Payment method: 'tokens' uses Arweave tokens directly (default), 'credits' uses Turbo credits as alternative",
-        ),
-      tags: z
-        .array(
-          z.object({
-            name: z.string().min(1).describe("Tag name"),
-            value: z.string().describe("Tag value"),
-          }),
-        )
-        .optional()
-        .describe(
-          "Additional tags to attach to all uploaded files for metadata and indexing.",
-        ),
-      tokenAmount: z
-        .string()
-        .optional()
-        .describe(
-          "Amount of Arweave tokens to use for folder upload (in Winston, smallest AR unit). Required if paymentMethod is 'tokens'",
-        ),
-    })
-    .refine(
-      (data) => {
-        // If payment method is tokens, tokenAmount is required
-        if (data.paymentMethod === "tokens" && !data.tokenAmount) {
-          return false;
-        }
-        // If tokenAmount is provided, payment method should be tokens
-        if (data.tokenAmount && data.paymentMethod !== "tokens") {
-          return false;
-        }
-        return true;
-      },
-      {
-        message:
-          "When paymentMethod is 'tokens', tokenAmount is required. When tokenAmount is provided, paymentMethod must be 'tokens'.",
-      },
-    );
+  protected parametersSchema = z.object({
+    concurrentUploads: z
+      .number()
+      .int()
+      .min(1)
+      .max(20)
+      .optional()
+      .default(5)
+      .describe(
+        "Number of concurrent uploads (1-20, default: 5). Higher values may be faster but use more resources.",
+      ),
+    excludePatterns: z
+      .array(z.string())
+      .optional()
+      .describe(
+        "Array of glob patterns for files to exclude (e.g., ['*.tmp', '*.log', 'node_modules/*']). Applied after include patterns.",
+      ),
+    folderPath: z
+      .string()
+      .min(1)
+      .describe(
+        "Path to the folder/directory to upload. Can be absolute or relative path.",
+      ),
+    includePatterns: z
+      .array(z.string())
+      .optional()
+      .describe(
+        "Array of glob patterns for files to include (e.g., ['*.html', '*.css', '*.js']). If not provided, includes all files.",
+      ),
+    paymentMethod: z
+      .enum(["credits", "tokens"])
+      .optional()
+      .describe(
+        "Payment method: 'tokens' uses Arweave tokens directly (default, amount auto-calculated), 'credits' uses Turbo credits as alternative",
+      ),
+    tags: z
+      .array(
+        z.object({
+          name: z.string().min(1).describe("Tag name"),
+          value: z.string().describe("Tag value"),
+        }),
+      )
+      .optional()
+      .describe(
+        "Additional tags to attach to all uploaded files for metadata and indexing.",
+      ),
+  });
 
   constructor(private context: ToolContext) {
     super();
@@ -193,11 +169,132 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
         paymentToken: DEFAULT_PAYMENT_TOKEN, // Default to AR tokens when using token payment
       });
 
-      // If using token payment, validate token amount
-      if (effectivePaymentMethod === "tokens" && args.tokenAmount) {
-        // Comprehensive token amount validation
+      // Calculate folder size and token amount if using token payment
+      let calculatedTokenAmount: string | undefined;
+      if (effectivePaymentMethod === "tokens") {
+        // First, collect files to calculate total size
+        const filesResult = await (
+          turboService as unknown as {
+            collectFiles: (
+              folderPath: string,
+              includePatterns: string[],
+              excludePatterns: string[],
+              maxFileSize?: number,
+            ) => Promise<{
+              error?: { code: string; message: string; solutions: string[] };
+              files?: Array<{
+                filePath: string;
+                relativePath: string;
+                size: number;
+              }>;
+              success: boolean;
+            }>;
+          }
+        ).collectFiles(
+          args.folderPath,
+          args.includePatterns || [],
+          args.excludePatterns || [],
+        );
+
+        if (!filesResult.success) {
+          return JSON.stringify({
+            error: {
+              code: "FOLDER_SCAN_FAILED",
+              message:
+                filesResult.error?.message ||
+                "Failed to scan folder for size calculation",
+              solutions: [
+                "Check that the folder exists and is readable",
+                "Verify folder permissions",
+                "Ensure the folder contains accessible files",
+                "Try with a different folder path",
+                ...(filesResult.error?.solutions || []),
+              ],
+            },
+            success: false,
+          });
+        }
+
+        // Calculate total folder size
+        const totalBytes =
+          filesResult.files?.reduce(
+            (
+              sum: number,
+              file: { filePath: string; relativePath: string; size: number },
+            ) => sum + file.size,
+            0,
+          ) || 0;
+
+        if (totalBytes === 0) {
+          return JSON.stringify({
+            error: {
+              code: "EMPTY_FOLDER",
+              message: "Folder contains no uploadable files",
+              solutions: [
+                "Ensure the folder contains files",
+                "Check include/exclude patterns are not filtering out all files",
+                "Verify file permissions allow reading",
+                "Try with a different folder that contains files",
+              ],
+            },
+            success: false,
+          });
+        }
+
+        // Get required token amount for the total folder size with enhanced error handling
+        let priceResult;
+        try {
+          priceResult = (await Promise.race([
+            turboService.getTokenPriceForBytes({
+              byteCount: totalBytes,
+            }),
+            new Promise((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Price calculation timeout")),
+                30000,
+              ),
+            ),
+          ])) as Awaited<ReturnType<typeof turboService.getTokenPriceForBytes>>;
+        } catch {
+          return JSON.stringify({
+            error: {
+              code: "PRICE_CALCULATION_TIMEOUT",
+              message: "Price calculation request timed out",
+              solutions: [
+                "Check your internet connection and try again",
+                "Verify Turbo service is accessible",
+                "Consider using 'credits' payment method as fallback",
+                "Try again with a smaller folder",
+              ],
+            },
+            success: false,
+          });
+        }
+
+        if (!priceResult.success) {
+          return JSON.stringify({
+            error: {
+              code: "PRICE_CALCULATION_FAILED",
+              message:
+                priceResult.error?.message || "Failed to calculate upload cost",
+              solutions: [
+                "Check your internet connection",
+                "Verify the folder size is valid",
+                "Try again after a few moments",
+                "Consider using 'credits' payment method as fallback",
+                "Ensure your wallet is properly configured for token payments",
+              ],
+            },
+            success: false,
+          });
+        }
+
+        // Store the calculated token amount for later use
+        calculatedTokenAmount = priceResult.tokenAmount || "0";
+
+        // Validate the calculated amount is reasonable
         const tokenValidationResult = this.validateTokenAmount(
-          args.tokenAmount,
+          calculatedTokenAmount,
         );
         if (!tokenValidationResult.success) {
           return JSON.stringify({
@@ -211,12 +308,12 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
       const progressReports: TurboFileUploadProgress[] = [];
 
       // If using token payment, handle token top-up first with enhanced error handling
-      if (effectivePaymentMethod === "tokens" && args.tokenAmount) {
+      if (effectivePaymentMethod === "tokens" && calculatedTokenAmount) {
         let topUpResult;
         try {
           topUpResult = (await Promise.race([
             turboService.topUpWithTokens({
-              tokenAmount: args.tokenAmount,
+              tokenAmount: calculatedTokenAmount,
             }),
             new Promise((_, reject) =>
               setTimeout(
@@ -234,7 +331,7 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
                 "Check your internet connection and try again",
                 "Verify Arweave network is accessible",
                 "Consider using 'credits' payment method as fallback",
-                "Try again with a smaller token amount",
+                "Try again with a smaller folder",
                 "Ensure your wallet has sufficient AR tokens",
               ],
             },
@@ -252,7 +349,7 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
                 "Verify you have sufficient AR tokens in your wallet",
                 "Check that your SEED_PHRASE is correct",
                 "Ensure your wallet is funded with Arweave tokens",
-                "Try with a smaller token amount",
+                "Try with a smaller folder or fewer files",
                 "Consider using 'credits' payment method",
                 "Verify your wallet supports Arweave token payments",
                 "Check if the Arweave network is experiencing issues",
@@ -298,7 +395,7 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
           : undefined,
         paymentMethod: args.paymentMethod || DEFAULT_PAYMENT_METHOD,
         success: true,
-        tokenAmount: args.tokenAmount,
+        tokenAmount: calculatedTokenAmount,
         totalFiles: uploadResult.totalFiles,
         totalSize: uploadResult.totalSize,
         uploadedFiles: uploadResult.uploadedFiles,
