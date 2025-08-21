@@ -173,24 +173,7 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
       let calculatedTokenAmount: string | undefined;
       if (effectivePaymentMethod === "tokens") {
         // First, collect files to calculate total size
-        const filesResult = await (
-          turboService as unknown as {
-            collectFiles: (
-              folderPath: string,
-              includePatterns: string[],
-              excludePatterns: string[],
-              maxFileSize?: number,
-            ) => Promise<{
-              error?: { code: string; message: string; solutions: string[] };
-              files?: Array<{
-                filePath: string;
-                relativePath: string;
-                size: number;
-              }>;
-              success: boolean;
-            }>;
-          }
-        ).collectFiles(
+        const filesResult = await turboService.collectFiles(
           args.folderPath,
           args.includePatterns || [],
           args.excludePatterns || [],
@@ -289,8 +272,9 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
           });
         }
 
-        // Store the calculated token amount for later use
-        calculatedTokenAmount = priceResult.tokenAmount || "0";
+        // Store and normalize the calculated token amount for later use
+        const rawTokenAmount = priceResult.tokenAmount || "0";
+        calculatedTokenAmount = this.normalizeTokenAmount(rawTokenAmount);
 
         // Validate the calculated amount is reasonable
         const tokenValidationResult = this.validateTokenAmount(
@@ -434,6 +418,28 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
         },
         success: false,
       });
+    }
+  }
+
+  private normalizeTokenAmount(tokenAmount: string): string {
+    try {
+      // Handle scientific notation and decimal formats from Turbo SDK
+      const numericValue = parseFloat(tokenAmount);
+
+      // If the value is not a valid number, return as-is for validation to catch
+      if (isNaN(numericValue) || !isFinite(numericValue)) {
+        return tokenAmount;
+      }
+
+      // Convert to integer string (Winston units are always integers)
+      // Use Math.ceil to ensure we have at least enough tokens (round up)
+      const winstonAmount = Math.ceil(numericValue);
+
+      // Ensure it's positive
+      return Math.max(0, winstonAmount).toString();
+    } catch {
+      // If parsing fails, return original for validation to catch
+      return tokenAmount;
     }
   }
 
