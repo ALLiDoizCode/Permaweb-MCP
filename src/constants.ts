@@ -90,3 +90,7 @@ export const DEFAULT_MAX_QUEUE_SIZE = 50; // Maximum number of queued requests
 export const DEFAULT_WORKER_TIMEOUT_MS = 30000; // 30 second timeout per worker task
 export const DEFAULT_ENABLE_PRE_GENERATION = false; // Background pre-generation disabled by default
 export const DEFAULT_PRE_GENERATION_IDLE_THRESHOLD_MS = 60000; // 1 minute idle threshold
+
+// Payment Configuration
+export const DEFAULT_PAYMENT_METHOD: "credits" | "tokens" = "tokens"; // Default to tokens payment
+export const DEFAULT_PAYMENT_TOKEN = "arweave"; // Use arweave token as default

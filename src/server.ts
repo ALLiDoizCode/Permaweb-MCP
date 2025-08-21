@@ -32,6 +32,14 @@ export const getCurrentUserState = () => ({
   publicKey,
 });
 
+// Export getter for current context (dynamic)
+export const getCurrentContext = (): ToolContext => ({
+  embeddedTemplates,
+  hubId,
+  keyPair,
+  publicKey,
+});
+
 // Export setter for server state (used by hub initialization tools)
 export const setUserState = (newState: {
   hubId?: string;
@@ -145,7 +153,8 @@ function setupToolRegistry() {
 
   // Register Documentation tools
   const documentationFactory = new DocumentationToolFactory({
-    categoryDescription: "Permaweb documentation and deployment tools",
+    categoryDescription:
+      "Permaweb documentation, file storage, and deployment tools. Use ArDrive tools (uploadToArweave/uploadFolderToArweave) for file/folder uploads. Use deployPermawebDirectory only when specifically prompted to 'deploy to the permaweb'.",
     categoryName: "Documentation",
     context,
   });
