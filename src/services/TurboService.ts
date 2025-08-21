@@ -212,6 +212,69 @@ export class TurboService {
     }
   }
 
+  async collectFiles(
+    folderPath: string,
+    includePatterns: string[] = [],
+    excludePatterns: string[] = [],
+    maxFileSize?: number,
+  ): Promise<{
+    error?: { code: string; message: string; solutions: string[] };
+    files?: Array<{ filePath: string; relativePath: string; size: number }>;
+    success: boolean;
+  }> {
+    try {
+      // Validate folder existence
+      await access(folderPath, constants.F_OK);
+      const folderStat = await stat(folderPath);
+      if (!folderStat.isDirectory()) {
+        return {
+          error: {
+            code: "NOT_A_DIRECTORY",
+            message: `Path ${folderPath} is not a directory`,
+            solutions: [
+              "Provide a valid directory path",
+              "Check that the path points to a folder, not a file",
+              "Verify the directory exists and is accessible",
+            ],
+          },
+          success: false,
+        };
+      }
+
+      const files: Array<{
+        filePath: string;
+        relativePath: string;
+        size: number;
+      }> = [];
+      await this.traverseDirectory(
+        folderPath,
+        folderPath,
+        files,
+        includePatterns,
+        excludePatterns,
+        maxFileSize,
+      );
+
+      return { files, success: true };
+    } catch (error) {
+      return {
+        error: {
+          code: "DIRECTORY_ACCESS_FAILED",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to access directory",
+          solutions: [
+            "Check that the directory exists",
+            "Verify read permissions on the directory",
+            "Ensure the path is correct and accessible",
+          ],
+        },
+        success: false,
+      };
+    }
+  }
+
   async getTokenPriceForBytes(params: {
     byteCount: number;
   }): Promise<TurboTokenPriceResult> {
@@ -770,69 +833,6 @@ export class TurboService {
         success: false,
         totalFiles: 0,
         uploadedFiles: 0,
-      };
-    }
-  }
-
-  async collectFiles(
-    folderPath: string,
-    includePatterns: string[] = [],
-    excludePatterns: string[] = [],
-    maxFileSize?: number,
-  ): Promise<{
-    error?: { code: string; message: string; solutions: string[] };
-    files?: Array<{ filePath: string; relativePath: string; size: number }>;
-    success: boolean;
-  }> {
-    try {
-      // Validate folder existence
-      await access(folderPath, constants.F_OK);
-      const folderStat = await stat(folderPath);
-      if (!folderStat.isDirectory()) {
-        return {
-          error: {
-            code: "NOT_A_DIRECTORY",
-            message: `Path ${folderPath} is not a directory`,
-            solutions: [
-              "Provide a valid directory path",
-              "Check that the path points to a folder, not a file",
-              "Verify the directory exists and is accessible",
-            ],
-          },
-          success: false,
-        };
-      }
-
-      const files: Array<{
-        filePath: string;
-        relativePath: string;
-        size: number;
-      }> = [];
-      await this.traverseDirectory(
-        folderPath,
-        folderPath,
-        files,
-        includePatterns,
-        excludePatterns,
-        maxFileSize,
-      );
-
-      return { files, success: true };
-    } catch (error) {
-      return {
-        error: {
-          code: "DIRECTORY_ACCESS_FAILED",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to access directory",
-          solutions: [
-            "Check that the directory exists",
-            "Verify read permissions on the directory",
-            "Ensure the path is correct and accessible",
-          ],
-        },
-        success: false,
       };
     }
   }
