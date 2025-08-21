@@ -14,9 +14,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Minimal build check
-  build-check:
-    name: Build Check
+  # Fast development validation
+  development-validation:
+    name: Development Build & Quality Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -28,11 +28,33 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-dev-node-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-dev-node-${{ env.NODE_VERSION }}-
+            ${{ runner.os }}-dev-node-
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Build project
-        run: npm run build
-
-      - name: Success
-        run: echo "✅ Development branch build successful"
+      - name: Fast quality & build check
+        run: |
+          echo "🚀 Running development branch validation..."
+          
+          # Fast linting (fail fast for obvious issues)
+          npm run lint
+          
+          # Type checking
+          npm run type-check
+          
+          # Build project
+          npm run build
+          
+          # Quick CLI test
+          node bin/permamind.js --version
+          
+          echo "✅ Development branch validation successful"
+          echo "🎯 Ready for PR creation or further development"
