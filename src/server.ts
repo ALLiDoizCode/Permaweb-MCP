@@ -153,7 +153,8 @@ function setupToolRegistry() {
 
   // Register Documentation tools
   const documentationFactory = new DocumentationToolFactory({
-    categoryDescription: "Permaweb documentation and deployment tools",
+    categoryDescription:
+      "Permaweb documentation, file storage, and deployment tools. Use ArDrive tools (uploadToArweave/uploadFolderToArweave) for file/folder uploads. Use deployPermawebDirectory only when specifically prompted to 'deploy to the permaweb'.",
     categoryName: "Documentation",
     context,
   });
