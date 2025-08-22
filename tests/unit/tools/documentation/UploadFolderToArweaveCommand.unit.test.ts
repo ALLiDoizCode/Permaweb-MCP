@@ -811,7 +811,7 @@ describe("UploadFolderToArweaveCommand", () => {
       expect(parsed.error.solutions).toContain(
         "Check your internet connection and try again",
       );
-    }, 65000); // Allow for timeout + buffer
+    }, 10000); // Reduced timeout for test environment (5s timeout + 5s buffer)
   });
 
   describe("Parameter Validation with Payment Methods", () => {

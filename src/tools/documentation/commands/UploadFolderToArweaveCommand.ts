@@ -227,6 +227,8 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
         // Get required token amount for the total folder size with enhanced error handling
         let priceResult;
         try {
+          // Use shorter timeout in test environment to avoid CI failures
+          const priceTimeoutMs = process.env.NODE_ENV === "test" ? 3000 : 30000;
           priceResult = (await Promise.race([
             turboService.getTokenPriceForBytes({
               byteCount: totalBytes,
@@ -234,7 +236,7 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
             new Promise((_, reject) =>
               setTimeout(
                 () => reject(new Error("Price calculation timeout")),
-                30000,
+                priceTimeoutMs,
               ),
             ),
           ])) as Awaited<ReturnType<typeof turboService.getTokenPriceForBytes>>;
@@ -295,6 +297,8 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
       if (effectivePaymentMethod === "tokens" && calculatedTokenAmount) {
         let topUpResult;
         try {
+          // Use shorter timeout in test environment to avoid CI failures
+          const timeoutMs = process.env.NODE_ENV === "test" ? 5000 : 60000;
           topUpResult = (await Promise.race([
             turboService.topUpWithTokens({
               tokenAmount: calculatedTokenAmount,
@@ -302,7 +306,7 @@ export class UploadFolderToArweaveCommand extends ToolCommand<
             new Promise((_, reject) =>
               setTimeout(
                 () => reject(new Error("Token top-up timeout")),
-                60000,
+                timeoutMs,
               ),
             ),
           ])) as Awaited<ReturnType<typeof turboService.topUpWithTokens>>;
