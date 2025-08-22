@@ -26,9 +26,9 @@ export default defineConfig({
       pool: "forks",
       poolOptions: {
         forks: {
-          singleFork: true,
           isolate: false,
           maxForks: 1,
+          singleFork: true,
         },
       },
     }),
@@ -36,17 +36,17 @@ export default defineConfig({
       pool: "threads",
       poolOptions: {
         threads: {
-          singleThread: true,
           maxThreads: 1,
+          singleThread: true,
         },
       },
     }),
-    testTimeout: 30000,
-    // Add teardown timeout for CI stability
-    teardownTimeout: 10000,
     // Force sequential execution in CI
     sequence: {
       concurrent: process.env.CI ? false : true,
     },
+    // Add teardown timeout for CI stability
+    teardownTimeout: 10000,
+    testTimeout: 30000,
   },
 });
