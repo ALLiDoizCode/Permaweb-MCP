@@ -1,3 +1,5 @@
+import type { JWKInterface } from "arweave/node/lib/wallet.js";
+
 import { ARIO } from "@ar.io/sdk/node";
 
 /**
@@ -9,6 +11,7 @@ import { ARIO } from "@ar.io/sdk/node";
  */
 export class ArnsClientManager {
   private static instance: ArnsClientManager;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private arnsClient: any;
   private currentNetwork: "mainnet" | "testnet" = "mainnet";
 
@@ -27,6 +30,7 @@ export class ArnsClientManager {
   /**
    * Get current ARIO client instance
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public getClient(): any {
     return this.arnsClient;
   }
@@ -45,7 +49,7 @@ export class ArnsClientManager {
    */
   public async initializeClient(
     network: "mainnet" | "testnet" = "mainnet",
-    signer?: any,
+    signer?: JWKInterface,
   ): Promise<void> {
     try {
       // Validate network parameter
@@ -55,10 +59,21 @@ export class ArnsClientManager {
         );
       }
 
-      if (network === "testnet") {
-        this.arnsClient = signer ? ARIO.testnet({ signer }) : ARIO.testnet();
+      if (signer) {
+        const { ArweaveSigner } = await import("@ar.io/sdk/node");
+        const arweaveSigner = new ArweaveSigner(signer);
+
+        if (network === "testnet") {
+          this.arnsClient = ARIO.testnet({ signer: arweaveSigner });
+        } else {
+          this.arnsClient = ARIO.mainnet({ signer: arweaveSigner });
+        }
       } else {
-        this.arnsClient = signer ? ARIO.mainnet({ signer }) : ARIO.mainnet();
+        if (network === "testnet") {
+          this.arnsClient = ARIO.testnet();
+        } else {
+          this.arnsClient = ARIO.mainnet();
+        }
       }
 
       this.currentNetwork = network;
@@ -76,7 +91,7 @@ export class ArnsClientManager {
    * Uses ARNS_NETWORK environment variable to determine network
    * @param signer - Optional signer for write operations
    */
-  public async initializeFromEnvironment(signer?: any): Promise<void> {
+  public async initializeFromEnvironment(signer?: JWKInterface): Promise<void> {
     const network = this.getNetworkFromEnvironment();
     await this.initializeClient(network, signer);
   }
@@ -104,7 +119,7 @@ export class ArnsClientManager {
    */
   public async switchNetwork(
     network: "mainnet" | "testnet",
-    signer?: any,
+    signer?: JWKInterface,
   ): Promise<void> {
     if (this.currentNetwork !== network) {
       await this.initializeClient(network, signer);
