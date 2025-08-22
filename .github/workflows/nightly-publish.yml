@@ -72,10 +72,10 @@ jobs:
       - name: Generate nightly version and publish
         id: publish
         run: |
-          # Generate nightly version
+          # Generate nightly version (simplified without timestamp)
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           TIMESTAMP=$(date +"%Y%m%d%H%M%S")
-          NIGHTLY_VERSION="${CURRENT_VERSION}-nightly.${TIMESTAMP}"
+          NIGHTLY_VERSION="${CURRENT_VERSION}-nightly"
           
           echo "🔢 Nightly version: $NIGHTLY_VERSION"
           npm version $NIGHTLY_VERSION --no-git-tag-version
