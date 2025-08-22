@@ -37,11 +37,14 @@ describe("ArnsToolFactory", () => {
   });
 
   describe("getToolClasses", () => {
-    it("should return empty array initially", () => {
+    it("should return ArNS command classes", () => {
       // Access protected method through type assertion for testing
       const toolClasses = (factory as any).getToolClasses();
-      expect(toolClasses).toEqual([]);
       expect(Array.isArray(toolClasses)).toBe(true);
+      expect(toolClasses).toHaveLength(3); // ResolveArnsNameCommand, GetArnsRecordInfoCommand, GetArnsTokenCostCommand
+      expect(toolClasses[0].name).toBe("ResolveArnsNameCommand");
+      expect(toolClasses[1].name).toBe("GetArnsRecordInfoCommand");
+      expect(toolClasses[2].name).toBe("GetArnsTokenCostCommand");
     });
   });
 
@@ -65,7 +68,21 @@ describe("ArnsToolFactory", () => {
       expect(mockToolRegistry.registerCategory).toHaveBeenCalledWith(
         "ArNS",
         "ArNS name system operations for decentralized domains",
-        [],
+        expect.any(Array),
+      );
+
+      // Verify that the registered array contains command instances
+      const registeredCommands =
+        mockToolRegistry.registerCategory.mock.calls[0][2];
+      expect(registeredCommands).toHaveLength(3);
+      expect(registeredCommands[0].constructor.name).toBe(
+        "ResolveArnsNameCommand",
+      );
+      expect(registeredCommands[1].constructor.name).toBe(
+        "GetArnsRecordInfoCommand",
+      );
+      expect(registeredCommands[2].constructor.name).toBe(
+        "GetArnsTokenCostCommand",
       );
     });
   });
