@@ -9,7 +9,7 @@ import { ARIO } from "@ar.io/sdk/node";
  */
 export class ArnsClientManager {
   private static instance: ArnsClientManager;
-  private arnsClient: ARIO | undefined;
+  private arnsClient: any;
   private currentNetwork: "mainnet" | "testnet" = "mainnet";
 
   private constructor() {}
@@ -27,7 +27,7 @@ export class ArnsClientManager {
   /**
    * Get current ARIO client instance
    */
-  public getClient(): ARIO | undefined {
+  public getClient(): any {
     return this.arnsClient;
   }
 
@@ -41,13 +41,13 @@ export class ArnsClientManager {
   /**
    * Initialize ARIO client for specified network
    * @param network - Network to initialize (mainnet | testnet)
+   * @param signer - Optional signer for write operations (required for buyRecord, transferRecord, etc.)
    */
   public async initializeClient(
     network: "mainnet" | "testnet" = "mainnet",
+    signer?: any,
   ): Promise<void> {
     try {
-      console.log(`Initializing ArNS client for ${network}...`);
-
       // Validate network parameter
       if (!["mainnet", "testnet"].includes(network)) {
         throw new Error(
@@ -56,21 +56,15 @@ export class ArnsClientManager {
       }
 
       if (network === "testnet") {
-        this.arnsClient = ARIO.testnet();
-        console.log("ArNS client initialized for testnet using ARIO.testnet()");
+        this.arnsClient = signer ? ARIO.testnet({ signer }) : ARIO.testnet();
       } else {
-        this.arnsClient = ARIO.mainnet();
-        console.log("ArNS client initialized for mainnet using ARIO.mainnet()");
+        this.arnsClient = signer ? ARIO.mainnet({ signer }) : ARIO.mainnet();
       }
 
       this.currentNetwork = network;
-      console.log(`ArNS client setup complete - active network: ${network}`);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      console.error(
-        `ArNS client initialization failed for ${network}: ${errorMessage}`,
-      );
       throw new Error(
         `Failed to initialize ArNS client for ${network}: ${errorMessage}`,
       );
@@ -80,10 +74,11 @@ export class ArnsClientManager {
   /**
    * Initialize client using environment configuration
    * Uses ARNS_NETWORK environment variable to determine network
+   * @param signer - Optional signer for write operations
    */
-  public async initializeFromEnvironment(): Promise<void> {
+  public async initializeFromEnvironment(signer?: any): Promise<void> {
     const network = this.getNetworkFromEnvironment();
-    await this.initializeClient(network);
+    await this.initializeClient(network, signer);
   }
 
   /**
@@ -105,10 +100,14 @@ export class ArnsClientManager {
   /**
    * Switch to different network if not already on target network
    * @param network - Target network (mainnet | testnet)
+   * @param signer - Optional signer for write operations
    */
-  public async switchNetwork(network: "mainnet" | "testnet"): Promise<void> {
+  public async switchNetwork(
+    network: "mainnet" | "testnet",
+    signer?: any,
+  ): Promise<void> {
     if (this.currentNetwork !== network) {
-      await this.initializeClient(network);
+      await this.initializeClient(network, signer);
     }
   }
 
@@ -120,24 +119,10 @@ export class ArnsClientManager {
     const envNetwork = process.env.ARNS_NETWORK?.toLowerCase();
 
     if (envNetwork === "testnet") {
-      console.log(
-        "ArNS network configured via ARNS_NETWORK environment variable: testnet",
-      );
       return "testnet";
     }
 
-    if (envNetwork && envNetwork !== "mainnet") {
-      console.warn(
-        `Invalid ARNS_NETWORK value: ${envNetwork}. Defaulting to mainnet`,
-      );
-    } else if (envNetwork === "mainnet") {
-      console.log(
-        "ArNS network configured via ARNS_NETWORK environment variable: mainnet",
-      );
-    } else {
-      console.log("ARNS_NETWORK not specified - defaulting to mainnet");
-    }
-
+    // Default to mainnet for invalid, missing, or mainnet values
     return "mainnet";
   }
 }

@@ -6,6 +6,7 @@ import { ArnsClientManager } from "../utils/ArnsClientManager.js";
 import {
   extractBaseName,
   isValidArnsName,
+  normalizeArnsName,
 } from "../utils/ArnsNameValidation.js";
 
 interface ArnsRecord {
@@ -49,7 +50,7 @@ export class GetArnsRecordInfoCommand extends ToolCommand<
       .min(1)
       .refine(
         isValidArnsName,
-        "Invalid ArNS name format. Must be valid .ar name or undername (e.g., example.ar or sub.example.ar)",
+        "Invalid ArNS name format. Must be valid name or undername (e.g., example, example.ar, sub.example, or sub.example.ar)",
       ),
     network: z
       .enum(["mainnet", "testnet"])
@@ -88,8 +89,11 @@ export class GetArnsRecordInfoCommand extends ToolCommand<
 
       const currentNetwork = clientManager.getCurrentNetwork();
 
+      // Normalize the name to include .ar suffix if missing
+      const normalizedName = normalizeArnsName(args.name);
+
       // Extract the base name for querying (removes .ar suffix and handles undernames)
-      const nameToQuery = extractBaseName(args.name);
+      const nameToQuery = extractBaseName(normalizedName);
 
       // Get record information
       const record = await (arnsClient as ExtendedARIO).getArNSRecord({
@@ -99,10 +103,11 @@ export class GetArnsRecordInfoCommand extends ToolCommand<
       if (!record) {
         return JSON.stringify({
           error: "RECORD_NOT_FOUND",
-          message: `ArNS record not found: ${args.name}`,
+          message: `ArNS record not found: ${normalizedName}`,
           query: {
-            name: args.name,
+            name: normalizedName,
             network: currentNetwork,
+            originalInput: args.name,
           },
           success: false,
           suggestion:
@@ -112,7 +117,8 @@ export class GetArnsRecordInfoCommand extends ToolCommand<
 
       // Build comprehensive record info
       const recordInfo: Record<string, unknown> = {
-        name: args.name,
+        name: normalizedName,
+        originalInput: args.name,
         owner: record.contractTxId || record.processId,
         processId: record.processId,
         startTimestamp: record.startTimestamp,
@@ -134,8 +140,9 @@ export class GetArnsRecordInfoCommand extends ToolCommand<
       return JSON.stringify({
         network: currentNetwork,
         query: {
-          name: args.name,
+          name: normalizedName,
           network: currentNetwork,
+          originalInput: args.name,
         },
         recordInfo,
         success: true,

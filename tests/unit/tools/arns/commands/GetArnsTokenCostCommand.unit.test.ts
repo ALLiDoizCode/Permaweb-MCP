@@ -244,12 +244,12 @@ describe("GetArnsTokenCostCommand", () => {
       const response = JSON.parse(result);
       expect(response.success).toBe(true);
       expect(response.pricing.breakdown).toBeDefined();
-      expect(response.pricing.breakdown.baseCostIO).toBeDefined();
-      expect(response.pricing.breakdown.networkFeeIO).toBeDefined();
-      expect(response.pricing.breakdown.totalCostIO).toBeDefined();
+      expect(response.pricing.breakdown.baseCostARIO).toBeDefined();
+      expect(response.pricing.breakdown.networkFeeARIO).toBeDefined();
+      expect(response.pricing.breakdown.totalCostARIO).toBeDefined();
       expect(response.pricing.breakdown.demandFactor).toBeDefined();
-      expect(response.pricing.breakdown.undernameFeeIO).toBeDefined(); // Extra undernames
-      expect(response.pricing.breakdown.costPerUndername).toBeDefined();
+      expect(response.pricing.breakdown.undernameFeeARIO).toBeDefined(); // Extra undernames
+      expect(response.pricing.breakdown.costPerUndernameARIO).toBeDefined();
     });
 
     it("should include cost efficiency analysis for lease options", async () => {
@@ -266,10 +266,10 @@ describe("GetArnsTokenCostCommand", () => {
       expect(response.comparison.costEfficiency.breakEvenYears).toBeDefined();
       expect(response.comparison.costEfficiency.longTermSavings).toBeDefined();
       expect(response.comparison.costEfficiency.shortTermBenefit).toBeDefined();
-      expect(response.pricing.breakdown.pricePerYear).toBeDefined();
+      expect(response.pricing.breakdown.pricePerYearARIO).toBeDefined();
     });
 
-    it("should format IO token amounts correctly", async () => {
+    it("should format ARIO token amounts correctly", async () => {
       const result = await command.execute({
         name: "testname",
         type: "permanent",
@@ -277,9 +277,15 @@ describe("GetArnsTokenCostCommand", () => {
 
       const response = JSON.parse(result);
       expect(response.success).toBe(true);
-      expect(response.pricing.breakdown.baseCostIO).toMatch(/^\d+(\.\d+)?$/); // Number format
-      expect(response.pricing.breakdown.networkFeeIO).toMatch(/^\d+(\.\d+)?$/);
-      expect(response.pricing.breakdown.totalCostIO).toMatch(/^\d+(\.\d+)?$/);
+      expect(response.pricing.breakdown.baseCostARIO).toMatch(
+        /^\d+(\.\d+)?[kM]?$/,
+      ); // Number format with optional k/M suffix
+      expect(response.pricing.breakdown.networkFeeARIO).toMatch(
+        /^\d+(\.\d+)?[kM]?$/,
+      );
+      expect(response.pricing.breakdown.totalCostARIO).toMatch(
+        /^\d+(\.\d+)?[kM]?$/,
+      );
     });
   });
 

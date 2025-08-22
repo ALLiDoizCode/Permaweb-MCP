@@ -7,18 +7,22 @@ import {
   ToolMetadata,
 } from "../../core/index.js";
 import { ArnsClientManager } from "../utils/ArnsClientManager.js";
+import {
+  isValidArnsName,
+  normalizeArnsName,
+} from "../utils/ArnsNameValidation.js";
 
 interface ArnsTokenCostResponse {
   comparison?: {
     costEfficiency?: {
       breakEvenYears?: number; // How many years until permanent becomes cheaper
-      longTermSavings?: string; // Potential savings with permanent
-      shortTermBenefit?: string; // Savings with lease for specified period
+      longTermSavings?: string; // Potential savings with permanent in ARIO
+      shortTermBenefit?: string; // Savings with lease for specified period in ARIO
     };
     leaseTotal?: string; // Total lease cost in winston
-    leaseTotalIO?: string; // Total lease cost in IO for display
+    leaseTotalARIO?: string; // Total lease cost in ARIO for display
     permanentCost?: string; // Permanent cost in winston
-    permanentCostIO?: string; // Permanent cost in IO for display
+    permanentCostARIO?: string; // Permanent cost in ARIO for display
     recommendation?: string;
   };
   error?: {
@@ -32,13 +36,13 @@ interface ArnsTokenCostResponse {
     baseCost: string; // IO tokens in winston
     // Enhanced breakdown details
     breakdown?: {
-      baseCostIO: string; // Base cost in IO tokens for display
-      costPerUndername?: string; // Cost per additional undername
+      baseCostARIO: string; // Base cost in ARIO tokens for display
+      costPerUndernameARIO?: string; // Cost per additional undername in ARIO
       demandFactor: number; // Current demand multiplier
-      networkFeeIO: string; // Network fee in IO tokens for display
-      pricePerYear?: string; // For lease: cost per year in IO
-      totalCostIO: string; // Total cost in IO tokens for display
-      undernameFeeIO?: string; // Undername fee in IO tokens for display
+      networkFeeARIO: string; // Network fee in ARIO tokens for display
+      pricePerYearARIO?: string; // For lease: cost per year in ARIO
+      totalCostARIO: string; // Total cost in ARIO tokens for display
+      undernameFeeARIO?: string; // Undername fee in ARIO tokens for display
     };
     isEstimate: boolean;
     networkFee: string; // Demand factor adjustment
@@ -83,8 +87,13 @@ export class GetArnsTokenCostCommand extends ToolCommand<
         .string()
         .min(1)
         .max(51)
-        .regex(/^[a-zA-Z0-9-]+$/)
-        .describe("ArNS name to calculate cost for (without .ar suffix)"),
+        .refine(
+          isValidArnsName,
+          "Invalid ArNS name format. Must be valid name or undername (e.g., example, example.ar, sub.example, or sub.example.ar)",
+        )
+        .describe(
+          "ArNS name to calculate cost for (with or without .ar suffix)",
+        ),
       network: z
         .enum(["mainnet", "testnet"])
         .optional()
@@ -160,8 +169,14 @@ export class GetArnsTokenCostCommand extends ToolCommand<
         throw new Error("ArNS client not initialized");
       }
 
+      // Normalize the name to ensure consistent handling
+      const normalizedName = normalizeArnsName(args.name);
+      const baseName = normalizedName.replace(".ar", ""); // Remove .ar for API calls
+
+      // USD pricing removed - only ARIO denomination needed
+
       const response: ArnsTokenCostResponse = {
-        name: args.name,
+        name: args.name, // Keep original input name for consistency
         network,
         pricing: {
           baseCost: "0",
@@ -177,8 +192,6 @@ export class GetArnsTokenCostCommand extends ToolCommand<
 
       try {
         // Get real pricing from ar-io-sdk
-        console.log(`Calculating costs for ${args.name} (${args.type})`);
-
         // Map our type to ar-io-sdk type
         const arnsType = args.type === "permanent" ? "permabuy" : "lease";
 
@@ -191,7 +204,7 @@ export class GetArnsTokenCostCommand extends ToolCommand<
           years?: number;
         } = {
           intent: "Buy-Record",
-          name: args.name,
+          name: baseName, // Use base name for API calls
           type: arnsType,
         };
 
@@ -251,20 +264,20 @@ export class GetArnsTokenCostCommand extends ToolCommand<
         response.pricing = {
           baseCost: baseCost.toString(),
           breakdown: {
-            baseCostIO: this.winstonToIO(baseCost),
-            costPerUndername:
+            baseCostARIO: this.winstonToARIO(baseCost),
+            costPerUndernameARIO:
               args.undernames && args.undernames > 10
-                ? this.winstonToIO(100000000) // 0.1 IO per extra undername
+                ? this.winstonToARIO(100000000) // 0.1 IO per extra undername
                 : undefined,
             demandFactor,
-            networkFeeIO: this.winstonToIO(networkFee),
-            pricePerYear:
+            networkFeeARIO: this.winstonToARIO(networkFee),
+            pricePerYearARIO:
               args.type === "lease" && args.years
-                ? this.winstonToIO(Math.round(totalCost / args.years))
+                ? this.winstonToARIO(Math.round(totalCost / args.years))
                 : undefined,
-            totalCostIO: this.winstonToIO(totalCost),
-            undernameFeeIO: undernameFee
-              ? this.winstonToIO(undernameFee)
+            totalCostARIO: this.winstonToARIO(totalCost),
+            undernameFeeARIO: undernameFee
+              ? this.winstonToARIO(undernameFee)
               : undefined,
           },
           isEstimate: false, // Real pricing from ar-io-sdk
@@ -287,7 +300,7 @@ export class GetArnsTokenCostCommand extends ToolCommand<
             }
           ).getTokenCost({
             intent: "Buy-Record",
-            name: args.name,
+            name: baseName, // Use base name for API calls
             type: "permabuy",
             undernames: args.undernames,
           });
@@ -297,7 +310,7 @@ export class GetArnsTokenCostCommand extends ToolCommand<
           const leaseCostPerYear = Math.round(leaseTotal / args.years);
 
           // Calculate break-even analysis
-          const breakEvenAnalysis = this.calculateBreakEvenAnalysis(
+          const breakEvenAnalysis = await this.calculateBreakEvenAnalysis(
             leaseCostPerYear,
             permanentTotal,
             args.years,
@@ -306,13 +319,13 @@ export class GetArnsTokenCostCommand extends ToolCommand<
           response.comparison = {
             costEfficiency: {
               breakEvenYears: breakEvenAnalysis.breakEvenYears,
-              longTermSavings: breakEvenAnalysis.longTermSavings,
-              shortTermBenefit: breakEvenAnalysis.shortTermBenefit,
+              longTermSavings: breakEvenAnalysis.longTermSavingsARIO,
+              shortTermBenefit: breakEvenAnalysis.shortTermBenefitARIO,
             },
             leaseTotal: leaseTotal.toString(),
-            leaseTotalIO: this.winstonToIO(leaseTotal),
+            leaseTotalARIO: this.winstonToARIO(leaseTotal),
             permanentCost: permanentTotal.toString(),
-            permanentCostIO: this.winstonToIO(permanentTotal),
+            permanentCostARIO: this.winstonToARIO(permanentTotal),
             recommendation:
               breakEvenAnalysis.breakEvenYears <= args.years
                 ? `Permanent registration pays for itself in ${breakEvenAnalysis.breakEvenYears} years. Consider permanent for long-term use.`
@@ -321,9 +334,7 @@ export class GetArnsTokenCostCommand extends ToolCommand<
                   : `${args.years}-year lease is cost-effective for your use case.`,
           };
         }
-      } catch (error) {
-        console.warn(`Live pricing failed: ${error}, using fallback estimates`);
-
+      } catch {
         // Fallback to estimated pricing based on known registration fees
         const baseCost = this.getEstimatedBaseCost(args);
         const demandMultiplier = 3.1; // Approximate current demand factor
@@ -338,20 +349,20 @@ export class GetArnsTokenCostCommand extends ToolCommand<
         response.pricing = {
           baseCost: baseCost.toString(),
           breakdown: {
-            baseCostIO: this.winstonToIO(baseCost),
-            costPerUndername:
+            baseCostARIO: this.winstonToARIO(baseCost),
+            costPerUndernameARIO:
               args.undernames && args.undernames > 10
-                ? this.winstonToIO(100000000) // 0.1 IO per extra undername
+                ? this.winstonToARIO(100000000) // 0.1 IO per extra undername
                 : undefined,
             demandFactor: demandMultiplier,
-            networkFeeIO: this.winstonToIO(networkFee),
-            pricePerYear:
+            networkFeeARIO: this.winstonToARIO(networkFee),
+            pricePerYearARIO:
               args.type === "lease" && args.years
-                ? this.winstonToIO(Math.round(totalCostFallback / args.years))
+                ? this.winstonToARIO(Math.round(totalCostFallback / args.years))
                 : undefined,
-            totalCostIO: this.winstonToIO(totalCostFallback),
-            undernameFeeIO: undernameFee
-              ? this.winstonToIO(undernameFee)
+            totalCostARIO: this.winstonToARIO(totalCostFallback),
+            undernameFeeARIO: undernameFee
+              ? this.winstonToARIO(undernameFee)
               : undefined,
           },
           isEstimate: true,
@@ -375,7 +386,7 @@ export class GetArnsTokenCostCommand extends ToolCommand<
           const leaseCostPerYear = Math.round(totalCostFallback / args.years);
 
           // Calculate break-even analysis
-          const breakEvenAnalysis = this.calculateBreakEvenAnalysis(
+          const breakEvenAnalysis = await this.calculateBreakEvenAnalysis(
             leaseCostPerYear,
             permanentTotal,
             args.years,
@@ -384,13 +395,13 @@ export class GetArnsTokenCostCommand extends ToolCommand<
           response.comparison = {
             costEfficiency: {
               breakEvenYears: breakEvenAnalysis.breakEvenYears,
-              longTermSavings: breakEvenAnalysis.longTermSavings,
-              shortTermBenefit: breakEvenAnalysis.shortTermBenefit,
+              longTermSavings: breakEvenAnalysis.longTermSavingsARIO,
+              shortTermBenefit: breakEvenAnalysis.shortTermBenefitARIO,
             },
             leaseTotal: totalCostFallback.toString(),
-            leaseTotalIO: this.winstonToIO(totalCostFallback),
+            leaseTotalARIO: this.winstonToARIO(totalCostFallback),
             permanentCost: permanentTotal.toString(),
-            permanentCostIO: this.winstonToIO(permanentTotal),
+            permanentCostARIO: this.winstonToARIO(permanentTotal),
             recommendation:
               breakEvenAnalysis.breakEvenYears <= args.years
                 ? `Permanent registration pays for itself in ${breakEvenAnalysis.breakEvenYears} years (estimate)`
@@ -437,8 +448,8 @@ export class GetArnsTokenCostCommand extends ToolCommand<
     currentLeaseDuration: number,
   ): {
     breakEvenYears: number;
-    longTermSavings: string;
-    shortTermBenefit: string;
+    longTermSavingsARIO: string;
+    shortTermBenefitARIO: string;
   } {
     const breakEvenYears = Math.ceil(permanentCost / leaseCostPerYear);
     const longTermSavings = Math.max(0, leaseCostPerYear * 5 - permanentCost);
@@ -449,8 +460,8 @@ export class GetArnsTokenCostCommand extends ToolCommand<
 
     return {
       breakEvenYears,
-      longTermSavings: this.winstonToIO(longTermSavings),
-      shortTermBenefit: this.winstonToIO(shortTermBenefit),
+      longTermSavingsARIO: this.winstonToARIO(longTermSavings),
+      shortTermBenefitARIO: this.winstonToARIO(shortTermBenefit),
     };
   }
 
@@ -562,22 +573,30 @@ export class GetArnsTokenCostCommand extends ToolCommand<
   }
 
   /**
-   * Convert winston (1e12) to IO tokens for user-friendly display
+   * Convert winston (1e12) to ARIO tokens for user-friendly display
+   * ARIO has 6 decimal places, and 1 IO = 1,000,000 ARIO (1e6)
    */
-  private winstonToIO(winston: number | string): string {
+  private winstonToARIO(winston: number | string): string {
     const winstonNum =
       typeof winston === "string" ? parseInt(winston) : winston;
-    const io = winstonNum / 1e12;
+    // Convert winston to IO, then IO to ARIO
+    // 1 IO = 1e12 winston, 1 IO = 1e6 ARIO
+    // So: winston / 1e12 * 1e6 = winston / 1e6
+    const ario = winstonNum / 1e6;
 
-    // Format with appropriate precision
-    if (io >= 1000) {
-      return io.toFixed(0); // No decimals for large numbers
-    } else if (io >= 100) {
-      return io.toFixed(1); // 1 decimal for hundreds
-    } else if (io >= 10) {
-      return io.toFixed(2); // 2 decimals for tens
+    // Format with appropriate precision and k/M notation for readability
+    if (ario >= 1000000) {
+      return (ario / 1000000).toFixed(1) + "M"; // Millions
+    } else if (ario >= 1000) {
+      return (ario / 1000).toFixed(1) + "k"; // Thousands
+    } else if (ario >= 100) {
+      return ario.toFixed(0); // Whole numbers for hundreds
+    } else if (ario >= 10) {
+      return ario.toFixed(1); // 1 decimal for tens
+    } else if (ario >= 1) {
+      return ario.toFixed(2); // 2 decimals for single digits
     } else {
-      return io.toFixed(3); // 3 decimals for small numbers
+      return ario.toFixed(6); // Up to 6 decimals for small amounts
     }
   }
 }

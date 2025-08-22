@@ -1,7 +1,10 @@
 import { BaseToolFactory, ToolCommand, ToolContext } from "../core/index.js";
+import { BuyArnsRecordCommand } from "./commands/BuyArnsRecordCommand.js";
 import { GetArnsRecordInfoCommand } from "./commands/GetArnsRecordInfoCommand.js";
 import { GetArnsTokenCostCommand } from "./commands/GetArnsTokenCostCommand.js";
 import { ResolveArnsNameCommand } from "./commands/ResolveArnsNameCommand.js";
+import { TransferArnsRecordCommand } from "./commands/TransferArnsRecordCommand.js";
+import { UpdateArnsRecordCommand } from "./commands/UpdateArnsRecordCommand.js";
 
 /**
  * ArNS Tool Factory
@@ -13,9 +16,12 @@ export class ArnsToolFactory extends BaseToolFactory {
    */
   protected getToolClasses(): Array<new (context: ToolContext) => ToolCommand> {
     return [
-      ResolveArnsNameCommand,
+      BuyArnsRecordCommand,
       GetArnsRecordInfoCommand,
       GetArnsTokenCostCommand,
+      ResolveArnsNameCommand,
+      TransferArnsRecordCommand,
+      UpdateArnsRecordCommand,
     ];
   }
 }
