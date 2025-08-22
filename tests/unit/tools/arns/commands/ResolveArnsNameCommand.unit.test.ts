@@ -46,7 +46,9 @@ describe("ResolveArnsNameCommand", () => {
     // Ensure client manager returns a valid client by default (critical for mock isolation)
     mockArnsClientManager.getClient.mockReturnValue(mockArnsClient);
     mockArnsClientManager.getCurrentNetwork.mockReturnValue("mainnet");
-    mockArnsClientManager.initializeFromEnvironment.mockResolvedValue(undefined);
+    mockArnsClientManager.initializeFromEnvironment.mockResolvedValue(
+      undefined,
+    );
     mockArnsClientManager.switchNetwork.mockResolvedValue(undefined);
 
     command = new ResolveArnsNameCommand(mockContext);
@@ -73,7 +75,9 @@ describe("ResolveArnsNameCommand", () => {
         success: true,
       });
 
-      expect(mockArnsClientManager.initializeFromEnvironment).toHaveBeenCalled();
+      expect(
+        mockArnsClientManager.initializeFromEnvironment,
+      ).toHaveBeenCalled();
       expect(mockArnsClient.resolveArNSName).toHaveBeenCalledWith({
         name: "example.ar",
       });
@@ -111,7 +115,9 @@ describe("ResolveArnsNameCommand", () => {
 
       const parsed = JSON.parse(result);
 
-      expect(mockArnsClientManager.switchNetwork).toHaveBeenCalledWith("testnet");
+      expect(mockArnsClientManager.switchNetwork).toHaveBeenCalledWith(
+        "testnet",
+      );
       expect(parsed.network).toBe("testnet");
     });
 

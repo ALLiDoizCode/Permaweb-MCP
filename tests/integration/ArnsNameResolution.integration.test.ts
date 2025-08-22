@@ -95,13 +95,13 @@ describe("ArNS Name Resolution Integration", () => {
       const command = new GetArnsRecordInfoCommand(mockContext);
 
       // Test network parameter handling
-      const mainnetResult = await command.execute({ 
+      const mainnetResult = await command.execute({
         name: "example.ar",
-        network: "mainnet"
+        network: "mainnet",
       });
-      const testnetResult = await command.execute({ 
+      const testnetResult = await command.execute({
         name: "example.ar",
-        network: "testnet"
+        network: "testnet",
       });
 
       const mainnetParsed = JSON.parse(mainnetResult);
@@ -110,12 +110,16 @@ describe("ArNS Name Resolution Integration", () => {
       // Both should successfully process network parameters (may fail at lookup level)
       // Should not be parameter validation errors
       if (!mainnetParsed.success) {
-        expect(mainnetParsed.error).not.toMatch(/INVALID_PARAMETER|VALIDATION_ERROR/);
+        expect(mainnetParsed.error).not.toMatch(
+          /INVALID_PARAMETER|VALIDATION_ERROR/,
+        );
       }
       if (!testnetParsed.success) {
-        expect(testnetParsed.error).not.toMatch(/INVALID_PARAMETER|VALIDATION_ERROR/);
+        expect(testnetParsed.error).not.toMatch(
+          /INVALID_PARAMETER|VALIDATION_ERROR/,
+        );
       }
-      
+
       // At minimum, both should accept valid network parameters without validation errors
       expect(typeof mainnetParsed.success).toBe("boolean");
       expect(typeof testnetParsed.success).toBe("boolean");
@@ -127,7 +131,9 @@ describe("ArNS Name Resolution Integration", () => {
       const resolveCommand = new ResolveArnsNameCommand(mockContext);
       const recordCommand = new GetArnsRecordInfoCommand(mockContext);
 
-      const resolveResult = await resolveCommand.execute({ name: "example.ar" });
+      const resolveResult = await resolveCommand.execute({
+        name: "example.ar",
+      });
       const recordResult = await recordCommand.execute({ name: "example.ar" });
 
       const resolveParsed = JSON.parse(resolveResult);
@@ -138,7 +144,7 @@ describe("ArNS Name Resolution Integration", () => {
       expect(recordParsed).toHaveProperty("success");
       expect(typeof resolveParsed.success).toBe("boolean");
       expect(typeof recordParsed.success).toBe("boolean");
-      
+
       // If either fails, should have proper error structure
       if (!resolveParsed.success) {
         expect(resolveParsed).toHaveProperty("error");
@@ -170,18 +176,18 @@ describe("ArNS Name Resolution Integration", () => {
   describe("Response Format Validation", () => {
     it("should return consistent JSON response structures", async () => {
       const resolveCommand = new ResolveArnsNameCommand(mockContext);
-      
+
       const result = await resolveCommand.execute({ name: "test.ar" });
-      
+
       // Should always return valid JSON
       expect(() => JSON.parse(result)).not.toThrow();
-      
+
       const parsed = JSON.parse(result);
-      
+
       // Should have required response structure
       expect(parsed).toHaveProperty("success");
       expect(typeof parsed.success).toBe("boolean");
-      
+
       if (!parsed.success) {
         expect(parsed).toHaveProperty("error");
         expect(parsed).toHaveProperty("message");
@@ -189,21 +195,21 @@ describe("ArNS Name Resolution Integration", () => {
         expect(typeof parsed.message).toBe("string");
       }
     });
-    
+
     it("should validate record info response structure", async () => {
       const recordCommand = new GetArnsRecordInfoCommand(mockContext);
-      
+
       const result = await recordCommand.execute({ name: "test.ar" });
-      
+
       // Should always return valid JSON
       expect(() => JSON.parse(result)).not.toThrow();
-      
+
       const parsed = JSON.parse(result);
-      
+
       // Should have required response structure
       expect(parsed).toHaveProperty("success");
       expect(typeof parsed.success).toBe("boolean");
-      
+
       if (!parsed.success) {
         expect(parsed).toHaveProperty("error");
         expect(parsed).toHaveProperty("message");

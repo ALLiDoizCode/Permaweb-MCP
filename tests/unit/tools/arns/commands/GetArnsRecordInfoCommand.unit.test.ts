@@ -46,7 +46,9 @@ describe("GetArnsRecordInfoCommand", () => {
     // Ensure client manager returns a valid client by default (critical for mock isolation)
     mockArnsClientManager.getClient.mockReturnValue(mockArnsClient);
     mockArnsClientManager.getCurrentNetwork.mockReturnValue("mainnet");
-    mockArnsClientManager.initializeFromEnvironment.mockResolvedValue(undefined);
+    mockArnsClientManager.initializeFromEnvironment.mockResolvedValue(
+      undefined,
+    );
     mockArnsClientManager.switchNetwork.mockResolvedValue(undefined);
 
     command = new GetArnsRecordInfoCommand(mockContext);
