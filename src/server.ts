@@ -8,6 +8,7 @@ import type { ProcessDefinition } from "./services/ProcessCommunicationService.j
 
 import { defaultProcessService } from "./services/DefaultProcessService.js";
 import { TokenProcessTemplateService } from "./services/TokenProcessTemplateService.js";
+import { ArnsToolFactory } from "./tools/arns/ArnsToolFactory.js";
 import { ContactToolFactory } from "./tools/contact/ContactToolFactory.js";
 import { DocumentationToolFactory } from "./tools/documentation/DocumentationToolFactory.js";
 import { HubToolFactory } from "./tools/hub/HubToolFactory.js";
@@ -180,6 +181,16 @@ function setupToolRegistry() {
   });
 
   userFactory.registerTools(toolRegistry);
+
+  // Register ArNS tools
+  const arnsFactory = new ArnsToolFactory({
+    categoryDescription:
+      "ArNS name system operations for decentralized domains",
+    categoryName: "ArNS",
+    context,
+  });
+
+  arnsFactory.registerTools(toolRegistry);
 }
 
 const server = new FastMCP({

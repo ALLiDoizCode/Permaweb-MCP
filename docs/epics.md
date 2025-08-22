@@ -7,14 +7,14 @@ This document consolidates all epic initiatives for the Permamind project, provi
 ## Table of Contents
 
 1. [MVP Refactoring Epic - Brownfield Enhancement](#mvp-refactoring-epic---brownfield-enhancement)
-2. [BMAD Integration Epic - Brownfield Enhancement](#bmad-integration-epic---brownfield-enhancement)
-3. [Token Tools NLS Migration Epic](#token-tools-nls-migration-epic)
-4. [Agent UX Enhancement Epic - Revolutionary Interface](#agent-ux-enhancement-epic---revolutionary-interface)
-5. [AO Process Management Tools Epic](#ao-process-management-tools-epic)
-6. [Human Crypto Keys Performance Optimization Epic - Brownfield Enhancement](#human-crypto-keys-performance-optimization-epic---brownfield-enhancement)
-7. [Lua Process Creation and Documentation Enhancement Epic](#lua-process-creation-and-documentation-enhancement-epic)
-8. [AO Process Communication ADP Migration Epic - Brownfield Enhancement](#ao-process-communication-adp-migration-epic---brownfield-enhancement)
-9. [ADP Parameter Translation Quality Issues Epic - Brownfield Enhancement](#adp-parameter-translation-quality-issues-epic---brownfield-enhancement)
+2. [Token Tools NLS Migration Epic](#token-tools-nls-migration-epic)
+3. [Agent UX Enhancement Epic - Revolutionary Interface](#agent-ux-enhancement-epic---revolutionary-interface)
+4. [AO Process Management Tools Epic](#ao-process-management-tools-epic)
+5. [Human Crypto Keys Performance Optimization Epic - Brownfield Enhancement](#human-crypto-keys-performance-optimization-epic---brownfield-enhancement)
+6. [Lua Process Creation and Documentation Enhancement Epic](#lua-process-creation-and-documentation-enhancement-epic)
+7. [AO Process Communication ADP Migration Epic - Brownfield Enhancement](#ao-process-communication-adp-migration-epic---brownfield-enhancement)
+8. [ADP Parameter Translation Quality Issues Epic - Brownfield Enhancement](#adp-parameter-translation-quality-issues-epic---brownfield-enhancement)
+9. [ArNS Tools Integration Epic - Brownfield Enhancement](#arns-tools-integration-epic---brownfield-enhancement)
 
 ---
 
@@ -80,102 +80,6 @@ Refactor Permamind project to align with MVP scope by streamlining tools to esse
 - [x] New test suite covers all remaining tools with 90% coverage
 - [x] Build passes: npm run build && npm run lint && npm run type-check && npm run test
 - [x] No regression in core AO messaging, memory storage, contact management, or documentation features
-
----
-
-## Epic 2: BMAD Installation & Integration Tool Epic - Brownfield Enhancement
-
-### Epic Goal
-
-Create a tool that installs the complete BMAD methodology into any user's project AND integrates BMAD functionality with Claude Code slash commands, providing seamless access to the full methodology.
-
-### Epic Description
-
-**Existing System Context:**
-
-- Current system: Permamind MCP server with existing tool infrastructure
-- Technology stack: TypeScript, FastMCP, existing MCP tool patterns
-- Integration points: UserToolFactory, command system, Claude Code slash command system
-
-**Enhancement Details:**
-
-- What's being added/changed: @init tool + Claude Code slash command integration
-- Installation: Copies complete .bmad-core directory to user's project
-- Slash commands: /analyst, /architect, /dev, /pm, /qa, /sm, /ux-expert, /create-doc, /execute-checklist, etc.
-- Integration: Detects installed BMAD and provides clean slash command access
-- How it integrates: New MCP tool + Claude Code slash command registration
-- Success criteria: Users run @init once, then use clean slash commands in any Claude Code session
-
-### Stories
-
-#### Story 2.1: Create @init MCP Tool
-
-**User Story:** As a developer using Permamind, I want to install the complete BMAD methodology in my project with a single command so that I can access all BMAD resources locally.
-
-**Acceptance Criteria:**
-
-- Implement new MCP tool in Permamind UserToolFactory
-- Tool copies entire .bmad-core directory structure to target project
-- Include validation to check if BMAD already exists
-- Provide option to update/overwrite existing installation
-- Validate successful installation with basic health checks
-- Provide clear feedback on installation status and next steps
-
-#### Story 2.2: Implement Claude Code Slash Command Integration
-
-**User Story:** As a Claude Code user with BMAD installed, I want to use clean slash commands for all BMAD functionality so that I can access agents, tasks, templates, checklists, and workflows efficiently.
-
-**Acceptance Criteria:**
-
-- Create agent slash commands: /analyst, /architect, /dev, /pm, /qa, /sm, /ux-expert, /bmad-master
-- Create task slash commands: /advanced-elicitation, /create-doc, /execute-checklist, /brownfield-create-epic, etc. (all 20 tasks)
-- Create template slash commands: /architecture, /prd, /story, /front-end-spec, etc. (all 15 templates)
-- Create checklist slash commands: /architect-checklist, /pm-checklist, /story-dod-checklist, etc. (all 7 checklists)
-- Create workflow slash commands: /greenfield-fullstack, /brownfield-service, etc. (all 6 workflows)
-- Ensure slash commands integrate with Claude Code's command system
-- Maintain parameter passing and execution patterns from original BMAD tools
-
-#### Story 2.3: Auto-detect BMAD Installation for Slash Commands
-
-**User Story:** As a Claude Code user, I want slash commands to automatically detect if BMAD is installed in my project so that I get helpful guidance when BMAD is not available.
-
-**Acceptance Criteria:**
-
-- Slash commands detect if .bmad-core exists in current project
-- Provide helpful error messages if BMAD not installed
-- Auto-suggest @init if user tries slash commands without installation
-- Enable slash commands to work from any directory within BMAD-enabled project
-- Support multi-project workflows where some projects have BMAD and others don't
-- Graceful degradation when BMAD resources are unavailable
-
-#### Story 2.4: Add Installation Guidance and Slash Command Documentation
-
-**User Story:** As a new BMAD user, I want comprehensive documentation and guidance so that I can understand how to install and use BMAD effectively in my projects.
-
-**Acceptance Criteria:**
-
-- Create help documentation for @init tool with usage examples
-- Document all available slash commands with examples and parameter descriptions
-- Provide post-installation usage guidance and getting started workflow
-- Include troubleshooting for common installation and usage issues
-- Create quick reference guide for all slash commands organized by category
-- Integrate documentation with existing Permamind help system
-
-### Definition of Done
-
-- [ ] @init tool implemented in Permamind
-- [ ] Complete .bmad-core directory installation working
-- [ ] All agent slash commands implemented: /analyst, /architect, /dev, /pm, /qa, /sm, /ux-expert, /bmad-master
-- [ ] All task slash commands implemented (20 commands)
-- [ ] All template slash commands implemented (15 commands)
-- [ ] All checklist slash commands implemented (7 commands)
-- [ ] All workflow slash commands implemented (6 commands)
-- [ ] Auto-detection of BMAD installation for slash commands
-- [ ] Installation validation and conflict detection
-- [ ] Comprehensive documentation for installation and slash commands
-- [ ] Tool tested across different project types and Claude Code sessions
-- [ ] No impact on existing Permamind or Claude Code functionality
-- [ ] Build passes: npm run build && npm run lint && npm run type-check && npm run test
 
 ---
 
@@ -828,6 +732,155 @@ Fix critical quality issues in ADP (AO Documentation Protocol) parameter transla
 
 ---
 
+## Epic 10: ArNS Tools Integration Epic - Brownfield Enhancement
+
+### Epic Goal
+
+Integrate comprehensive Arweave Name System (ArNS) tools into Permamind MCP server to enable decentralized domain name operations, including name registration, resolution, management, and cost calculation through natural language interactions.
+
+### Epic Description
+
+**Existing System Context:**
+
+- Current functionality: Permamind MCP server with existing tool infrastructure for token operations, process management, and documentation
+- Technology stack: TypeScript, FastMCP, existing MCP tool patterns, AO Connect integration, Arweave ecosystem connectivity
+- Integration points: Existing tool factory system, signer management infrastructure, address resolution utilities, confirmation flow patterns
+
+**Enhancement Details:**
+
+- What's being added/changed: New ArNS tool category with comprehensive name system operations including name resolution, registration (lease/permanent), cost calculation, name management (upgrades, extensions), and undername support following ar-io-sdk patterns
+- How it integrates: Leverages existing tool factory architecture, signer management, and confirmation flows; uses ar-io-sdk as the underlying ArNS client library; follows established MCP tool patterns for parameter validation and response formatting
+- Success criteria: Users can perform all ArNS operations through natural language commands, seamless integration with existing Permamind functionality, full support for ArNS lifecycle management from discovery to deployment
+
+### Stories
+
+#### Story 10.1: ArNS Foundation & Client Setup
+
+**User Story:** As a Permamind developer, I want to establish the foundational ArNS infrastructure so that subsequent ArNS tools can be built on reliable client management and network configuration.
+
+**Acceptance Criteria:**
+
+- Create basic ArnsToolFactory structure following existing tool factory patterns
+- Implement ArnsClientManager utility for ar-io-sdk client management
+- Add network configuration support (mainnet/testnet via environment variables)
+- Establish ar-io-sdk integration patterns and initialization
+- Register ArnsToolFactory in server.ts (basic registration only)
+- Implement basic error handling and logging patterns
+
+#### Story 10.2: ArNS Name Resolution Tools
+
+**User Story:** As a Permamind user, I want to resolve ArNS names and query detailed name information so that I can discover and validate ArNS records before making operational decisions.
+
+**Acceptance Criteria:**
+
+- Implement ResolveArnsNameCommand for base names and undernames resolution
+- Implement GetArnsRecordInfoCommand for detailed name information retrieval
+- Support both .ar base names and undername resolution (e.g., sub.example.ar)
+- Include comprehensive validation for ArNS name formats using Zod schemas
+- Implement proper error handling for invalid names and network issues
+- Provide clear, AI-friendly tool descriptions and parameter documentation
+
+#### Story 10.3: ArNS Cost Calculation & Pricing
+
+**User Story:** As a user planning ArNS name registration, I want to calculate costs for different registration types so that I can make informed decisions about lease durations and permanent ownership.
+
+**Acceptance Criteria:**
+
+- Implement GetArnsTokenCostCommand for comprehensive price calculation
+- Support cost calculation for lease registrations (1-5 year duration options)
+- Support cost calculation for permanent registration options
+- Include demand-based pricing calculation using ar-io-sdk pricing APIs
+- Provide cost breakdown and comparison between lease vs permanent options
+- Handle pricing failures gracefully with fallback estimates when possible
+
+#### Story 10.4: ArNS Registration Tools
+
+**User Story:** As a user establishing decentralized identity, I want to register ArNS names through natural language commands so that I can secure my desired names with appropriate registration types.
+
+**Acceptance Criteria:**
+
+- Implement BuyArnsRecordCommand supporting both lease and permanent registration
+- Integrate with existing signer management infrastructure for transaction signing
+- Support lease duration selection (1-5 years) with proper validation
+- Implement permanent registration option with appropriate cost handling
+- Include referral tracking support for ar-io-sdk registration flow
+- Provide transaction confirmation and status reporting
+
+#### Story 10.5: ArNS Management Tools
+
+**User Story:** As an ArNS name owner, I want to manage my existing names through upgrade, extension, and configuration operations so that I can maintain and enhance my decentralized identity infrastructure.
+
+**Acceptance Criteria:**
+
+- Implement UpgradeArnsRecordCommand for converting leased names to permanent ownership
+- Implement ExtendArnsLeaseCommand for lease duration management before expiration
+- Implement IncreaseUndernameCountCommand for expanding undername capacity (10 → 100)
+- Include ownership validation to ensure user can manage specified names
+- Support management operation cost calculation and confirmation flows
+- Handle management operation failures with clear guidance
+
+#### Story 10.6: Cross-System Integration
+
+**User Story:** As a Permamind user, I want ArNS operations to work seamlessly with existing functionality so that I can combine name management with token transfers, process communication, and memory storage.
+
+**Acceptance Criteria:**
+
+- Extend existing address resolution utilities to support ArNS name resolution
+- Enable ArNS name usage in token transfer operations (transferTokens tool)
+- Support ArNS name resolution in process communication (executeAction tool)
+- Integrate ArNS record storage in memory system for persistent name management
+- Implement ArNS name support in contact mapping system (saveAddressMapping)
+- Provide seamless ArNS operations within natural language workflows
+- Update tool documentation and descriptions to reflect ArNS integration capabilities
+
+### Compatibility Requirements
+
+- [ ] Existing tool APIs remain unchanged for all current consumers
+- [ ] ArNS tools follow established MCP tool patterns and validation schemas
+- [ ] Network configuration respects existing environment variable patterns
+- [ ] Signer management integrates with current wallet and keypair infrastructure
+- [ ] Error handling maintains consistency with existing tool responses
+- [ ] No regression in existing token, process, or documentation functionality
+
+### Risk Mitigation
+
+- **Primary Risk:** ar-io-sdk dependency conflicts with existing AO Connect or Arweave dependencies
+- **Mitigation:** Careful dependency analysis, version compatibility testing, isolated SDK client initialization
+- **Rollback Plan:** ArNS tools are additive enhancement - can be disabled via tool factory registration without affecting core functionality
+
+### Definition of Done
+
+#### Story-Level Requirements
+
+- [ ] **Story 10.1**: ArNS Foundation & Client Setup - Basic infrastructure, client management, and server registration
+- [ ] **Story 10.2**: ArNS Name Resolution Tools - Name resolution and record information retrieval working
+- [ ] **Story 10.3**: ArNS Cost Calculation & Pricing - Comprehensive pricing for lease and permanent options
+- [ ] **Story 10.4**: ArNS Registration Tools - Name registration supporting both lease and permanent types
+- [ ] **Story 10.5**: ArNS Management Tools - Post-registration management (upgrade, extend, increase limits)
+- [ ] **Story 10.6**: Cross-System Integration - Seamless integration with existing Permamind infrastructure
+
+#### Technical Implementation Requirements
+
+- [ ] ArNS name resolution working for both base names and undernames (.ar and sub.example.ar)
+- [ ] Cost calculation supporting lease (1-5 years) and permanent registration options with demand-based pricing
+- [ ] Registration tools handle ar-io-sdk buyRecord() with proper transaction signing and confirmation
+- [ ] Management tools support upgrades (lease→permanent), extensions, and undername count increases (10→100)
+- [ ] Integration with existing AutoSafeToolContext signer management and transaction confirmation flows
+- [ ] ArNS name resolution integrated with token transfers and process communication tools
+- [ ] Cross-tool address resolution supporting .ar names in all address-accepting tools
+
+#### Quality & Compatibility Requirements
+
+- [ ] Comprehensive error handling for network issues, invalid names, insufficient funds, and ownership validation
+- [ ] Tool descriptions enable AI-assisted usage with proper Zod parameter validation schemas
+- [ ] No regression in existing Permamind functionality or MCP tool behavior during integration
+- [ ] All ArNS tools follow established MCP tool patterns and error response formatting
+- [ ] Build passes: npm run build && npm run lint && npm run type-check && npm run test
+- [ ] Integration testing confirms ArNS operations work with token transfers and process communication
+- [ ] Documentation updated to include ArNS tool examples and cross-system integration patterns
+
+---
+
 ---
 
 ## Implementation Priorities
@@ -846,21 +899,14 @@ Fix critical quality issues in ADP (AO Documentation Protocol) parameter transla
 3. Implement missing saveTokenMapping functionality
 4. Ensure immediate NLS availability
 
-### Phase 3: Advanced Capabilities (BMAD Integration)
-
-1. Create @init tool for BMAD installation
-2. Implement Claude Code slash command integration for all BMAD resources
-3. Add auto-detection and documentation system
-4. Enable complete BMAD methodology access through clean slash commands
-
-### Phase 4: Revolutionary UX (Agent Enhancement)
+### Phase 3: Advanced User Experience (Agent Enhancement)
 
 1. ~~Implement dual-platform agent detection and activation~~ (Story 4.1 deprecated)
 2. Create file-based agent systems for Claude Code (Story 4.2)
 3. Build unified memory-driven context sharing architecture (Story 4.3)
 4. Enable natural AI team collaboration experiences
 
-### Phase 5: AO Process Infrastructure (Process Management Tools)
+### Phase 4: AO Process Infrastructure (Process Management Tools)
 
 1. Implement createProcess MCP tool for AO process spawning
 2. Add evalProcess MCP tool for Lua code evaluation
@@ -889,7 +935,7 @@ Fix critical quality issues in ADP (AO Documentation Protocol) parameter transla
 
 - **Risk:** Conflicting changes between epic implementations
 - **Mitigation:** Sequential implementation with thorough integration testing
-- **Dependencies:** MVP Refactoring must complete before Token NLS Migration and BMAD Integration
+- **Dependencies:** MVP Refactoring must complete before Token NLS Migration and Agent UX Enhancement
 
 ### System Integrity
 
@@ -921,13 +967,13 @@ Fix critical quality issues in ADP (AO Documentation Protocol) parameter transla
 - All existing functionality preserved with natural language access
 - Architecture supports future NLS expansions
 
-### BMAD Integration Success
+### ArNS Tools Integration Success
 
-- @init tool installs complete BMAD methodology in any project
-- All 58 BMAD resources accessible via clean slash commands: 10 agents, 20 tasks, 15 templates, 7 checklists, 6 workflows
-- Auto-detection works reliably across different project types
+- Complete ArNS name system operations available through natural language
+- Name resolution, registration, and management working seamlessly
+- Integration with existing token transfers and process communication
+- Cost calculation and pricing transparency for all registration types
 - No regression in existing Permamind functionality
-- Users experience seamless BMAD access through Claude Code
 
 ### Agent UX Enhancement Success
 
@@ -967,7 +1013,7 @@ Fix critical quality issues in ADP (AO Documentation Protocol) parameter transla
 5. **Epic 9 (ADP Parameter Translation Quality Issues)** - Critical bug fixes for process communication
 6. **Epic 7 (Lua Process Creation and Documentation Enhancement)** - AI agent development capabilities
 7. **Epic 6 (Human Crypto Keys Performance Optimization)** - Critical performance enhancement
-8. **Epic 2 (BMAD Integration)** - Advanced development capabilities
+8. **Epic 10 (ArNS Tools Integration)** - Decentralized domain name system capabilities
 9. **Epic 4 (Agent UX Enhancement)** - File-based agents and memory sharing (Stories 4.2, 4.3)
 
 ### Quality Gates

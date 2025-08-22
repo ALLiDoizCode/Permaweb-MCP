@@ -1,5 +1,6 @@
 import { fetchEvents } from "../../../relay.js";
 import { MEMORY_KINDS } from "../../../services/aiMemoryService.js";
+import { ArnsAddressResolver } from "../../arns/utils/ArnsAddressResolver.js";
 
 export interface ResolutionResult<T> {
   matches?: T[];
@@ -22,13 +23,18 @@ interface TokenMatch {
   ticker?: string;
 }
 
-// Resolve contact name to address using memories
+// Resolve contact name to address using memories, now with ArNS support
 export async function resolveAddress(
   input: string,
   hubId: string,
 ): Promise<ResolutionResult<string>> {
   if (looksLikeProcessId(input)) {
     return { requiresVerification: false, resolved: true, value: input };
+  }
+
+  // Check if input is ArNS name (.ar suffix)
+  if (ArnsAddressResolver.isArnsName(input)) {
+    return await ArnsAddressResolver.resolveArnsToAddress(input);
   }
 
   try {

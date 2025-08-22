@@ -68,6 +68,7 @@
     "npm": ">=9.0.0"
   },
   "dependencies": {
+    "@ar.io/sdk": "^3.18.3",
     "@ardrive/turbo-sdk": "^1.30.0",
     "@permaweb/aoconnect": "^0.0.85",
     "arweave": "^1.15.7",

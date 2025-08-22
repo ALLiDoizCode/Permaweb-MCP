@@ -205,6 +205,26 @@ export const CommonSchemas = {
     .string()
     .regex(/^[a-zA-Z0-9_-]{43}$/, "Invalid Arweave address format"),
 
+  addressOrArnsName: z
+    .string()
+    .min(1)
+    .refine((value) => {
+      // Check if it's a valid Arweave address (43-character base64)
+      if (/^[a-zA-Z0-9_-]{43}$/.test(value)) return true;
+
+      // Check if it's a valid ArNS name (ends with .ar and has valid format)
+      if (value.endsWith(".ar")) {
+        const baseName = value.slice(0, -3);
+        // ArNS names can be base names or undernames with dots
+        // Each segment must start and end with alphanumeric (no leading/trailing hyphens)
+        return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/i.test(
+          baseName,
+        );
+      }
+
+      return false;
+    }, "Must be a valid Arweave address or ArNS name (e.g., example.ar)"),
+
   importance: z.number().min(0).max(1),
 
   limit: z.number().int().min(1).max(1000).optional().default(100),
