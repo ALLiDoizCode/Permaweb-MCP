@@ -21,12 +21,32 @@ export default defineConfig({
     // Add stability configurations for CI environments
     hookTimeout: 30000,
     include: ["tests/**/*.test.ts"],
-    pool: "forks",
-    poolOptions: {
-      forks: {
-        singleFork: true,
+    // Use serial execution in CI to avoid process management issues
+    ...(process.env.CI && {
+      pool: "forks",
+      poolOptions: {
+        forks: {
+          isolate: false,
+          maxForks: 1,
+          singleFork: true,
+        },
       },
+    }),
+    ...(!process.env.CI && {
+      pool: "threads",
+      poolOptions: {
+        threads: {
+          maxThreads: 1,
+          singleThread: true,
+        },
+      },
+    }),
+    // Force sequential execution in CI
+    sequence: {
+      concurrent: process.env.CI ? false : true,
     },
+    // Add teardown timeout for CI stability
+    teardownTimeout: 10000,
     testTimeout: 30000,
   },
 });
