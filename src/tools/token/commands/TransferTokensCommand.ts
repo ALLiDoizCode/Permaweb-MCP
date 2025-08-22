@@ -23,7 +23,7 @@ export class TransferTokensCommand extends ToolCommand<
 > {
   protected metadata: ToolMetadata = {
     description:
-      "Core MVP functionality: Transfer tokens from your account to another address. Supports token names/tickers and contact names from registry.",
+      "Core MVP functionality: Transfer tokens from your account to another address. Supports token names/tickers, contact names, and ArNS names (e.g., recipient.ar).",
     name: "transferTokens",
     openWorldHint: false,
     readOnlyHint: false,
@@ -45,7 +45,9 @@ export class TransferTokensCommand extends ToolCommand<
       .describe(
         "Set to true to send exact amount without denomination conversion",
       ),
-    recipient: z.string().describe("Address or contact name to send tokens to"),
+    recipient: CommonSchemas.addressOrArnsName.describe(
+      "Address, contact name, or ArNS name (e.g., recipient.ar) to send tokens to",
+    ),
   });
 
   constructor(private context: ToolContext) {

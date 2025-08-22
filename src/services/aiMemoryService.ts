@@ -18,6 +18,7 @@ import { event, fetchEvents, fetchEventsVIP01 } from "../relay.js";
 // Constants for memory kinds
 const MEMORY_KINDS = {
   AI_MEMORY: "10",
+  ARNS_MAPPING: "35",
   CONTACT_MAPPING: "31",
   CONTEXT_DOCUMENTATION: "50",
   MEMORY_CONTEXT: "40",
@@ -37,6 +38,16 @@ const isNonEmptyString = (value: string): boolean =>
   typeof value === "string" && value.trim().length > 0;
 
 export interface AIMemoryService {
+  // ArNS-specific memory operations
+  addArnsRecord: (
+    signer: JWKInterface,
+    hubId: string,
+    arnsName: string,
+    transactionId: string,
+    operation: "registration" | "transfer" | "update",
+    metadata: Record<string, unknown>,
+    p: string,
+  ) => Promise<string>;
   // Enhanced memory operations
   addEnhanced: (
     signer: JWKInterface,
@@ -50,6 +61,7 @@ export interface AIMemoryService {
     memories: Partial<AIMemory>[],
     p: string,
   ) => Promise<string[]>;
+
   // Reasoning chain operations
   addReasoningChain: (
     signer: JWKInterface,
@@ -57,8 +69,8 @@ export interface AIMemoryService {
     reasoning: ReasoningTrace,
     p: string,
   ) => Promise<string>;
-
   createAIMemoryTags: (memory: Partial<AIMemory>) => Tag[];
+
   // Context management
   createMemoryContext: (
     signer: JWKInterface,
@@ -67,8 +79,8 @@ export interface AIMemoryService {
     description: string,
     p: string,
   ) => Promise<string>;
-
   detectCircularReferences: (hubId: string) => Promise<string[]>;
+
   // Utility functions
   eventToAIMemory: (event: Record<string, unknown>) => AIMemory;
 
@@ -78,6 +90,11 @@ export interface AIMemoryService {
     toId: string,
   ) => Promise<string[]>;
 
+  getArnsOperationHistory: (
+    hubId: string,
+    arnsName?: string,
+    operation?: "registration" | "transfer" | "update",
+  ) => Promise<AIMemory[]>;
   getContextMemories: (hubId: string, contextId: string) => Promise<AIMemory[]>;
 
   // Analytics
@@ -87,7 +104,6 @@ export interface AIMemoryService {
     hubId: string,
     memoryId?: string,
   ) => Promise<MemoryLink[]>;
-
   getReasoningChain: (
     hubId: string,
     chainId: string,
@@ -98,6 +114,7 @@ export interface AIMemoryService {
     topRelationshipTypes: Array<{ count: number; type: string }>;
     totalLinks: number;
   }>;
+
   linkMemories: (
     signer: JWKInterface,
     hubId: string,
@@ -105,15 +122,69 @@ export interface AIMemoryService {
     targetId: string,
     relationship: MemoryLink,
   ) => Promise<string>;
+
   searchAdvanced: (
     hubId: string,
     query: string,
     filters?: SearchFilters,
   ) => Promise<AIMemory[]>;
+
+  searchArnsRecords: (hubId: string, query?: string) => Promise<AIMemory[]>;
 }
 
 const aiService = (): AIMemoryService => {
   return {
+    // ArNS-specific memory operations
+    addArnsRecord: async (
+      signer: JWKInterface,
+      hubId: string,
+      arnsName: string,
+      transactionId: string,
+      operation: "registration" | "transfer" | "update",
+      metadata: Record<string, unknown>,
+      p: string,
+    ): Promise<string> => {
+      try {
+        // Validate required fields
+        if (!isNonEmptyString(arnsName)) {
+          throw new Error("ArNS name is required");
+        }
+        if (!isNonEmptyString(transactionId)) {
+          throw new Error("Transaction ID is required");
+        }
+        if (!isNonEmptyString(p)) {
+          throw new Error("Public key p is required");
+        }
+
+        // Create ArNS memory tags
+        const tags = [
+          { name: "Kind", value: MEMORY_KINDS.ARNS_MAPPING },
+          {
+            name: "Content",
+            value: `ArNS ${operation}: ${arnsName} -> ${transactionId}`,
+          },
+          { name: "p", value: p },
+          { name: "arns_name", value: arnsName },
+          { name: "arns_transaction", value: transactionId },
+          { name: "arns_operation", value: operation },
+          { name: "domain", value: "arns" },
+          { name: "timestamp", value: new Date().toISOString() },
+        ];
+
+        // Add metadata as tags
+        for (const [key, value] of Object.entries(metadata)) {
+          if (typeof value === "string" || typeof value === "number") {
+            tags.push({ name: `arns_${key}`, value: value.toString() });
+          }
+        }
+
+        const result = await event(signer, hubId, tags);
+        return `ArNS record stored: ${result}`;
+      } catch (error) {
+        throw new Error(`Failed to store ArNS record: ${error}`);
+      }
+    },
+
     addEnhanced: async (
       signer: JWKInterface,
       hubId: string,
@@ -342,6 +413,49 @@ const aiService = (): AIMemoryService => {
       }
     },
 
+    getArnsOperationHistory: async (
+      hubId: string,
+      arnsName?: string,
+      operation?: "registration" | "transfer" | "update",
+    ): Promise<AIMemory[]> => {
+      try {
+        // Build filter parameters
+        const filterParams = {
+          kinds: [MEMORY_KINDS.ARNS_MAPPING],
+          limit: 100,
+        } as Record<string, unknown>;
+
+        // Build tags for filtering
+        const tags: Record<string, string[]> = {};
+
+        if (arnsName) {
+          tags.arns_name = [arnsName];
+        }
+
+        if (operation) {
+          tags.arns_operation = [operation];
+        }
+
+        if (Object.keys(tags).length > 0) {
+          filterParams.tags = tags;
+        }
+
+        const result = await fetchEventsVIP01(hubId, filterParams);
+
+        if (!result || !result.events) {
+          return [];
+        }
+
+        // Convert events to AIMemory format
+        const aiMemories = result.events.map((event: unknown) =>
+          aiService().eventToAIMemory(event as Record<string, unknown>),
+        );
+
+        return rankMemoriesByRelevance(aiMemories);
+      } catch (error) {
+        throw new Error(`Failed to get ArNS operation history: ${error}`);
+      }
+    },
     getContextMemories: async (
       hubId: string,
       contextId: string,
@@ -415,6 +529,7 @@ const aiService = (): AIMemoryService => {
         };
       }
     },
+
     getMemoryRelationships: async (
       hubId: string,
       memoryId?: string,
@@ -654,6 +769,51 @@ const aiService = (): AIMemoryService => {
         return rankMemoriesByRelevance(aiMemories);
       } catch (error) {
         throw new Error(`Failed to search memories: ${error}`);
+      }
+    },
+
+    searchArnsRecords: async (
+      hubId: string,
+      query?: string,
+    ): Promise<AIMemory[]> => {
+      try {
+        // Build filter parameters for ArNS records
+        const filterParams = {
+          kinds: [MEMORY_KINDS.ARNS_MAPPING],
+          limit: 100,
+        } as Record<string, unknown>;
+
+        if (query) {
+          filterParams.search = query;
+        }
+
+        const result = await fetchEventsVIP01(hubId, filterParams);
+
+        if (!result || !result.events) {
+          return [];
+        }
+
+        // Convert events to AIMemory format
+        const aiMemories = result.events.map((event: unknown) =>
+          aiService().eventToAIMemory(event as Record<string, unknown>),
+        );
+
+        // Filter by query if provided (additional client-side filtering)
+        let filteredMemories = aiMemories;
+        if (query) {
+          const queryLower = query.toLowerCase();
+          filteredMemories = aiMemories.filter(
+            (memory) =>
+              (memory.content &&
+                memory.content.toLowerCase().includes(queryLower)) ||
+              (memory.context?.domain &&
+                memory.context.domain.toLowerCase().includes(queryLower)),
+          );
+        }
+
+        return rankMemoriesByRelevance(filteredMemories);
+      } catch (error) {
+        throw new Error(`Failed to search ArNS records: ${error}`);
       }
     },
   };

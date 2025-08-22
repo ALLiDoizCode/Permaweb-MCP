@@ -28,7 +28,9 @@ export class SaveAddressMappingCommand extends ToolCommand<
   };
 
   protected parametersSchema = z.object({
-    address: CommonSchemas.address.describe("Wallet address"),
+    address: CommonSchemas.addressOrArnsName.describe(
+      "Wallet address or ArNS name (e.g., example.ar)",
+    ),
     name: z.string().describe("Contact name"),
   });
 
@@ -42,6 +44,9 @@ export class SaveAddressMappingCommand extends ToolCommand<
       const safeContext = AutoSafeToolContext.from(this.context);
       const { hubId, keyPair, publicKey } = await safeContext.initializeAll();
 
+      // Determine address type for enhanced filtering and resolution
+      const isArnsName = args.address.endsWith(".ar");
+
       // Use dedicated contact mapping kind for better filtering
       const tags = [
         { name: "Kind", value: MEMORY_KINDS.CONTACT_MAPPING },
@@ -52,6 +57,7 @@ export class SaveAddressMappingCommand extends ToolCommand<
         { name: "p", value: publicKey },
         { name: "contact_name", value: args.name },
         { name: "contact_address", value: args.address },
+        { name: "address_type", value: isArnsName ? "arns" : "direct" },
         { name: "domain", value: "address-book" },
       ];
 

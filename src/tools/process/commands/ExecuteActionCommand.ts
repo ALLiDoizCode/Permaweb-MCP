@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { ADPProcessCommunicationService } from "../../../services/ADPProcessCommunicationService.js";
+import { ArnsAddressResolver } from "../../arns/utils/ArnsAddressResolver.js";
 import {
   AutoSafeToolContext,
   CommonSchemas,
@@ -21,7 +22,7 @@ export class ExecuteActionCommand extends ToolCommand<
   string
 > {
   protected metadata: ToolMetadata = {
-    description: `Send messages to AO processes using natural language via AO Documentation Protocol (ADP). DEPLOYMENT WORKFLOW: Step 3 of 3: 1) spawnProcess → 2) evalProcess → 3) executeAction (this tool for testing). This tool automatically discovers ADP-compliant process handlers, understands your natural language requests, and executes them. Only works with processes that implement ADP - no legacy fallback.`,
+    description: `Send messages to AO processes using natural language via AO Documentation Protocol (ADP). Supports process identification via direct process IDs or ArNS names (e.g., myprocess.ar). DEPLOYMENT WORKFLOW: Step 3 of 3: 1) spawnProcess → 2) evalProcess → 3) executeAction (this tool for testing). This tool automatically discovers ADP-compliant process handlers, understands your natural language requests, and executes them. Only works with processes that implement ADP - no legacy fallback.`,
     name: "executeAction",
     openWorldHint: false,
     readOnlyHint: false,
@@ -29,8 +30,8 @@ export class ExecuteActionCommand extends ToolCommand<
   };
 
   protected parametersSchema = z.object({
-    processId: CommonSchemas.processId.describe(
-      "The AO process ID to communicate with",
+    processId: CommonSchemas.addressOrArnsName.describe(
+      "The AO process ID to communicate with (supports ArNS names like process.ar)",
     ),
     processMarkdown: z
       .string()
@@ -73,12 +74,40 @@ export class ExecuteActionCommand extends ToolCommand<
       const safeContext = AutoSafeToolContext.from(this.context);
       const keyPair = await safeContext.getKeyPair();
 
-      // ADP-only execution - no legacy fallback
+      // Resolve ArNS name to process ID if needed
+      let resolvedProcessId = args.processId;
+      if (ArnsAddressResolver.isArnsName(args.processId)) {
+        const arnsResolution = await ArnsAddressResolver.resolveArnsToAddress(
+          args.processId,
+        );
+
+        if (!arnsResolution.resolved) {
+          return JSON.stringify({
+            approach: "ADP",
+            error: "ARNS_RESOLUTION_FAILED",
+            message: arnsResolution.verificationMessage,
+            success: false,
+          });
+        }
+
+        resolvedProcessId = arnsResolution.value!;
+      }
+
+      // ADP-only execution with resolved process ID
       const adpResult = await ADPProcessCommunicationService.executeRequest(
-        args.processId,
+        resolvedProcessId,
         args.request,
         keyPair,
       );
+
+      // Include resolution information in successful response
+      if (resolvedProcessId !== args.processId) {
+        return JSON.stringify({
+          ...adpResult,
+          originalProcessId: args.processId,
+          resolvedProcessId,
+        });
+      }
 
       return JSON.stringify(adpResult);
     } catch (error) {
