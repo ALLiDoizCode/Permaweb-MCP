@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { pathToFileURL } from 'url';
 import { execSync } from 'child_process';
 import { homedir, platform } from 'os';
 import { createInterface } from 'readline';
@@ -87,7 +88,7 @@ async function generateSeedPhrase() {
     // Import the mnemonic generation functionality
     let generateMnemonic;
     try {
-      ({ generateMnemonic } = await import('../dist/mnemonic.js'));
+      ({ generateMnemonic } = await import(pathToFileURL(join(__dirname, '..', 'dist', 'mnemonic.js')).href));
     } catch (importErr) {
       // Try to build if dist is missing
       const distPath = join(__dirname, '..', 'dist');
@@ -97,7 +98,7 @@ async function generateSeedPhrase() {
           cwd: join(__dirname, '..'),
           stdio: 'inherit' 
         });
-        ({ generateMnemonic } = await import('../dist/mnemonic.js'));
+        ({ generateMnemonic } = await import(pathToFileURL(join(__dirname, '..', 'dist', 'mnemonic.js')).href));
       } else {
         throw importErr;
       }
@@ -248,7 +249,7 @@ async function importSeedPhrase() {
     try {
       let validateMnemonic;
       try {
-        ({ validateMnemonic } = await import('../dist/mnemonic.js'));
+        ({ validateMnemonic } = await import(pathToFileURL(join(__dirname, '..', 'dist', 'mnemonic.js')).href));
       } catch (importErr) {
         // Try to build if dist is missing
         const distPath = join(__dirname, '..', 'dist');
@@ -258,7 +259,7 @@ async function importSeedPhrase() {
             cwd: join(__dirname, '..'),
             stdio: 'inherit' 
           });
-          ({ validateMnemonic } = await import('../dist/mnemonic.js'));
+          ({ validateMnemonic } = await import(pathToFileURL(join(__dirname, '..', 'dist', 'mnemonic.js')).href));
         } else {
           throw importErr;
         }
@@ -410,7 +411,7 @@ async function startServer(configPath) {
 
     // Start the server by importing and running it
     // Note: No console output here as it interferes with MCP JSON protocol
-    await import(serverPath);
+    await import(pathToFileURL(serverPath).href);
     
   } catch (err) {
     if (err.code === 'MODULE_NOT_FOUND') {
@@ -527,3 +528,6 @@ if (args.length === 0) {
       process.exit(1);
   }
 }
+
+
+
