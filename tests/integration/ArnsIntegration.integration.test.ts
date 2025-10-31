@@ -3,11 +3,8 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { aiMemoryService } from "../../src/services/aiMemoryService.js";
 import { ArnsIntegrationService } from "../../src/services/ArnsIntegrationService.js";
 import { ArnsAddressResolver } from "../../src/tools/arns/utils/ArnsAddressResolver.js";
-import { SaveAddressMappingCommand } from "../../src/tools/contact/commands/SaveAddressMappingCommand.js";
 import { CommonSchemas } from "../../src/tools/core/ToolValidator.js";
 import { ExecuteActionCommand } from "../../src/tools/process/commands/ExecuteActionCommand.js";
-import { TransferTokensCommand } from "../../src/tools/token/commands/TransferTokensCommand.js";
-import { resolveAddress } from "../../src/tools/token/utils/TokenResolver.js";
 
 // Mock external dependencies with partial mocking
 vi.mock("../../src/process.js", async () => {
@@ -90,18 +87,13 @@ describe("ArNS Integration", () => {
     });
   });
 
-  describe("TokenResolver ArNS Integration", () => {
-    it("should detect ArNS names in resolveAddress", async () => {
-      // Test that ArNS names are detected and handled differently
-      const processId = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFG"; // 43 chars
+  describe("ArnsAddressResolver Resolution", () => {
+    it("should resolve ArNS names to addresses", async () => {
+      // Test that ArNS names are resolved successfully
       const arnsName = "example.ar";
 
-      const processIdResult = await resolveAddress(processId, "test-hub");
-      const arnsResult = await resolveAddress(arnsName, "test-hub");
-
-      // Process ID should be returned directly
-      expect(processIdResult.resolved).toBe(true);
-      expect(processIdResult.value).toBe(processId);
+      const arnsResult =
+        await ArnsAddressResolver.resolveArnsToAddress(arnsName);
 
       // ArNS name should be processed by ArNS resolver and resolve successfully
       expect(arnsResult.resolved).toBe(true);
@@ -112,19 +104,14 @@ describe("ArNS Integration", () => {
   });
 
   describe("Cross-Tool Address Support", () => {
-    it("should support both direct addresses and ArNS names", async () => {
-      const directAddress = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFG"; // 43 chars
+    it("should resolve ArNS names through ArnsAddressResolver", async () => {
       const arnsName = "test.ar";
 
-      // Both should be processed without throwing errors
-      const directResult = await resolveAddress(directAddress, "test-hub");
-      const arnsResult = await resolveAddress(arnsName, "test-hub");
+      // ArNS name should be processed without throwing errors
+      const arnsResult =
+        await ArnsAddressResolver.resolveArnsToAddress(arnsName);
 
-      expect(directResult).toBeDefined();
       expect(arnsResult).toBeDefined();
-
-      // Direct address should work immediately
-      expect(directResult.resolved).toBe(true);
 
       // ArNS should be recognized and processed successfully
       expect(arnsResult.verificationMessage).toContain(".ar");
@@ -132,7 +119,7 @@ describe("ArNS Integration", () => {
     });
   });
 
-  describe("Contact System ArNS Integration", () => {
+  describe("Schema Validation for ArNS Names", () => {
     it("should validate ArNS names in addressOrArnsName schema", () => {
       // Test direct addresses
       const directAddress = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFG";
@@ -162,123 +149,6 @@ describe("ArNS Integration", () => {
         }
         expect(result.success).toBe(false);
       }
-    });
-
-    it("should handle both address types in contact mapping", () => {
-      // This tests the schema validation - the actual SaveAddressMappingCommand would use this
-      const testCases = [
-        {
-          address: "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFG",
-          expected: true,
-          name: "Alice",
-        },
-        { address: "example.ar", expected: true, name: "Bob" },
-        { address: "sub.example.ar", expected: true, name: "Charlie" },
-        { address: "not-valid", expected: false, name: "Invalid" },
-      ];
-
-      for (const testCase of testCases) {
-        const result = CommonSchemas.addressOrArnsName.safeParse(
-          testCase.address,
-        );
-        expect(result.success).toBe(testCase.expected);
-      }
-    });
-
-    it("should save ArNS addresses in contact system", async () => {
-      const mockKeyPair = {
-        d: "mock-private-key",
-        e: "AQAB",
-        kty: "RSA",
-        n: "mock-public-key",
-      };
-
-      const mockContext = {
-        hubId: "test-hub",
-        keyPair: mockKeyPair,
-        publicKey: "mock-public-key",
-      };
-
-      const command = new SaveAddressMappingCommand(mockContext);
-
-      // Test saving ArNS name as address
-      const result = await command.execute({
-        address: "example.ar",
-        name: "TestArnsContact",
-      });
-
-      const response = JSON.parse(result);
-      expect(response.success).toBe(true);
-      expect(response.mapping.address).toBe("example.ar");
-      expect(response.mapping.name).toBe("TestArnsContact");
-    });
-  });
-
-  describe("Token Transfer with ArNS", () => {
-    it("should transfer tokens using ArNS name as recipient", async () => {
-      const mockKeyPair = {
-        d: "mock-private-key",
-        e: "AQAB",
-        kty: "RSA",
-        n: "mock-public-key",
-      };
-
-      const mockContext = {
-        hubId: "test-hub",
-        keyPair: mockKeyPair,
-        publicKey: "mock-public-key",
-      };
-
-      const command = new TransferTokensCommand(mockContext);
-
-      // Test token transfer to ArNS recipient
-      const result = await command.execute({
-        confirmed: true,
-        processId: "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFG",
-        quantity: "100",
-        recipient: "recipient.ar",
-      });
-
-      const response = JSON.parse(result);
-      expect(response.success).toBe(true);
-      expect(response.transfer.recipient).toBe(
-        "mock-resolved-address-123456789012345678901",
-      );
-    });
-
-    it("should handle ArNS resolution failures in token transfers", async () => {
-      const mockKeyPair = {
-        d: "mock-private-key",
-        e: "AQAB",
-        kty: "RSA",
-        n: "mock-public-key",
-      };
-
-      const mockContext = {
-        hubId: "test-hub",
-        keyPair: mockKeyPair,
-        publicKey: "mock-public-key",
-      };
-
-      const command = new TransferTokensCommand(mockContext);
-
-      // Test with a non-existent ArNS name (should fail resolution)
-      const result = await command.execute({
-        processId: "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFG",
-        quantity: "100",
-        recipient: "nonexistent-fake-name.ar",
-      });
-
-      const response = JSON.parse(result);
-
-      // Since we didn't provide confirmation and our mock resolver returns
-      // successful ArNS resolution, this should require confirmation
-      expect(response.success).toBe(false);
-      expect(response.requiresConfirmation).toBe(true);
-      expect(response.message).toContain("ArNS name");
-      expect(response.resolvedRecipient).toBe(
-        "mock-resolved-address-123456789012345678901",
-      );
     });
   });
 

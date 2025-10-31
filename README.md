@@ -8,9 +8,9 @@
 [![MCP](https://img.shields.io/badge/MCP-Compatible-lightblue.svg)](https://modelcontextprotocol.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**The world's first permanent, decentralized AI memory system built on Arweave and AO**
+**A streamlined MCP server for AO process management, Arweave deployment, and ArNS domain operations**
 
-Permamind is a Model Context Protocol (MCP) server that provides an immortal memory layer for AI agents, leveraging Arweave's permanent storage and the AO ecosystem for decentralized computation. Unlike traditional memory systems that are ephemeral and centralized, Permamind creates truly persistent AI memory that survives forever.
+Permamind is a Model Context Protocol (MCP) server that provides core infrastructure for interacting with the AO ecosystem and Arweave network. Built with TypeScript and FastMCP, it delivers 15 essential tools across 4 categories: Process management, Arweave deployment, wallet operations, and ArNS domain management.
 
 ## 🚀 Quick Start
 
@@ -76,127 +76,112 @@ SEED_PHRASE="your twelve word mnemonic phrase here"
 
 # Optional: Development mode
 NODE_ENV=development
-
-# Optional: Enable automatic memory storage
-MEMORY=true
-
-# Optional: Enable automatic context loading
-ENABLE_AUTO_CONTEXT=true
 ```
 
 ---
 
 ## 🌟 Why Permamind?
 
-| Traditional AI Memory        | Permamind                        |
-| ---------------------------- | -------------------------------- |
-| ❌ Ephemeral sessions        | ✅ Permanent storage             |
-| ❌ Centralized servers       | ✅ Decentralized AO network      |
-| ❌ Limited context           | ✅ Unlimited knowledge graphs    |
-| ❌ No cross-session learning | ✅ Continuous learning & memory  |
-| ❌ Vendor lock-in            | ✅ Open, permissionless protocol |
+| Manual AO Interaction        | Permamind                      |
+| ---------------------------- | ------------------------------ |
+| ❌ Complex CLI commands      | ✅ Natural MCP integration     |
+| ❌ Manual process management | ✅ Streamlined process tools   |
+| ❌ Difficult deployments     | ✅ One-command Arweave uploads |
+| ❌ ArNS CLI complexity       | ✅ Simple domain management    |
+| ❌ Fragmented tooling        | ✅ Unified MCP interface       |
 
 ## 🚀 Key Features
 
-### 🧠 **Immortal AI Memory**
+### 🔧 **Process Management (4 Tools)**
 
-- **Permanent Storage**: All memories stored forever on Arweave blockchain
-- **Permissionless**: No gatekeepers, true Web3 infrastructure
-- **Cross-Agent Memory**: Shared knowledge between AI systems
+- **spawnProcess**: Create new AO processes with custom configurations
+- **sendAOMessage**: Send messages with custom tags and data to processes
+- **readAOProcess**: Read process state via dryrun queries (read-only)
+- **queryAOProcessMessages**: Query and filter process message history
 
-### 🛠 **AO Integration**
+### 📦 **Arweave Deployment (4 Tools)**
 
-- **Complete Process Lifecycle**: Create → Evaluate → Communicate
-- **Natural Language Interface**: Talk to any AO process in plain English
-- **Self-Documenting Processes**: Handler definitions [AO Documentation Protocol](specs/)
-- **Token Operations**: Advanced minting strategies and DeFi primitives
+- **deployPermawebDirectory**: Deploy entire directories to Permaweb
+- **checkPermawebDeployPrerequisites**: Verify deployment requirements
+- **uploadToArweave**: Upload single files to Arweave
+- **uploadFolderToArweave**: Upload folders with automatic file handling
 
-### 🔧 **AO Documentation Protocol (ADP)**
+### 💰 **Wallet Operations (2 Tools)**
 
-Permamind introduces the **[AO Documentation Protocol](specs/)** - a standard that makes AO processes self-documenting:
+- **generateKeypair**: Generate Arweave keypair from seed phrase
+- **getUserPublicKey**: Get user's public key (wallet address)
 
-- **Automatic Discovery**: Processes expose their capabilities without manual documentation
-- **Zero Configuration**: Tools automatically understand any ADP-compliant process
-- **Dynamic Interfaces**: Generate UIs and interactions from process metadata
-- **Tag Validation**: Real-time validation before sending messages
-- **Developer Experience**: Instant understanding of any process's interface
+### 🌐 **ArNS Management (6 Tools)**
 
-**Learn more**: [ADP Specification](specs/adp-specification.md) | [Token Blueprint](specs/token-blueprint-adp.md)
+- **buyArnsRecord**: Purchase ArNS names (lease or permanent)
+- **getArnsRecordInfo**: Fetch ArNS record details and configurations
+- **getArnsTokenCost**: Query current ArNS pricing
+- **resolveArnsName**: Resolve ArNS name to transaction ID
+- **transferArnsRecord**: Transfer ArNS record ownership
+- **updateArnsRecord**: Update ArNS record properties
 
 ### 🎯 **Developer Experience**
 
-- **MCP Native**: Works with Claude, VS Code, Cursor, and more
-- **Zero Config**: Automatic wallet generation and hub deployment
+- **MCP Native**: Works with Claude Desktop, VS Code, Cursor, and more
+- **TypeScript Built**: Full type safety and modern development experience
+- **Zero Config**: Automatic wallet generation from mnemonic phrase
 
 ---
 
-### 📋 **Protocol Specifications**
+### 📋 **Core Architecture**
 
-- **[AO Documentation Protocol](specs/)** - Complete ADP specification
-- **[Token Blueprint](specs/token-blueprint-adp.md)** - Self-documenting token example
+**Components:**
 
-### 🏗 **Advanced Topics**
-
-- **[Architecture Overview](docs/architecture.md)** - Technical deep dive
-- **[Custom Templates](docs/custom-templates.md)** - Extend functionality
-- **[Performance Optimization](docs/performance.md)** - Scale your implementation
-- **[Security Guide](docs/security.md)** - Best practices and hardening
-
----
-
-**Core Components:**
-
-- **MCP Server**: FastMCP-based server exposing AI memory and AO tools
-- **AO Integration**: Direct communication with AO processes via ADP
-- **Memory Services**: Memory storage and retrieval
-- **ADP Discovery**: Automatic process capability detection and interface generation
-- **Token System**: Advanced minting strategies with credit notice detection
-- **Velocity Protocol**: Decentralized hub discovery and event routing
+- **MCP Server**: FastMCP-based server exposing 16 tools across 4 categories
+- **AO Integration**: Direct communication with AO processes via @permaweb/aoconnect
+- **Arweave Deployment**: File and directory uploads via Turbo SDK
+- **ArNS Management**: Comprehensive domain operations via AR.IO SDK
+- **Service Layer**: 12 specialized services supporting tool operations
 
 ---
 
 ## 💡 Usage Examples
 
-### Basic Memory Operations
+### Process Management
 
 ```bash
-# Store important information
-"Remember that the API key for service X is stored in environment variable Y"
+# Create a new AO process
+"Spawn a new AO process with the default module and scheduler"
 
-# Query memories
-"What do you remember about API configurations?"
+# Deploy Lua code to a process
+"Send a message to process xyz123 with Action: Eval and this Lua code: Handlers.add('ping', ...)"
 
-# Create knowledge relationships
-"Link this debugging technique to the performance optimization category"
+# Read process state
+"Read the state of process xyz123 using a dryrun query"
+
+# Query process messages
+"Show me the last 50 messages for process xyz123"
 ```
 
-### AO Process Interaction
+### Arweave Deployment
 
 ```bash
-# Discover process capabilities (automatic with ADP)
-"What can this process do?"
-# → Permamind queries Info handler and shows all available operations
+# Upload a single file
+"Upload my-file.json to Arweave"
 
-# Natural language interaction
-"Transfer 100 tokens from my wallet to alice"
-# → Permamind discovers Transfer handler, validates parameters, sends message
+# Deploy a directory to Permaweb
+"Deploy the ./dist directory to Permaweb with index.html as the entry point"
 
-# Create new processes
-"Create a new token called 'MyToken' with symbol 'MTK'"
-# → Spawns new process with ADP-compliant token template
+# Check deployment prerequisites
+"Check if I have the necessary prerequisites to deploy to Permaweb"
 ```
 
-### Advanced Workflows
+### ArNS Domain Management
 
 ```bash
-# Complex multi-step operations
-"Create a DAO, mint governance tokens, and set up voting"
+# Get domain information
+"Get the ArNS record for 'example'"
 
-# Process monitoring
-"Show me all messages for this token contract"
+# Purchase an ArNS name
+"Purchase the ArNS name 'myapp' as a permabuy"
 
-# Knowledge graph exploration
-"Show me the relationship between memory A and concept B"
+# Manage domain settings
+"Increase the undername limit for 'myapp' by 10"
 ```
 
 ---
@@ -209,10 +194,6 @@ Permamind introduces the **[AO Documentation Protocol](specs/)** - a standard th
 # Core Configuration
 SEED_PHRASE="your twelve word mnemonic phrase"     # Required for wallet
 NODE_ENV="production"                              # production | development
-
-# Memory Management
-MEMORY=true                                        # Auto-store memories
-CONTEXT_REFRESH_HOURS=24                          # Context refresh interval
 
 # AO Integration
 AO_SCHEDULER="https://ao-scheduler-url"           # Custom AO scheduler
@@ -233,8 +214,6 @@ MCP_LOG_LEVEL=info                                # Logging level
       "args": ["permamind"],
       "env": {
         "SEED_PHRASE": "your twelve word mnemonic phrase",
-        "MEMORY": "true",
-        "ENABLE_AUTO_CONTEXT": "true",
         "NODE_ENV": "production"
       }
     }
@@ -252,13 +231,13 @@ MCP_LOG_LEVEL=info                                # Logging level
 - **[Arweave](https://arweave.org/)** - Permanent data storage
 - **[Model Context Protocol](https://modelcontextprotocol.io/)** - AI tool standard
 - **[FastMCP](https://github.com/jlowin/fastmcp)** - TypeScript MCP framework
-- **[Velocity Protocol](https://github.com/SpaceTurtle-Dao/velocity-protocol)** - Decentralized social protocol
+- **[AR.IO SDK](https://github.com/ar-io/ar-io-sdk)** - ArNS and gateway operations
 
 ### Protocol Standards
 
-- **[AO Documentation Protocol (ADP)](specs/)** - Self-documenting process standard
-- **[AO Token Standard](https://cookbook_ao.g8way.io/references/token.html)** - Token implementation guide
-- **[Arweave Name System (ArNS)](https://ar.io/arns/)** - Decentralized naming
+- **[AO Specification](https://ao.arweave.dev/)** - AO compute layer specification
+- **[Arweave Name System (ArNS)](https://ar.io/arns/)** - Decentralized naming system
+- **[Model Context Protocol](https://modelcontextprotocol.io/)** - AI tool integration standard
 
 ### Community & Support
 
@@ -316,10 +295,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**🧠 Building the Future of AI Memory 🧠**
+**🚀 Streamlined MCP Server for AO & Arweave 🚀**
 
-_Permanent • Decentralized • Self-Documenting_
+_Process Management • Arweave Deployment • ArNS Domains_
 
-[🚀 Install Now](#quick-start) • [📚 Read Specs](specs/) • [💡 See Examples](docs/examples.md) • [🤝 Join Community](https://discord.gg/permamind)
+[🚀 Install Now](#quick-start) • [💡 See Examples](#-usage-examples) • [🤝 Join Community](https://discord.gg/yDJFBtfS4K)
 
 </div>

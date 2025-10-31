@@ -1,73 +1,50 @@
 import { BaseToolFactory, ToolCommand, ToolContext } from "../core/index.js";
-import { AnalyzeProcessArchitectureCommand } from "./commands/AnalyzeProcessArchitectureCommand.js";
-import { EvalProcessCommand } from "./commands/EvalProcessCommand.js";
-import { ExecuteActionCommand } from "./commands/ExecuteActionCommand.js";
-import { GenerateLuaProcessCommand } from "./commands/GenerateLuaProcessCommand.js";
 import { QueryAOProcessMessagesCommand } from "./commands/QueryAOProcessMessagesCommand.js";
-import { RollbackDeploymentCommand } from "./commands/RollbackDeploymentCommand.js";
+import { ReadAOProcessCommand } from "./commands/ReadAOProcessCommand.js";
+import { SendAOMessageCommand } from "./commands/SendAOMessageCommand.js";
 import { SpawnProcessCommand } from "./commands/SpawnProcessCommand.js";
-import { ValidateDeploymentCommand } from "./commands/ValidateDeploymentCommand.js";
 
 /**
- * Factory for creating AO process management tools that provide comprehensive
+ * Factory for creating core AO process management tools that provide essential
  * process lifecycle management capabilities in the Permamind MCP server.
  *
- * The ProcessToolFactory integrates four complementary tools that enable
- * complete AO process workflows:
+ * The ProcessToolFactory provides four core tools for fundamental AO process operations:
  *
- * **Process Lifecycle Management:**
- * - `SpawnProcessCommand` - Spawn new AO processes with optional template support
- * - `EvalProcessCommand` - Deploy Lua code to processes (handlers, modules) - NOT for messaging
- * - `ExecuteActionCommand` - Send messages to processes using natural language - SMART messaging
+ * **Core Process Operations:**
+ * - `SpawnProcessCommand` - Create new AO processes with optional template support
+ * - `SendAOMessageCommand` - Send messages with custom tags and data to processes
+ * - `ReadAOProcessCommand` - Read process state via dryrun queries (read-only)
  * - `QueryAOProcessMessagesCommand` - Query process message history and communication logs
- * - `ValidateDeploymentCommand` - Validate deployed process functionality
- * - `RollbackDeploymentCommand` - Rollback failed deployments
- *
- * **Integration Capabilities:**
- * - Seamless integration with BMAD workflow automation
- * - Compatible with existing Permamind memory and token tools
- * - Support for embedded process templates (token, DAO, etc.)
- * - Natural language interface for process communication
  *
  * **Workflow Examples:**
  * ```typescript
- * // Complete process lifecycle:
- * // 1. Create → 2. Evaluate → 3. Communicate → 4. Query
+ * // Core process lifecycle: Spawn → Send → Query
  *
- * // 1. Create a new AO process
- * await createProcessTool.execute({});
- *
- * // 2. Deploy handler code using evalProcess (for Lua code deployment)
- * await evalProcessTool.execute({
- *   processId: "new-process-id",
- *   code: "Handlers.add('ping', Handlers.utils.hasMatchingTag('Action', 'Ping'), ...)"
+ * // 1. Spawn a new AO process
+ * await spawnProcessTool.execute({
+ *   templateName: "basic-process"
  * });
  *
- * // 3. Send messages to the process using executeAction (for messaging)
- * await executeActionTool.execute({
+ * // 2. Deploy Lua handler code using sendAOMessage with Action: Eval
+ * await sendAOMessageTool.execute({
  *   processId: "new-process-id",
- *   request: "Send a ping message",
- *   processMarkdown: "# Process Documentation..."
+ *   tags: [{ name: "Action", value: "Eval" }],
+ *   data: "Handlers.add('ping', Handlers.utils.hasMatchingTag('Action', 'Ping'), ...)"
  * });
  *
- * // 4. Query message history
+ * // 3. Query message history
  * await queryMessagesTool.execute({
  *   processId: "new-process-id",
  *   first: 10
  * });
  * ```
  *
- * **BMAD Integration:**
- * Process tools work seamlessly within BMAD workflow contexts, enabling
- * automated process creation, testing, and deployment through BMAD templates
- * and task execution.
- *
  * @example
  * ```typescript
  * // Factory registration in server
  * const processFactory = new ProcessToolFactory({
  *   categoryName: "Process",
- *   categoryDescription: "AO process communication and blockchain query tools",
+ *   categoryDescription: "Core AO process management tools",
  *   context: toolContext
  * });
  *
@@ -75,8 +52,8 @@ import { ValidateDeploymentCommand } from "./commands/ValidateDeploymentCommand.
  * ```
  *
  * @see {@link SpawnProcessCommand} For AO process creation
- * @see {@link EvalProcessCommand} For process code evaluation
- * @see {@link ExecuteActionCommand} For natural language process communication
+ * @see {@link SendAOMessageCommand} For sending messages to processes (including code deployment)
+ * @see {@link ReadAOProcessCommand} For reading process state via dryrun
  * @see {@link QueryAOProcessMessagesCommand} For process message querying
  *
  * @since 1.0.0
@@ -84,32 +61,28 @@ import { ValidateDeploymentCommand } from "./commands/ValidateDeploymentCommand.
  */
 export class ProcessToolFactory extends BaseToolFactory {
   /**
-   * Returns the array of tool command classes that this factory creates.
+   * Returns the array of core tool command classes that this factory creates.
    *
    * The tools are returned in a logical workflow order:
    * 1. SpawnProcessCommand - Process creation
-   * 2. EvalProcessCommand - Code evaluation and setup
-   * 3. ExecuteActionCommand - Smart natural language communication
-   * 4. QueryAOProcessMessagesCommand - Message history and monitoring
+   * 2. SendAOMessageCommand - Message sending (write operations, including code deployment)
+   * 3. ReadAOProcessCommand - Dryrun queries (read operations)
+   * 4. QueryAOProcessMessagesCommand - Message history querying
    *
    * Each tool is instantiated with the factory's ToolContext, ensuring
    * consistent access to user credentials, embedded templates, and
    * hub configuration.
    *
-   * @returns Array of tool command constructors for process management
+   * @returns Array of 4 core tool command constructors for process management
    * @protected
    * @override
    */
   protected getToolClasses(): Array<new (context: ToolContext) => ToolCommand> {
     return [
-      AnalyzeProcessArchitectureCommand,
       SpawnProcessCommand,
-      EvalProcessCommand,
-      ExecuteActionCommand,
-      GenerateLuaProcessCommand,
+      SendAOMessageCommand,
+      ReadAOProcessCommand,
       QueryAOProcessMessagesCommand,
-      ValidateDeploymentCommand,
-      RollbackDeploymentCommand,
     ];
   }
 }

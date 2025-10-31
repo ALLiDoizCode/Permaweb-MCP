@@ -1,4 +1,4 @@
-import type { ResolutionResult } from "../../token/utils/TokenResolver.js";
+import type { ResolutionResult } from "../../../types/resolution.js";
 
 import { ArnsClientManager } from "./ArnsClientManager.js";
 import { isValidArnsName } from "./ArnsNameValidation.js";

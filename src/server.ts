@@ -7,15 +7,10 @@ import { FastMCP } from "fastmcp";
 import type { ProcessDefinition } from "./services/ProcessCommunicationService.js";
 
 import { defaultProcessService } from "./services/DefaultProcessService.js";
-import { TokenProcessTemplateService } from "./services/TokenProcessTemplateService.js";
 import { ArnsToolFactory } from "./tools/arns/ArnsToolFactory.js";
-import { ContactToolFactory } from "./tools/contact/ContactToolFactory.js";
-import { DocumentationToolFactory } from "./tools/documentation/DocumentationToolFactory.js";
-import { HubToolFactory } from "./tools/hub/HubToolFactory.js";
+import { ArweaveToolFactory } from "./tools/arweave/ArweaveToolFactory.js";
 import { ToolContext, toolRegistry } from "./tools/index.js";
-import { MemoryToolFactory } from "./tools/memory/MemoryToolFactory.js";
 import { ProcessToolFactory } from "./tools/process/ProcessToolFactory.js";
-import { TokenToolFactory } from "./tools/token/TokenToolFactory.js";
 import { UserToolFactory } from "./tools/user/UserToolFactory.js";
 
 let keyPair: JWKInterface | undefined;
@@ -85,15 +80,6 @@ async function init() {
 
   // Initialize embedded templates
   embeddedTemplates = new Map<string, ProcessDefinition>();
-  embeddedTemplates.set(
-    "token",
-    TokenProcessTemplateService.getTokenTemplate(""),
-  );
-
-  // Verify template availability (silent verification for MCP compatibility)
-  if (!embeddedTemplates.has("token")) {
-    throw new Error("Failed to initialize embedded token template");
-  }
 
   // Mark initialization as complete
   initializationComplete = true;
@@ -114,25 +100,6 @@ function setupToolRegistry() {
     publicKey,
   };
 
-  // Register Memory tools
-  const memoryFactory = new MemoryToolFactory({
-    categoryDescription:
-      "AI Memory management tools for persistent storage and retrieval",
-    categoryName: "Memory",
-    context,
-  });
-
-  memoryFactory.registerTools(toolRegistry);
-
-  // Register Contact tools
-  const contactFactory = new ContactToolFactory({
-    categoryDescription: "Contact and address management tools",
-    categoryName: "Contact",
-    context,
-  });
-
-  contactFactory.registerTools(toolRegistry);
-
   // Register Process tools
   const processFactory = new ProcessToolFactory({
     categoryDescription: "AO process communication and blockchain query tools",
@@ -142,35 +109,15 @@ function setupToolRegistry() {
 
   processFactory.registerTools(toolRegistry);
 
-  // Register Token tools
-  const tokenFactory = new TokenToolFactory({
+  // Register Arweave tools
+  const arweaveFactory = new ArweaveToolFactory({
     categoryDescription:
-      "Token operations for balance, transfer, and info queries",
-    categoryName: "Token",
+      "Arweave permanent storage tools. Use ArDrive tools (uploadToArweave/uploadFolderToArweave) for file/folder uploads. Use deployPermawebDirectory only when specifically prompted to 'deploy to the permaweb'.",
+    categoryName: "Arweave",
     context,
   });
 
-  tokenFactory.registerTools(toolRegistry);
-
-  // Register Documentation tools
-  const documentationFactory = new DocumentationToolFactory({
-    categoryDescription:
-      "Permaweb documentation, file storage, and deployment tools. Use ArDrive tools (uploadToArweave/uploadFolderToArweave) for file/folder uploads. Use deployPermawebDirectory only when specifically prompted to 'deploy to the permaweb'.",
-    categoryName: "Documentation",
-    context,
-  });
-
-  documentationFactory.registerTools(toolRegistry);
-
-  // Register Hub tools
-  const hubFactory = new HubToolFactory({
-    categoryDescription:
-      "Hub creation and management tools for Velocity protocol",
-    categoryName: "Hub",
-    context,
-  });
-
-  hubFactory.registerTools(toolRegistry);
+  arweaveFactory.registerTools(toolRegistry);
 
   // Register User tools
   const userFactory = new UserToolFactory({
