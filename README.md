@@ -1,6 +1,6 @@
-# Permamind 🧠⚡️
+# Permaweb MCP 🧠⚡️
 
-[![npm version](https://img.shields.io/npm/v/permamind.svg)](https://www.npmjs.com/package/permamind)
+[![npm version](https://img.shields.io/npm/v/permaweb-mcp.svg)](https://www.npmjs.com/package/permaweb-mcp)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
 [![AO](https://img.shields.io/badge/AO-Powered-orange.svg)](https://ao.arweave.dev/)
@@ -10,7 +10,7 @@
 
 **A streamlined MCP server for AO process management, Arweave deployment, and ArNS domain operations**
 
-Permamind is a Model Context Protocol (MCP) server that provides core infrastructure for interacting with the AO ecosystem and Arweave network. Built with TypeScript and FastMCP, it delivers 15 essential tools across 4 categories: Process management, Arweave deployment, wallet operations, and ArNS domain management.
+Permaweb MCP is a Model Context Protocol (MCP) server that provides core infrastructure for interacting with the AO ecosystem and Arweave network. Built with TypeScript and FastMCP, it delivers 16 essential tools across 4 categories: Process management, Arweave deployment, wallet operations, and ArNS domain management.
 
 ## 🚀 Quick Start
 
@@ -18,13 +18,13 @@ Permamind is a Model Context Protocol (MCP) server that provides core infrastruc
 
 ```bash
 # Install globally for CLI usage
-npm install -g permamind
+npm install -g permaweb-mcp
 
 # Or install locally in your project
-npm install permamind
+npm install permaweb-mcp
 
 # Start the MCP server
-npx permamind
+npx permaweb-mcp
 ```
 
 ### MCP Server Setup
@@ -36,9 +36,9 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
 ```json
 {
   "mcpServers": {
-    "permamind": {
+    "permaweb-mcp": {
       "command": "npx",
-      "args": ["permamind"],
+      "args": ["permaweb-mcp"],
       "env": {
         "SEED_PHRASE": "your twelve word mnemonic phrase here for deterministic wallet"
       }
@@ -55,9 +55,9 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
 ```json
 {
   "mcpServers": {
-    "permamind": {
+    "permaweb-mcp": {
       "command": "npx",
-      "args": ["permamind"],
+      "args": ["permaweb-mcp"],
       "env": {
         "SEED_PHRASE": "your twelve word mnemonic phrase here"
       }
@@ -80,9 +80,9 @@ NODE_ENV=development
 
 ---
 
-## 🌟 Why Permamind?
+## 🌟 Why Permaweb MCP?
 
-| Manual AO Interaction        | Permamind                      |
+| Manual AO Interaction        | Permaweb MCP                   |
 | ---------------------------- | ------------------------------ |
 | ❌ Complex CLI commands      | ✅ Natural MCP integration     |
 | ❌ Manual process management | ✅ Streamlined process tools   |
@@ -209,9 +209,9 @@ MCP_LOG_LEVEL=info                                # Logging level
 ```json
 {
   "mcpServers": {
-    "permamind": {
+    "permaweb-mcp": {
       "command": "npx",
-      "args": ["permamind"],
+      "args": ["permaweb-mcp"],
       "env": {
         "SEED_PHRASE": "your twelve word mnemonic phrase",
         "NODE_ENV": "production"
@@ -241,9 +241,9 @@ MCP_LOG_LEVEL=info                                # Logging level
 
 ### Community & Support
 
-- **NPM Package**: https://www.npmjs.com/package/permamind
+- **NPM Package**: https://www.npmjs.com/package/permaweb-mcp
 - **Discord Community**: [Join Discord](https://discord.gg/yDJFBtfS4K)
-- **Twitter Updates**: [@permamind](https://x.com/permamind)
+- **Twitter Updates**: [@allidoizcode](https://x.com/allidoizcode)
 
 ### Related Projects
 
@@ -262,8 +262,8 @@ We welcome contributions! See our [Contributing Guide](docs/contributing.md) for
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/permamind.git
-cd permamind
+git clone https://github.com/ALLiDoizCode/Permaweb-MCP.git
+cd Permaweb-MCP
 
 # Install dependencies
 npm install

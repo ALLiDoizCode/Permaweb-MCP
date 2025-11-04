@@ -1,10 +1,10 @@
 {
-  "name": "permamind",
+  "name": "permaweb-mcp",
   "version": "2.19.8",
   "main": "dist/server.js",
   "bin": {
-    "permamind": "./bin/permamind.js",
-    "permamind-setup": "./bin/permamind-setup.js"
+    "permaweb-mcp": "./bin/permaweb-mcp.js",
+    "permaweb-mcp-setup": "./bin/permaweb-mcp-setup.js"
   },
   "files": [
     "dist/**/*",
@@ -41,7 +41,8 @@
   "keywords": [
     "fastmcp",
     "mcp",
-    "permamind",
+    "permaweb-mcp",
+    "permaweb",
     "ai",
     "memory",
     "blockchain",

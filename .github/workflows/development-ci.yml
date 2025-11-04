@@ -54,7 +54,7 @@ jobs:
           npm run build
           
           # Quick CLI test
-          node bin/permamind.js --version
+          node bin/permaweb-mcp.js --version
           
           echo "✅ Development branch validation successful"
           echo "🎯 Ready for PR creation or further development"

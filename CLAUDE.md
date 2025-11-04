@@ -1,8 +1,8 @@
-# Permamind - Project Context for Claude Code
+# Permaweb MCP - Project Context for Claude Code
 
 ## Project Overview
 
-Permamind is an MCP (Model Context Protocol) server that provides an immortal memory layer for AI agents and clients. It leverages Arweave's permanent storage and the AO (Autonomous Objects) ecosystem to create persistent, decentralized AI memory.
+Permaweb MCP is an MCP (Model Context Protocol) server that provides an immortal memory layer for AI agents and clients. It leverages Arweave's permanent storage and the AO (Autonomous Objects) ecosystem to create persistent, decentralized AI memory.
 
 ## Architecture
 
@@ -437,4 +437,4 @@ await ario.joinNetwork({
 });
 ```
 
-This project provides a streamlined MCP server focused on core AO process management, Arweave deployment, wallet operations, and ArNS domain management capabilities.
+This project (Permaweb MCP) provides a streamlined MCP server focused on core AO process management, Arweave deployment, wallet operations, and ArNS domain management capabilities.

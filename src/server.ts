@@ -141,7 +141,7 @@ function setupToolRegistry() {
 }
 
 const server = new FastMCP({
-  name: "Permamind Memory Server",
+  name: "Permaweb MCP Server",
   version: "1.0.0",
 });
 
