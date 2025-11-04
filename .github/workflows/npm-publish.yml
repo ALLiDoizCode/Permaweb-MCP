@@ -77,23 +77,23 @@ jobs:
           echo "📦 Validating package structure..."
           
           # Critical files check
-          test -f "bin/permamind.js" || { echo "❌ Missing bin/permamind.js"; exit 1; }
-          test -f "bin/permamind-setup.js" || { echo "❌ Missing bin/permamind-setup.js"; exit 1; }
+          test -f "bin/permaweb-mcp.js" || { echo "❌ Missing bin/permaweb-mcp.js"; exit 1; }
+          test -f "bin/permaweb-mcp-setup.js" || { echo "❌ Missing bin/permaweb-mcp-setup.js"; exit 1; }
           test -d "templates" || { echo "❌ Missing templates directory"; exit 1; }
           test -d "scripts" || { echo "❌ Missing scripts directory"; exit 1; }
           test -d "dist" || { echo "❌ Missing dist directory"; exit 1; }
           
           # Executable permissions
-          test -x "bin/permamind.js" || { echo "❌ bin/permamind.js not executable"; exit 1; }
-          test -x "bin/permamind-setup.js" || { echo "❌ bin/permamind-setup.js not executable"; exit 1; }
+          test -x "bin/permaweb-mcp.js" || { echo "❌ bin/permaweb-mcp.js not executable"; exit 1; }
+          test -x "bin/permaweb-mcp-setup.js" || { echo "❌ bin/permaweb-mcp-setup.js not executable"; exit 1; }
           
           echo "✅ Package structure & permissions validated"
 
       - name: Test CLI functionality
         run: |
           echo "🖥️ Testing CLI functionality..."
-          node bin/permamind.js --help
-          node bin/permamind.js --version
+          node bin/permaweb-mcp.js --help
+          node bin/permaweb-mcp.js --version
           node scripts/configure.js list
           echo "✅ CLI functionality validated"
 
@@ -122,8 +122,8 @@ jobs:
         run: |
           npm ci
           npm run build
-          node bin/permamind.js --help
-          node bin/permamind.js --version
+          node bin/permaweb-mcp.js --help
+          node bin/permaweb-mcp.js --version
 
   npm-publish:
     name: Publish to NPM
@@ -197,7 +197,7 @@ jobs:
             PACKAGE_VERSION=$(node -p "require('./package.json').version")
             echo "🔍 Verifying published package..."
             sleep 15  # Reduced wait time
-            npm view permamind@$PACKAGE_VERSION
+            npm view permaweb-mcp@$PACKAGE_VERSION
             echo "✅ Package published and verified!"
           fi
         env:
@@ -212,17 +212,17 @@ jobs:
           
           gh release create "$TAG_NAME" \
             --title "Release $VERSION" \
-            --notes "## 🧠 Permamind MCP Server Release
+            --notes "## 🧠 Permaweb MCP Server Release
 
           ### Installation
           \`\`\`bash
-          npm install -g permamind
-          permamind --setup
+          npm install -g permaweb-mcp
+          permaweb-mcp --setup
           \`\`\`
 
           ### Features
           - Easy NPM installation with global CLI
-          - Automated configuration wizard  
+          - Automated configuration wizard
           - Cross-platform support (macOS, Windows, Linux)
           - Integration with Claude Desktop, VS Code, and Cursor
           - Comprehensive AI memory management
@@ -241,5 +241,5 @@ jobs:
       - name: Success notification
         run: |
           echo "🎉 NPM Publishing Pipeline Completed Successfully!"
-          echo "📦 Package is now available globally via: npm install -g permamind"
-          echo "🚀 Users can now install with simple: permamind --setup"
+          echo "📦 Package is now available globally via: npm install -g permaweb-mcp"
+          echo "🚀 Users can now install with simple: permaweb-mcp --setup"

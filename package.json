@@ -1,10 +1,10 @@
 {
-  "name": "permamind",
+  "name": "permaweb-mcp",
   "version": "2.19.9",
   "main": "dist/server.js",
   "bin": {
-    "permamind": "./bin/permamind.js",
-    "permamind-setup": "./bin/permamind-setup.js"
+    "permaweb-mcp": "./bin/permaweb-mcp.js",
+    "permaweb-mcp-setup": "./bin/permaweb-mcp-setup.js"
   },
   "files": [
     "dist/**/*",
@@ -41,7 +41,8 @@
   "keywords": [
     "fastmcp",
     "mcp",
-    "permamind",
+    "permaweb-mcp",
+    "permaweb",
     "ai",
     "memory",
     "blockchain",
@@ -73,12 +74,10 @@
     "@permaweb/aoconnect": "^0.0.85",
     "arweave": "^1.15.7",
     "bip39-web-crypto": "^4.0.1",
-    "chalk": "^5.4.1",
     "dotenv": "^16.5.0",
     "fastmcp": "^1.27.3",
     "human-crypto-keys": "^0.1.4",
     "lodash": "^4.17.21",
-    "yaml": "^2.8.0",
     "zod": "^3.24.4"
   },
   "release": {

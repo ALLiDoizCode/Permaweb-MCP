@@ -1,26 +1,26 @@
-MANUAL UPDATE COMMANDS FOR PERMAMIND:
+MANUAL UPDATE COMMANDS FOR PERMAWEB MCP:
 
 Run these commands one by one (will ask for sudo password):
 
 1. Create backup:
-sudo cp /usr/local/lib/node_modules/permamind/bin/permamind.js /usr/local/lib/node_modules/permamind/bin/permamind.js.backup
+sudo cp /usr/local/lib/node_modules/permaweb-mcp/bin/permaweb-mcp.js /usr/local/lib/node_modules/permaweb-mcp/bin/permaweb-mcp.js.backup
 
 2. Copy updated binary:
-sudo cp /Users/jonathangreen/Documents/MCP/Permamind/package/bin/permamind.js /usr/local/lib/node_modules/permamind/bin/permamind.js
+sudo cp /Users/jonathangreen/Documents/Permaweb-MCP/package/bin/permaweb-mcp.js /usr/local/lib/node_modules/permaweb-mcp/bin/permaweb-mcp.js
 
 3. Copy updated server:
-sudo cp /Users/jonathangreen/Documents/MCP/Permamind/package/dist/server.js /usr/local/lib/node_modules/permamind/dist/server.js
+sudo cp /Users/jonathangreen/Documents/Permaweb-MCP/package/dist/server.js /usr/local/lib/node_modules/permaweb-mcp/dist/server.js
 
 4. Copy updated process file:
-sudo cp /Users/jonathangreen/Documents/MCP/Permamind/package/dist/process.js /usr/local/lib/node_modules/permamind/dist/process.js
+sudo cp /Users/jonathangreen/Documents/Permaweb-MCP/package/dist/process.js /usr/local/lib/node_modules/permaweb-mcp/dist/process.js
 
 5. Copy updated constants:
-sudo cp /Users/jonathangreen/Documents/MCP/Permamind/package/dist/constants.js /usr/local/lib/node_modules/permamind/dist/constants.js
+sudo cp /Users/jonathangreen/Documents/Permaweb-MCP/package/dist/constants.js /usr/local/lib/node_modules/permaweb-mcp/dist/constants.js
 
 6. Set permissions:
-sudo chmod +x /usr/local/lib/node_modules/permamind/bin/permamind.js
+sudo chmod +x /usr/local/lib/node_modules/permaweb-mcp/bin/permaweb-mcp.js
 
 After running these commands:
 - Restart Claude (quit and reopen)
-- Test Permamind tools
+- Test Permaweb MCP tools
 - Check logs for actual error messages

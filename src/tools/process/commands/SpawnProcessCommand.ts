@@ -16,11 +16,11 @@ interface SpawnProcessArgs extends Record<string, never> {
 export class SpawnProcessCommand extends ToolCommand<SpawnProcessArgs, string> {
   protected metadata: ToolMetadata = {
     description:
-      "Spawn an empty AO process container (no code) and return its process ID. This creates a fresh AO process using the default AOS module configuration, ready for code deployment via evalProcess. DEPLOYMENT WORKFLOW: Step 1 of 3: 1) spawnProcess (this tool) → 2) evalProcess → 3) test with executeAction. DO NOT use aos CLI - use Permamind tools only. Use 'spawn empty process' or 'spawn process' to trigger this tool. Automatically initializes wallet and hub if needed.",
+      "Spawn an empty AO process container (no code) and return its process ID. This creates a fresh AO process using the default AOS module configuration, ready for code deployment via sendAOMessage. DEPLOYMENT WORKFLOW: Step 1 of 2: 1) spawnProcess (this tool) → 2) sendAOMessage with Action: Eval tag to deploy code. DO NOT use aos CLI - use Permamind tools only. Use 'spawn empty process' or 'spawn process' to trigger this tool. Automatically initializes wallet and hub if needed.",
     name: "spawnProcess",
     openWorldHint: false,
     readOnlyHint: false,
-    title: "Spawn Empty AO Process (Step 1/3 - Deployment Workflow)",
+    title: "Spawn Empty AO Process",
   };
 
   protected parametersSchema = z.object({

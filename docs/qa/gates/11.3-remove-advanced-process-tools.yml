@@ -1,0 +1,60 @@
+schema: 1
+story: "11.3"
+story_title: "Remove Advanced Process Tools"
+gate: CONCERNS
+status_reason: "Implementation successful with 5 advanced process tools removed and 3 core tools preserved. However, 35 pre-existing test failures remain unaddressed (unrelated to this story)."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-10-28T17:20:00Z"
+
+waiver: { active: false }
+
+top_issues:
+  - id: "TEST-001"
+    severity: medium
+    finding: "35 pre-existing test failures in unrelated services (TurboService, ArchitectureExplanationService, WorkflowStateService)"
+    suggested_action: "Address test failures in separate story - these are unrelated to process tool removal"
+    suggested_owner: "dev"
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 1, low: 0 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - "Track pre-existing test failures for future resolution"
+
+quality_score: 90
+expires: "2025-11-11T00:00:00Z"
+
+evidence:
+  tests_reviewed: 26
+  risks_identified: 1
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: "No security concerns - proper file deletions and import cleanup"
+  performance:
+    status: PASS
+    notes: "Build time unaffected, 11 fewer tools registered"
+  reliability:
+    status: PASS
+    notes: "TypeScript compilation successful, core process workflow preserved"
+  maintainability:
+    status: PASS
+    notes: "Code complexity reduced, comprehensive JSDoc updates, clear service dependency documentation"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Consider refactoring ProcessToolFactory tests to be more resilient to tool count changes"
+      refs: ["tests/unit/tools/process/ProcessToolFactory.unit.test.ts"]
+    - action: "Address 35 pre-existing test failures in separate maintenance story"
+      refs:
+        [
+          "tests/unit/services/TurboService.unit.test.ts",
+          "tests/unit/services/ArchitectureExplanationService.unit.test.ts",
+          "tests/unit/services/WorkflowStateService.unit.test.ts",
+        ]

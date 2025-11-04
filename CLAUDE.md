@@ -1,8 +1,8 @@
-# Permamind - Project Context for Claude Code
+# Permaweb MCP - Project Context for Claude Code
 
 ## Project Overview
 
-Permamind is an MCP (Model Context Protocol) server that provides an immortal memory layer for AI agents and clients. It leverages Arweave's permanent storage and the AO (Autonomous Objects) ecosystem to create persistent, decentralized AI memory.
+Permaweb MCP is an MCP (Model Context Protocol) server that provides an immortal memory layer for AI agents and clients. It leverages Arweave's permanent storage and the AO (Autonomous Objects) ecosystem to create persistent, decentralized AI memory.
 
 ## Architecture
 
@@ -19,8 +19,14 @@ Permamind is an MCP (Model Context Protocol) server that provides an immortal me
 
 ````
 src/
-├── services/          # Core business logic services
+├── services/          # Core business logic services (12 services)
 ├── models/           # Data models and TypeScript interfaces
+├── tools/            # MCP tool implementations (16 tools)
+│   ├── arns/         # ArNS domain management (6 tools)
+│   ├── arweave/      # Arweave deployment (4 tools)
+│   ├── core/         # Shared helpers and base classes
+│   ├── process/      # AO process operations (4 tools)
+│   └── user/         # Wallet operations (2 tools)
 ├── types/            # Type definitions
 ├── constants.ts      # Configuration constants
 ├── process.ts        # AO process creation and messaging
@@ -107,18 +113,60 @@ const processId = await spawn({
 
 ## MCP Server Architecture
 
-### Tool Definitions
+### Tool Categories (16 Tools)
+
+**Process Tools (4):**
+
+- `spawnProcess` - Create new AO processes
+- `sendAOMessage` - Send messages with custom tags and data to processes
+- `readAOProcess` - Read process state via dryrun queries (read-only)
+- `queryAOProcessMessages` - Query process message history
+
+**Arweave Tools (4):**
+
+- `deployPermawebDirectory` - Deploy directories to Permaweb
+- `checkPermawebDeployPrerequisites` - Verify deployment requirements
+- `uploadToArweave` - Upload single files to Arweave
+- `uploadFolderToArweave` - Upload folders to Arweave
+
+**User Tools (2):**
+
+- `generateKeypair` - Generate Arweave keypair from seed phrase
+- `getUserPublicKey` - Get user's public key (wallet address)
+
+**ArNS Tools (6):**
+
+- `buyArnsRecord` - Purchase ArNS names (lease or permanent)
+- `getArnsRecordInfo` - Fetch ArNS record details
+- `getArnsTokenCost` - Get ArNS pricing information
+- `resolveArnsName` - Resolve ArNS name to transaction ID
+- `transferArnsRecord` - Transfer ArNS record ownership
+- `updateArnsRecord` - Update ArNS record properties
+
+### Tool Implementation
 
 - Use Zod schemas for parameter validation
 - Provide comprehensive descriptions for AI understanding
 - Return structured responses with success/error states
 - Handle asynchronous operations properly
 
-### Resource Management
+### Service Layer (12 Services)
 
-- Memory operations through aiMemoryService
-- Workflow operations through WorkflowHubService
-- AO messaging through AOMessageService and MarkdownWorkflowService
+**Core Infrastructure:**
+
+- DefaultProcessService, ProcessCommunicationService, RegistryService
+
+**Process Operations:**
+
+- ArweaveGraphQLService, ProcessCacheService
+
+**Arweave Deployment:**
+
+- PermawebDeployService, TurboService
+
+**Service Dependencies:**
+
+- ADPProcessCommunicationService, DocumentationProtocolService, ProcessDiscoveryService, HubLuaService, AOMessageService
 
 ### Error Handling
 
@@ -168,25 +216,35 @@ describe("ServiceName", () => {
 });
 ```
 
-## Memory and Workflow System
+## AO Process Management
 
-### AI Memory Types
+### Core Capabilities
 
-- **conversation**: Chat interactions and context
-- **context**: Comprehensive Permaweb ecosystem documentation (automatically loaded)
-- **knowledge**: Factual information and learning
-- **procedure**: Step-by-step processes and workflows
-- **reasoning**: Decision trees and logic chains
-- **enhancement**: Code improvements and optimizations
-- **performance**: Metrics and benchmarking data
-- **workflow**: Process definitions and execution history
+- **Process Creation**: Spawn new AO processes with custom configurations
+- **Message Sending**: Send messages with custom tags and data to processes
+- **Process Reading**: Read process state via dryrun queries (read-only)
+- **Message Querying**: Query and filter process message history
 
-### Workflow Definitions
+### Process Interaction Patterns
 
-- **JSON Format**: Structured workflow definitions with handlers
-- **Markdown Format**: Natural language workflows with AI interpretation
-- **Natural Language Service**: Intelligent parameter extraction
-- **Process Integration**: Dynamic AO process interaction
+- **Spawn Pattern**: Create processes with module, scheduler, and signer
+- **Send Pattern**: Send messages with custom tags (including code deployment via Action: Eval)
+- **Read Pattern**: Query process state via dryrun (no wallet required)
+- **Query Pattern**: Fetch messages with filtering and pagination
+
+### Lua Code Deployment Pattern
+
+To deploy Lua code to AO processes, use `sendAOMessage` with the `Action: Eval` tag:
+
+```typescript
+await sendAOMessage({
+  processId: "process-id",
+  tags: [{ name: "Action", value: "Eval" }],
+  data: "Handlers.add('ping', Handlers.utils.hasMatchingTag('Action', 'Ping'), function(msg) msg.reply({ Data = 'Pong!' }) end)",
+});
+```
+
+**Migration Note**: The `evalProcess` tool was removed in Epic 12 (Story 12.3). Use the pattern above instead for deploying Lua code to processes. This provides more flexibility and consistency with other message operations.
 
 ## Security Considerations
 
@@ -274,11 +332,11 @@ CONTEXT_CHUNK_SIZE=2000      # Maximum characters per context chunk (default: 20
 
 ## Integration Points
 
-### Velocity Protocol
+### Arweave Ecosystem
 
-- Decentralized social/operational network for AO
-- Hub registry for workflow discovery
-- Zone-based organization and permissions
+- **Arweave Network**: Permanent data storage for files and deployments
+- **Turbo SDK**: Fast uploads with credit-based payment system
+- **AR.IO Gateway**: ArNS domain resolution and name services
 
 ### FastMCP Features
 
@@ -329,68 +387,54 @@ export class ServiceName {
 }
 ```
 
-### AO Workflow Execution
+### Process Message Sending
 
 ```typescript
-const markdownWorkflow = "# Workflow Definition...";
-const userRequest = "natural language request";
+import { send } from "./process.js";
 
-const result = await markdownWorkflowService.executeWorkflowRequest(
-  markdownWorkflow,
-  userRequest,
+const result = await send(
+  signer,
   processId,
+  [
+    { name: "Action", value: "Transfer" },
+    { name: "Recipient", value: recipientId },
+  ],
+  dataPayload,
 );
 ```
 
-### Memory Storage
+### Arweave Deployment
 
 ```typescript
-const memory: Partial<AIMemory> = {
-  content: "Memory content",
-  memoryType: "knowledge",
-  importance: 0.8,
-  context: { sessionId, topic, domain },
-};
+import { TurboService } from "./services/TurboService.js";
 
-await aiMemoryService.addEnhanced(signer, hubId, memory);
+const uploadResult = await turboService.uploadFile(filePath, contentType, tags);
 ```
 
-## Context Initialization System
+## ArNS (Arweave Name System)
 
-### Overview
+### ArNS Operations
 
-Permamind automatically loads comprehensive Permaweb ecosystem documentation into context on startup, providing instant access to:
+Permamind provides comprehensive ArNS domain management capabilities:
 
-- **Arweave Ecosystem**: 65 documents, 21,106 words of development guides
-- **AO Computer System**: 90 documents, 36,805 words of system documentation
-- **AR.IO Infrastructure**: 125 documents, 78,208 words of ecosystem guides
-- **HyperBEAM Computing**: Decentralized computing implementation docs
-- **Permaweb Glossary**: 9,710 words of comprehensive terminology
+- **Record Management**: Purchase, extend, and release ArNS names
+- **Undername Limits**: Increase undername capacity for domains
+- **Pricing Information**: Query current ArNS pricing
+- **Record Details**: Fetch complete ArNS record information
 
-### Context Management Tools
-
-- `queryPermawebDocs` - Query live Permaweb documentation across all domains
-- `managePermawebDocsCache` - Manage documentation cache (status, preload, clear)
-- `searchMemoriesAdvanced` - Includes live Permaweb documentation in general memory searches
-
-### Technical Implementation
-
-- **Intelligent Chunking**: Content split at semantic boundaries (~2000 chars)
-- **Importance Scoring**: Context prioritized by relevance and keywords
-- **Caching**: 24-hour TTL with retry logic for reliability
-- **Background Loading**: Non-blocking startup with progress tracking
-- **Error Handling**: Graceful fallback when sources are unavailable
-
-### Context URLs
+### ArNS Integration
 
 ```typescript
-const CONTEXT_SOURCES = [
-  "https://fuel_permawebllms.permagate.io/hyperbeam-llms.txt",
-  "https://fuel_permawebllms.permagate.io/arweave-llms.txt",
-  "https://fuel_permawebllms.permagate.io/ao-llms.txt",
-  "https://fuel_permawebllms.permagate.io/ario-llms.txt",
-  "https://fuel_permawebllms.permagate.io/permaweb-glossary-llms.txt",
-];
+import { ARIO } from "@ar.io/sdk/node";
+
+// Get ArNS record details
+const record = await ario.getArNSRecord({ name: "example" });
+
+// Purchase ArNS name
+await ario.joinNetwork({
+  qty: purchaseQty,
+  type: "permabuy" | "lease",
+});
 ```
 
-This project represents a cutting-edge implementation of persistent AI memory using decentralized technologies, combining the reliability of Arweave with the computational power of AO and the standardization of MCP.
+This project (Permaweb MCP) provides a streamlined MCP server focused on core AO process management, Arweave deployment, wallet operations, and ArNS domain management capabilities.
