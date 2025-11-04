@@ -17,10 +17,6 @@ export default defineConfig({
       NODE_ENV: "test", // Explicitly set NODE_ENV for all tests to prevent mainnet endpoint usage
     },
     environment: "node",
-    globals: true,
-    // Add stability configurations for CI environments
-    hookTimeout: 30000,
-    include: ["tests/**/*.test.ts"],
     // Skip slow integration tests in CI that make real network calls
     exclude: process.env.CI
       ? [
@@ -30,6 +26,10 @@ export default defineConfig({
           "tests/integration/ArnsNameResolution.integration.test.ts",
         ]
       : ["**/node_modules/**", "**/dist/**"],
+    globals: true,
+    // Add stability configurations for CI environments
+    hookTimeout: 30000,
+    include: ["tests/**/*.test.ts"],
     // Use serial execution in CI to avoid process management issues
     ...(process.env.CI && {
       pool: "forks",
