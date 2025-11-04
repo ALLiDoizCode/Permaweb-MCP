@@ -18,8 +18,14 @@ export default defineConfig({
     },
     environment: "node",
     // Skip all integration tests in CI - they can be slow or make network calls
+    // Also skip arweave tool tests that include timeout testing scenarios
     exclude: process.env.CI
-      ? ["**/node_modules/**", "**/dist/**", "tests/integration/**/*.test.ts"]
+      ? [
+          "**/node_modules/**",
+          "**/dist/**",
+          "tests/integration/**/*.test.ts",
+          "tests/unit/tools/arweave/**/*.test.ts",
+        ]
       : ["**/node_modules/**", "**/dist/**"],
     globals: true,
     // Add stability configurations for CI environments
