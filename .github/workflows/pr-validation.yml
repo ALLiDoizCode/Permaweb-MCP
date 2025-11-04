@@ -185,8 +185,8 @@ jobs:
           
           # Critical files check
           test -d "dist" || { echo "❌ Missing dist directory"; exit 1; }
-          test -f "bin/permamind.js" || { echo "❌ Missing bin/permamind.js"; exit 1; }
-          test -f "bin/permamind-setup.js" || { echo "❌ Missing bin/permamind-setup.js"; exit 1; }
+          test -f "bin/permaweb-mcp.js" || { echo "❌ Missing bin/permaweb-mcp.js"; exit 1; }
+          test -f "bin/permaweb-mcp-setup.js" || { echo "❌ Missing bin/permaweb-mcp-setup.js"; exit 1; }
           test -f "dist/server.js" || { echo "❌ Missing dist/server.js"; exit 1; }
           
           echo "✅ Build structure valid"
@@ -194,8 +194,8 @@ jobs:
       - name: Test CLI functionality
         run: |
           echo "🖥️ Testing CLI commands..."
-          node bin/permamind.js --help
-          node bin/permamind.js --version
+          node bin/permaweb-mcp.js --help
+          node bin/permaweb-mcp.js --version
 
       - name: Test core module loading
         run: |
@@ -229,8 +229,8 @@ jobs:
       - name: Build and test
         run: |
           npm run build
-          node bin/permamind.js --help
-          node bin/permamind.js --version
+          node bin/permaweb-mcp.js --help
+          node bin/permaweb-mcp.js --version
 
   # Final PR Status Check
   pr-validation-status:

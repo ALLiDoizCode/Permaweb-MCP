@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ToolContext } from "../../../../src/tools/index.js";
-import { EvalProcessCommand } from "../../../../src/tools/process/commands/EvalProcessCommand.js";
-import { ExecuteActionCommand } from "../../../../src/tools/process/commands/ExecuteActionCommand.js";
 import { QueryAOProcessMessagesCommand } from "../../../../src/tools/process/commands/QueryAOProcessMessagesCommand.js";
+import { ReadAOProcessCommand } from "../../../../src/tools/process/commands/ReadAOProcessCommand.js";
+import { SendAOMessageCommand } from "../../../../src/tools/process/commands/SendAOMessageCommand.js";
 import { SpawnProcessCommand } from "../../../../src/tools/process/commands/SpawnProcessCommand.js";
 import { ProcessToolFactory } from "../../../../src/tools/process/ProcessToolFactory.js";
 
@@ -54,13 +54,13 @@ describe("ProcessToolFactory", () => {
   });
 
   describe("Tool Registration", () => {
-    it("should register all process management tools", () => {
+    it("should register all core process management tools", () => {
       const toolClasses = (factory as any).getToolClasses();
 
-      expect(toolClasses).toHaveLength(9);
+      expect(toolClasses).toHaveLength(4);
       expect(toolClasses).toContain(SpawnProcessCommand);
-      expect(toolClasses).toContain(EvalProcessCommand);
-      expect(toolClasses).toContain(ExecuteActionCommand);
+      expect(toolClasses).toContain(SendAOMessageCommand);
+      expect(toolClasses).toContain(ReadAOProcessCommand);
       expect(toolClasses).toContain(QueryAOProcessMessagesCommand);
     });
 
@@ -76,12 +76,12 @@ describe("ProcessToolFactory", () => {
     it("should maintain consistent tool registration order", () => {
       const toolClasses = (factory as any).getToolClasses();
 
-      // Verify all expected tools are present (order may vary due to new additions)
+      // Verify all expected core tools are present
       expect(toolClasses).toContain(SpawnProcessCommand);
-      expect(toolClasses).toContain(EvalProcessCommand);
-      expect(toolClasses).toContain(ExecuteActionCommand);
+      expect(toolClasses).toContain(SendAOMessageCommand);
+      expect(toolClasses).toContain(ReadAOProcessCommand);
       expect(toolClasses).toContain(QueryAOProcessMessagesCommand);
-      expect(toolClasses.length).toBe(9); // Updated count
+      expect(toolClasses.length).toBe(4);
     });
   });
 
@@ -126,7 +126,7 @@ describe("ProcessToolFactory", () => {
       });
 
       const toolClasses = (alternativeFactory as any).getToolClasses();
-      expect(toolClasses).toHaveLength(9);
+      expect(toolClasses).toHaveLength(4);
 
       toolClasses.forEach((ToolClass: any) => {
         const toolInstance = new ToolClass(alternativeContext);
@@ -135,20 +135,8 @@ describe("ProcessToolFactory", () => {
     });
   });
 
-  describe("Integration with Existing Tools", () => {
-    it("should maintain compatibility with existing ExecuteActionCommand", () => {
-      const toolClasses = (factory as any).getToolClasses();
-      const executeActionClass = toolClasses.find(
-        (cls: any) => cls === ExecuteActionCommand,
-      );
-
-      expect(executeActionClass).toBe(ExecuteActionCommand);
-
-      const executeActionInstance = new executeActionClass(mockContext);
-      expect(executeActionInstance).toBeInstanceOf(ExecuteActionCommand);
-    });
-
-    it("should maintain compatibility with existing QueryAOProcessMessagesCommand", () => {
+  describe("Core Tool Integration", () => {
+    it("should maintain compatibility with QueryAOProcessMessagesCommand", () => {
       const toolClasses = (factory as any).getToolClasses();
       const queryMessagesClass = toolClasses.find(
         (cls: any) => cls === QueryAOProcessMessagesCommand,
@@ -163,7 +151,7 @@ describe("ProcessToolFactory", () => {
     });
   });
 
-  describe("New Tool Integration", () => {
+  describe("Core Process Tools", () => {
     it("should properly integrate SpawnProcessCommand", () => {
       const toolClasses = (factory as any).getToolClasses();
       const spawnProcessClass = toolClasses.find(
@@ -176,16 +164,16 @@ describe("ProcessToolFactory", () => {
       expect(spawnProcessInstance).toBeInstanceOf(SpawnProcessCommand);
     });
 
-    it("should properly integrate EvalProcessCommand", () => {
+    it("should properly integrate SendAOMessageCommand", () => {
       const toolClasses = (factory as any).getToolClasses();
-      const evalProcessClass = toolClasses.find(
-        (cls: any) => cls === EvalProcessCommand,
+      const sendAOMessageClass = toolClasses.find(
+        (cls: any) => cls === SendAOMessageCommand,
       );
 
-      expect(evalProcessClass).toBe(EvalProcessCommand);
+      expect(sendAOMessageClass).toBe(SendAOMessageCommand);
 
-      const evalProcessInstance = new evalProcessClass(mockContext);
-      expect(evalProcessInstance).toBeInstanceOf(EvalProcessCommand);
+      const sendAOMessageInstance = new sendAOMessageClass(mockContext);
+      expect(sendAOMessageInstance).toBeInstanceOf(SendAOMessageCommand);
     });
   });
 
@@ -213,7 +201,7 @@ describe("ProcessToolFactory", () => {
       const tools = factory.getTools();
 
       expect(Array.isArray(tools)).toBe(true);
-      expect(tools.length).toBe(9);
+      expect(tools.length).toBe(4);
 
       // Each tool should be an instance of ToolCommand
       tools.forEach((tool) => {
@@ -250,7 +238,7 @@ describe("ProcessToolFactory", () => {
       });
 
       const toolClasses = (incompleteFactory as any).getToolClasses();
-      expect(toolClasses).toHaveLength(9);
+      expect(toolClasses).toHaveLength(4);
     });
   });
 
@@ -273,7 +261,7 @@ describe("ProcessToolFactory", () => {
       });
 
       const toolClasses = (customFactory as any).getToolClasses();
-      expect(toolClasses).toHaveLength(9);
+      expect(toolClasses).toHaveLength(4);
     });
   });
 });

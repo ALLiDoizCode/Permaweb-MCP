@@ -101,7 +101,7 @@ jobs:
 
           **Installation:**
           \`\`\`bash
-          npm install permamind@nightly
+          npm install permaweb-mcp@nightly
           \`\`\`
 
           **Changes since last release:**
@@ -118,7 +118,7 @@ jobs:
         run: |
           if [ "${{ job.status }}" = "success" ]; then
             echo "✅ Nightly build ${{ steps.publish.outputs.version }} published successfully"
-            echo "📦 Install with: npm install permamind@nightly"
+            echo "📦 Install with: npm install permaweb-mcp@nightly"
           else
             echo "❌ Nightly build failed"
             if [ "${{ steps.publish.outputs.npm-published }}" = "true" ]; then
