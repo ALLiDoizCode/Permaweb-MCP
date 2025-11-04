@@ -46,6 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: check-skip
     if: needs.check-skip.outputs.skip-ci != 'true'
+    timeout-minutes: 10
     outputs:
       quality-result: ${{ steps.quality.outcome }}
       test-result: ${{ steps.tests.outcome }}
