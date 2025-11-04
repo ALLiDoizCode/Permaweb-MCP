@@ -17,14 +17,9 @@ export default defineConfig({
       NODE_ENV: "test", // Explicitly set NODE_ENV for all tests to prevent mainnet endpoint usage
     },
     environment: "node",
-    // Skip slow integration tests in CI that make real network calls
+    // Skip all integration tests in CI - they can be slow or make network calls
     exclude: process.env.CI
-      ? [
-          "**/node_modules/**",
-          "**/dist/**",
-          "tests/integration/ArnsIntegration.integration.test.ts",
-          "tests/integration/ArnsNameResolution.integration.test.ts",
-        ]
+      ? ["**/node_modules/**", "**/dist/**", "tests/integration/**/*.test.ts"]
       : ["**/node_modules/**", "**/dist/**"],
     globals: true,
     // Add stability configurations for CI environments
