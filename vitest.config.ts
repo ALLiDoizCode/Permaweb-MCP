@@ -21,6 +21,15 @@ export default defineConfig({
     // Add stability configurations for CI environments
     hookTimeout: 30000,
     include: ["tests/**/*.test.ts"],
+    // Skip slow integration tests in CI that make real network calls
+    exclude: process.env.CI
+      ? [
+          "**/node_modules/**",
+          "**/dist/**",
+          "tests/integration/ArnsIntegration.integration.test.ts",
+          "tests/integration/ArnsNameResolution.integration.test.ts",
+        ]
+      : ["**/node_modules/**", "**/dist/**"],
     // Use serial execution in CI to avoid process management issues
     ...(process.env.CI && {
       pool: "forks",
