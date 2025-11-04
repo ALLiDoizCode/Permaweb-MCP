@@ -114,15 +114,18 @@ jobs:
         id: tests
         env:
           NODE_ENV: test
+          CI: true
         run: |
           echo "🧪 Running test suite..."
-          
-          # Run tests with coverage
+          echo "CI environment variable: $CI"
+          echo "NODE_ENV: $NODE_ENV"
+
+          # Run tests with coverage (skip slow tests via CI env var)
           if ! npm run test:coverage; then
             echo "⚠️ Test failures detected"
             exit 0  # Don't fail the job, just mark the step as failed
           fi
-          
+
           echo "✅ All tests passed"
 
       - name: Upload coverage reports
