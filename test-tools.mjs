@@ -1,11 +1,12 @@
 #!/usr/bin/env node
+/* eslint-env node */
 
 /**
  * Simple test script to verify MCP tools are loaded correctly
  * This script loads the server module to trigger tool registration
  */
 
-console.log("🔍 Testing Permamind Tool Registry\n");
+console.log("🔍 Testing Permaweb MCP Tool Registry\n");
 console.log("⏳ Initializing server...\n");
 
 // Suppress server startup output

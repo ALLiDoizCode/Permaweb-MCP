@@ -9,7 +9,7 @@ export default tseslint.config(
   perfectionist.configs["recommended-alphabetical"],
   eslintConfigPrettier,
   {
-    ignores: ["**/*.js", "dashboard/.svelte-kit/**/*"],
+    ignores: ["**/*.js", "**/*.mjs", "dashboard/.svelte-kit/**/*"],
   },
   {
     files: [
