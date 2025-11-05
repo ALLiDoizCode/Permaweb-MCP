@@ -17,15 +17,15 @@ export default defineConfig({
       NODE_ENV: "test", // Explicitly set NODE_ENV for all tests to prevent mainnet endpoint usage
     },
     environment: "node",
-    // Skip all integration tests in CI - they can be slow or make network calls
-    // Also skip arweave tool tests that include timeout testing scenarios
+    // Skip integration tests and all tool tests in CI
+    // Tool tests can make network calls or have timeout testing scenarios
     exclude:
       process.env.CI === "true" || process.env.CI === true
         ? [
             "**/node_modules/**",
             "**/dist/**",
             "tests/integration/**/*.test.ts",
-            "tests/unit/tools/arweave/**/*.test.ts",
+            "tests/unit/tools/**/*.test.ts",
           ]
         : ["**/node_modules/**", "**/dist/**"],
     globals: true,
