@@ -1,4 +1,4 @@
-# Permamind CI/CD Pipeline Documentation
+# Permaweb MCP CI/CD Pipeline Documentation
 
 ## Overview
 

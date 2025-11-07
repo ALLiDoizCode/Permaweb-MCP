@@ -7,7 +7,7 @@ import { z } from "zod";
  * document their capabilities through an enhanced Info handler.
  *
  * The protocol extends existing Info handlers to include comprehensive metadata,
- * making processes self-documenting and enabling tools like Permamind's
+ * making processes self-documenting and enabling tools like Permaweb MCP's
  * executeAction to automatically discover process capabilities.
  */
 

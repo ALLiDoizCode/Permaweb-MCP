@@ -6,7 +6,7 @@ import { SpawnProcessCommand } from "./commands/SpawnProcessCommand.js";
 
 /**
  * Factory for creating core AO process management tools that provide essential
- * process lifecycle management capabilities in the Permamind MCP server.
+ * process lifecycle management capabilities in the Permaweb MCP server.
  *
  * The ProcessToolFactory provides four core tools for fundamental AO process operations:
  *
@@ -57,7 +57,7 @@ import { SpawnProcessCommand } from "./commands/SpawnProcessCommand.js";
  * @see {@link QueryAOProcessMessagesCommand} For process message querying
  *
  * @since 1.0.0
- * @author Permamind Development Team
+ * @author Permaweb MCP Development Team
  */
 export class ProcessToolFactory extends BaseToolFactory {
   /**
