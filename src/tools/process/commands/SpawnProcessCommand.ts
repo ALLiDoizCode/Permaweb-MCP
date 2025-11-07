@@ -16,7 +16,7 @@ interface SpawnProcessArgs extends Record<string, never> {
 export class SpawnProcessCommand extends ToolCommand<SpawnProcessArgs, string> {
   protected metadata: ToolMetadata = {
     description:
-      "Spawn an empty AO process container (no code) and return its process ID. This creates a fresh AO process using the default AOS module configuration, ready for code deployment via sendAOMessage. DEPLOYMENT WORKFLOW: Step 1 of 2: 1) spawnProcess (this tool) → 2) sendAOMessage with Action: Eval tag to deploy code. DO NOT use aos CLI - use Permamind tools only. Use 'spawn empty process' or 'spawn process' to trigger this tool. Automatically initializes wallet and hub if needed.",
+      "LOW-LEVEL INFRASTRUCTURE TOOL: Spawns an empty AO process container on the Arweave network and returns its process ID. This is for infrastructure operations like creating storage containers or registry processes - NOT for developing AO applications. FOR AO APPLICATION DEVELOPMENT: Use the 'ao' skill instead to write, test, and deploy complete AO processes with proper Lua code. This tool only creates empty process shells without code. Use cases: Creating dedicated storage processes, spawning process registries, or infrastructure components. Workflow: 1) spawnProcess (creates empty container) → 2) sendAOMessage with Action: Eval (deploys code). Automatically initializes wallet if needed.",
     name: "spawnProcess",
     openWorldHint: false,
     readOnlyHint: false,

@@ -415,7 +415,7 @@ const uploadResult = await turboService.uploadFile(filePath, contentType, tags);
 
 ### ArNS Operations
 
-Permamind provides comprehensive ArNS domain management capabilities:
+This project (Permaweb MCP) provides comprehensive ArNS domain management capabilities:
 
 - **Record Management**: Purchase, extend, and release ArNS names
 - **Undername Limits**: Increase undername capacity for domains
