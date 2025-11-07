@@ -1,6 +1,6 @@
 {
   "name": "permaweb-mcp",
-  "version": "2.19.10",
+  "version": "2.19.11",
   "main": "dist/server.js",
   "bin": {
     "permaweb-mcp": "./bin/permaweb-mcp.js",
