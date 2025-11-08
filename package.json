@@ -59,7 +59,7 @@
   "homepage": "https://x.com/allidoizcode",
   "type": "module",
   "license": "MIT",
-  "description": "An MCP server that provides an immortal memory layer for AI agents and clients",
+  "description": "MCP server for AO process management, Arweave deployment, ArNS domain operations, and wallet management. Provides 16 tools across process operations (spawn, message, query), Permaweb deployment, ArNS name services, and Arweave wallet generation.",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
